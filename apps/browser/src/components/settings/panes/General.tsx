@@ -115,13 +115,17 @@ export function GeneralPane() {
   );
 }
 
+function editLinkRules(edit: (rules: LinkRule[]) => LinkRule[]) {
+  const s = useBrowser.getState();
+  s.updateSettings({ linkRules: edit(s.settings.linkRules) });
+}
+
 function LinkRulesSection() {
   const rules = useBrowser((s) => s.settings.linkRules);
   const [added, setAdded] = useState<string | null>(null);
   const add = () => {
-    const s = useBrowser.getState();
-    const rule = { id: newId("linkRule"), pattern: "", profileId: lastActiveProfile(s) };
-    s.updateSettings({ linkRules: [...s.settings.linkRules, rule] });
+    const rule = { id: newId("linkRule"), pattern: "", profileId: lastActiveProfile(useBrowser.getState()) };
+    editLinkRules((all) => [...all, rule]);
     setAdded(rule.id);
   };
   return (
@@ -129,7 +133,8 @@ function LinkRulesSection() {
       <SectionHeader
         anchor="general.linkRules"
         description="A link from another app to a site in this list opens in that site's profile. The first match wins."
-        action={<Button title="Add Rule" icon="plus" onPress={add} />} />
+        action={<Button title="Add Rule" icon="plus" onPress={add} />}
+      />
       {rules.length > 0 && <Group>{rules.map((rule) => <LinkRuleRow key={rule.id} rule={rule} autoFocus={rule.id === added} />)}</Group>}
     </>
   );
@@ -138,14 +143,8 @@ function LinkRulesSection() {
 function LinkRuleRow({ rule, autoFocus }: { rule: LinkRule; autoFocus: boolean }) {
   const profiles = useProfiles();
   const [pattern, setPattern] = useState(rule.pattern);
-  const change = (patch: Partial<LinkRule>) => {
-    const s = useBrowser.getState();
-    s.updateSettings({ linkRules: s.settings.linkRules.map((r) => (r.id === rule.id ? { ...r, ...patch } : r)) });
-  };
-  const remove = () => {
-    const s = useBrowser.getState();
-    s.updateSettings({ linkRules: s.settings.linkRules.filter((r) => r.id !== rule.id) });
-  };
+  const change = (patch: Partial<LinkRule>) => editLinkRules((all) => all.map((r) => (r.id === rule.id ? { ...r, ...patch } : r)));
+  const remove = () => editLinkRules((all) => all.filter((r) => r.id !== rule.id));
   const commit = () => {
     if (pattern.trim() !== rule.pattern) change({ pattern: pattern.trim() });
   };
