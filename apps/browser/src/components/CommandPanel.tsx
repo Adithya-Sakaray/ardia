@@ -83,7 +83,7 @@ export function CommandPanel({ windowWidth }: { windowWidth: number }) {
       : shown
         ? anchor.left
         : WINDOW_MARGIN;
-    const from = shown ? { left, top: anchor.top, width: anchor.width, height: anchor.sidebar.height } : null;
+    const from = shown ? { left: anchor.left, top: anchor.top, width: anchor.width, height: anchor.sidebar.height } : null;
     return (
       <Grow from={from} frame={{ left, top: anchor.top, width }} openHeight={anchor.sidebar.height} radius={DROPDOWN_RADIUS} surface={surface(DROPDOWN_RADIUS)}>
         <OutsidePressArea onOutsidePress={onCancel}>
