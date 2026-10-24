@@ -54,6 +54,7 @@ jobs:
         run: |
           system_profiler SPDisplaysDataType | grep -i resolution || true
           sed -i '' 's/  await sleep(1500);/  await sleep(10000);/' apps/browser/scripts/tab-drag-test.mjs
+          python3 .github/instrument.py
           node apps/browser/scripts/tab-drag-test.mjs apps/browser/build/Build/Products/Debug/Ardia.app
       - name: Logs
         if: always()
