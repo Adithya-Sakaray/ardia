@@ -16,8 +16,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Regenerate sidebar.right
-        run: node apps/demo/scripts/icons/regenerate.mjs --only sidebar.right --sheet
+      - name: Fit sidebar.right
+        run: node .github/fit-one.mjs sidebar.right
       - run: git diff --stat && git diff > icons.diff
       - uses: actions/upload-artifact@v4
         if: always()
@@ -75,7 +75,10 @@ jobs:
       - name: Tab drag test
         env:
           VERBOSE: "1"
-        run: node apps/browser/scripts/tab-drag-test.mjs apps/browser/build/Build/Products/Debug/Ardia.app
+        run: |
+          system_profiler SPDisplaysDataType | grep -i resolution || true
+          sed -i '' 's/  await sleep(1500);/  await sleep(10000);/' apps/browser/scripts/tab-drag-test.mjs
+          node apps/browser/scripts/tab-drag-test.mjs apps/browser/build/Build/Products/Debug/Ardia.app
       - name: Logs
         if: always()
         run: mkdir -p logs && cp "$TMPDIR"/ac-tab-drag-*/tab-drag-test.log logs/ 2>/dev/null; cp metro.log logs/ 2>/dev/null; cp apps/browser/build.log logs/ 2>/dev/null; true
