@@ -29,6 +29,7 @@ export const SYNCED_SETTINGS = [
   "showSelectionSearch",
   "commandBarPreference",
   "tabLayout",
+  "sidebarSide",
   "hideToolbarWhileScrolling",
   "showSidebarButton",
   "showClearButton",

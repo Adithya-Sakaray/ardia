@@ -81,6 +81,11 @@ export function TabsPane() {
         {!top && toggle("balancedTopApps", "tabs.balancedTopApps")}
         {!top && liquidGlass && toggle("pinnedTabIconRing", "tabs.pinnedTabIconRing")}
         {toggle("fadeUnloadedTabs", "tabs.fadeUnloadedTabs")}
+        {!top && (
+          <Row anchor="tabs.sidebarSide">
+            <Toggle value={settings.sidebarSide === "right"} onChange={(v) => update({ sidebarSide: v ? "right" : "left" })} />
+          </Row>
+        )}
       </Group>
 
       <SectionHeader title="General" />
