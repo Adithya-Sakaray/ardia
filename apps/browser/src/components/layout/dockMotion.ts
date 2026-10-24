@@ -46,7 +46,7 @@ export function lightsCenter(offset: number, down = 0, base: readonly [number, n
 
 export const cardLeft = (dock: number, width: number, inset: number) => inset + (width - inset) * dock;
 
-type PeekSpan = { from: number; to: number };
+export type PeekSpan = { from: number; to: number };
 type DockMotion = { moving: Record<string, true>; revealing: Record<string, true>; peeks: Record<string, PeekSpan> };
 export const useDockMotion = create<DockMotion>()(() => ({ moving: {}, revealing: {}, peeks: {} }));
 
@@ -77,11 +77,7 @@ export const overPeek = (windowId: string, x: number) => {
   const span = useDockMotion.getState().peeks[windowId];
   return !!span && x >= span.from && x < span.to;
 };
-export const usePeekEdge = (windowId: string): number | undefined =>
-  useDockMotion((m) => {
-    const span = m.peeks[windowId];
-    return span && span.from === -Infinity ? span.to : undefined;
-  });
+export const usePeekSpan = (windowId: string): PeekSpan | undefined => useDockMotion((m) => m.peeks[windowId]);
 export const devPeeks: Record<string, { show(): void; hide(): void }> = {};
 
 export const HEADER_TOOLS = { toggleX: 70.75 + 27, pitch: 35, edge: 7, lightsRight: 70.75 + 7 } as const;

@@ -156,6 +156,8 @@ function DownloadsPanel({ windowId, closing, onClosed }: { windowId: string; clo
   const addressBar = useAddressBarInSidebar();
   const side = useSidebarSide();
   const rightSide = top || side === "right";
+  const sidebarWidth = useSidebarWidth(windowId);
+  const besideFooter = addressBar && side === "right" ? sidebarWidth - 10 - WIDTH : 0;
   const setOpen = (value: boolean) => useBrowser.getState().setDownloadsOpen(windowId, value);
   const appear = useRef(new Animated.Value(0)).current;
   const closed = useRef(onClosed);
@@ -174,9 +176,9 @@ function DownloadsPanel({ windowId, closing, onClosed }: { windowId: string; clo
         style={{
           position: "absolute",
           ...(addressBar ? { bottom: PROFILE_DOTS_HEIGHT + 2 } : { top: 44 }),
-          ...(top ? { right: 8 } : rightSide ? { right: 10 } : { left: 10 }),
+          ...(top ? { right: 8 } : besideFooter > 10 ? { right: besideFooter } : rightSide ? { right: 10 } : { left: 10 }),
           opacity: appear,
-          transformOrigin: `${addressBar ? "bottom" : "top"} ${rightSide ? "right" : "left"}`,
+          transformOrigin: `${addressBar ? "bottom" : "top"} ${rightSide && besideFooter <= 10 ? "right" : "left"}`,
           transform: [
             { scale: appear.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }) },
             { translateY: appear.interpolate({ inputRange: [0, 1], outputRange: addressBar ? [4, 0] : [-4, 0] }) },

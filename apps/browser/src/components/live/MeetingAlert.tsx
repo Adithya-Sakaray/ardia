@@ -10,6 +10,7 @@ import { viewTabIds } from "../../store/model";
 import { IconButton } from "../primitives";
 import { useSidebarSide } from "../layout/windowLayout";
 import { measureRow, type Anchor } from "../sidebar/state";
+import { useSidebarWidth } from "../sidebar/tokens";
 import { OverlappingAvatars } from "./CalendarPreview";
 import { useLiveColors } from "./colors";
 import { SmallButton } from "./LiveItemCard";
@@ -30,14 +31,16 @@ function AlertCard({ event, windowId, windowWidth }: { event: CalendarEvent; win
   const calendarTab = useBrowser((s) => viewTabIds(s, windowId).find((id) => s.tabs[id]?.pinned && isCalendarUrl(s.tabs[id]!.pinnedUrl ?? s.tabs[id]!.url)));
   const sidebarShown = useBrowser((s) => !!s.windows[windowId]?.sidebarOpen);
   const calendarName = useCalendar((s) => s.calendars.find((c) => c.id === event.calendarId)?.title);
-  const [anchor, setAnchor] = useState<Anchor | null>(null);
   const right = useSidebarSide() === "right";
+  const sidebarWidth = useSidebarWidth(windowId);
+  const [measured, setMeasured] = useState<{ anchor: Anchor; right: boolean } | null>(null);
+  const anchor = measured && measured.right === right ? measured.anchor : null;
   const appear = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     let cancelled = false;
-    setAnchor(null);
-    if (calendarTab && sidebarShown) void measureRow(windowId, calendarTab).then((a) => !cancelled && setAnchor(a));
+    if (calendarTab && sidebarShown) void measureRow(windowId, calendarTab).then((a) => !cancelled && setMeasured(a && { anchor: a, right }));
+    else setMeasured(null);
     return () => {
       cancelled = true;
     };
@@ -51,7 +54,10 @@ function AlertCard({ event, windowId, windowWidth }: { event: CalendarEvent; win
   const running = event.start <= now;
   const people = event.attendees.filter((a) => !a.me);
   const who = attendeesLabel(event);
-  const position = anchor ? { left: right ? anchor.x - 8 - WIDTH : anchor.x + anchor.width + 8, top: Math.max(8, anchor.y - 4) } : { left: Math.max(8, windowWidth - WIDTH - 14), top: 52 };
+  const fallbackRight = right && sidebarShown ? sidebarWidth : 0;
+  const position = anchor
+    ? { left: right ? anchor.x - 8 - WIDTH : anchor.x + anchor.width + 8, top: Math.max(8, anchor.y - 4) }
+    : { left: Math.max(8, windowWidth - fallbackRight - WIDTH - 14), top: 52 };
 
   return (
     <Animated.View

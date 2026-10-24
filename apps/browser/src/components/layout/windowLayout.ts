@@ -14,7 +14,7 @@ export type SidebarSide = "left" | "right";
 
 export function sidebarSideOf(s: BrowserState, windowId: string): SidebarSide {
   const w = s.windows[windowId];
-  return w && (w.tabLayout ?? s.settings.tabLayout) === "sidebar" && s.settings.sidebarSide === "right" ? "right" : "left";
+  return w && w.kind !== "small" && (w.tabLayout ?? s.settings.tabLayout) === "sidebar" && s.settings.sidebarSide === "right" ? "right" : "left";
 }
 
 export function useSidebarSide(): SidebarSide {
