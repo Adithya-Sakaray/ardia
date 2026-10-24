@@ -305,6 +305,7 @@ const BODIES: readonly string[] = [
   "<path d=\"M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M15.59,7L12,10.59L8.41,7L7,8.41L10.59,12L7,15.59L8.41,17L12,13.41L15.59,17L17,15.59L13.41,12L17,8.41L15.59,7Z\" />",
   "<rect x=\"6.14\" y=\"6.14\" width=\"19.73\" height=\"19.73\" rx=\"2.38\"/><path d=\"M12.01 12.01L19.99 19.99\"/><path d=\"M19.99 12.01L12.01 19.99\"/>",
   "<path d=\"M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z\" />",
+  "<rect x=\"3.15\" y=\"6.23\" width=\"25.7\" height=\"19.55\" rx=\"3.35\"/><path d=\"M12.15 6.23L12.15 25.78\"/><path d=\"M6.29 10.71L9.01 10.71\" stroke-width=\"1.23\"/><path d=\"M6.29 13.77L9.01 13.77\" stroke-width=\"1.23\"/><path d=\"M6.29 16.83L9.01 16.83\" stroke-width=\"1.23\"/>",
 ];
 
 const ENCODED: Record<string, readonly EncodedLayer[]> = {
@@ -534,6 +535,7 @@ const ENCODED: Record<string, readonly EncodedLayer[]> = {
   "shield.lefthalf.filled": [[245,24,1,1,0,[[1.1012,1.015,0.0204,-0.0145,0,0,1],[1.1087,1,-0.0096,-0.0249,0,0,1],[1.1106,1.01,-0.0096,-0.0295,0.0127,0,1],[1.105,1.0075,-0.0068,-0.0324,0.0173,0,1],[1.1088,1.01,-0.0021,0.0014,0.024,0,1]]]],
   "shippingbox": [[246,24,0,1,0,[[1.1967,1.0225,-0.0122,-0.0108,0.0597,0,1],[1.191,1.0175,-0.0075,0.0164,0.0778,0,1],[1.191,1.0175,-0.0037,0.0127,0.0913,0,1],[1.1835,1.0175,0.0019,0.0089,0.1018,0,1],[1.1817,1.0175,0.0047,0.0052,0.1153,0,1]]]],
   "sidebar.left": [[247,32,0,1,0,[[1.3408,1,-0.0103,0.0009,0.0575,0,1],[1.3333,1,0,-0.0075,0.077,0,1],[1.3221,1,0.0075,-0.0131,0.0973,0,1],[1.309,0.995,0.0075,-0.0188,0.1123,0,1],[1.2958,0.995,0.0094,0.0131,0.128,0,1]]]],
+  "sidebar.right": [[301,32,0,1,0,[[1.3427,1.0025,0,-0.0188,0.0665,0,-1],[1.3333,1,0,0.0131,0.0823,0,-1],[1.3296,1,-0.0028,0.0122,0.0898,0,-1],[1.3071,0.9975,0,0.0038,0.119,0,-1],[1.3052,0.9875,0,-0.0009,0.128,0,-1]]]],
   "slider.horizontal.3": [[248,32,0,1,0,[[1.3315,0.9725,-0.0103,0,0.0522,0,1],[1.3333,0.9725,-0.0075,-0.0075,0.0672,0,1],[1.3708,0.9725,0.0047,0.015,0.0808,0,1],[1.4065,0.9925,0.0131,0.0066,0.0793,0,1],[1.3933,0.97,-0.0112,-0.0066,0.104,0,1]]]],
   "snowflake": [[249,24,0,1,0,[[1.0567,0.98,0.007,-0.0061,0.0538,0,1],[1.068,0.98,0.0145,-0.0117,0.068,0,1],[1.0792,0.9775,-0.0164,0.0183,0.0763,0,1],[1.0848,0.98,-0.0117,0.0145,0.083,0,1],[1.0961,0.98,-0.0023,0.007,0.0905,0,1]]]],
   "sparkles": [[250,24,0,1,0,[[0.8892,0.9725,-0.0401,0.0647,0.0935,0,1],[0.9192,0.9975,-0.0391,0.06,0.101,0,1],[0.9492,1.0575,-0.0391,0.0563,0.107,0,1],[0.9304,0.9575,-0.0569,0.0431,0.116,0,1],[0.9567,1.0075,-0.0579,0.0412,0.1235,0,1]]]],
@@ -837,6 +839,7 @@ const NUDGES: Record<string, string> = {
   "shield.lefthalf.filled": "eaaadeaccaffabefdfgcbgfc9dghah9ebeaffaaadebcdbgfbbffeg9cdggcad9hchaedecffaaaeebcdb9fcbffefacdg9cbdahdhbeeedfffbfebc9ef9bdfgbfbbfebafcfbaeadefeed",
   "shippingbox": "ccgcc7adcbg6cahegdc9gcc8g7gac9ccgbgaccgcc7adcbgfcagdhdc9gcc8g7gad9cchbgacc8cc8adcb8eca7d7db98cc8778ac9cc8b8acc8cc7adcb8fca8d8dc88cc8878ac9cc8b8a",
   "sidebar.left": "9cecb99gbcf9ce99abefbcfgc9efbfccaebe9cdcbh9fbdf9be8a8befacfgbhdeafbc8cad9cecah8fbdfhce9a9bdfacfgchdebgcc9cae99e9ad8cbageca9e9eebb7fbdbe7c8cc9cbd",
+  "sidebar.right": "9ddbb7cdfac8gbd89de9bdfa9babbbccecf49eebbfddfbc88cc8acd8bdg999a9bacbebgc9debafddfacf8cd8ace8bdg99aaabbdbecfc9eeaafdcfbcf8bdg9ce8bdg999aabadbecfc",
   "slider.horizontal.3": "cefecb9bcgfebaffffccfhbefffdbebcfcffbc7cb997bd7abe7a7bb87cb87977b7bc6666bc8cb99fbd8abf7b7bb87ba8797eb8ac6e6eecace9cffdbafebbbbgfccggd9deafacfcfe",
   "snowflake": "b9e9ed8b99de8abe7e6aaedacb7f5fcc7c6cdf9fhab8degacegababdf9adidd9d8ccfcfbef9e9ab8degacegac9bdf9bdadd8d8ccgbfbdf9f9ab8cegacefababdf9adadd8c8ccbbeb",
   "sparkles": "cdgdcgeegckfjbfejegakdkhkgjbnbnejdjcddhdcgfegcdflbhelehaldlhlglchboemdmdeeidehgfidfgfcjgnfkjofojoioemlmgogoffdjdfhhfjcgggckghgljhfojoiolologogon",

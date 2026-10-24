@@ -27,7 +27,8 @@ export function SidebarHeaderTools({ width }: { width: number }) {
   const tab = useToolbarTab(useActiveTabId());
   const palette = toolbarPalette(useTheme(), null);
   const toggle = useBrowser((s) => s.settings.showSidebarButton !== false);
-  const toggleX = useSidebarSide() === "right" ? EDGE + PLATE / 2 : TOGGLE_X;
+  const right = useSidebarSide() === "right";
+  const toggleX = right ? EDGE + PLATE / 2 : TOGGLE_X;
   const { buttons, step } = navButtonsFitting(width, BUTTON, toggle, toggleX);
   const shown = tab ? buttons : [];
   const last = width - EDGE - BUTTON / 2;
@@ -43,7 +44,7 @@ export function SidebarHeaderTools({ width }: { width: number }) {
         <ToolbarButton
           {...place(at[0]!)}
           palette={palette}
-          icon="sidebar.left"
+          icon={right ? "sidebar.right" : "sidebar.left"}
           size={GLYPH}
           onPress={() => useBrowser.getState().toggleSidebar(windowId)}
           tooltip="Auto-Hide Tabs (⌘S)"

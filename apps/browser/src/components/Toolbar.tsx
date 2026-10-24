@@ -18,7 +18,7 @@ import { closeHistoryMenu, goBack, goForward, historyItems, openHistoryMenu, use
 import { openModeFor, openUrl } from "./bookmarks/actions";
 import { closePane, openSplitPane, showSplitMenu } from "./layout/splitActions";
 import { toolbarPalette, useEasedColor, type ToolbarPalette } from "./layout/toolbarColors";
-import { setToolbarExtensionsWidth, SIDEBAR_FIELD } from "./layout/windowLayout";
+import { setToolbarExtensionsWidth, sidebarSideOf, SIDEBAR_FIELD } from "./layout/windowLayout";
 import { showUrlBarMenu } from "./omnibox/paste";
 import { useHover } from "./primitives";
 import { ToolbarExtensions, useToolbarExtensionsWidth } from "./extensions/ToolbarExtensions";
@@ -64,6 +64,7 @@ export function Toolbar({
   const palette = toolbarPalette(theme, website);
   const band = useEasedColor(bare ? null : palette.background);
   const history = useHistoryAvailability(tabId);
+  const sidebarRight = useBrowser((s) => sidebarSideOf(s, windowId) === "right");
   const extensionsWidth = useToolbarExtensionsWidth(windowId);
   useEffect(() => setToolbarExtensionsWidth(windowId, extensionsWidth), [windowId, extensionsWidth]);
   const dim = useRef(new Animated.Value(focused ? 1 : 0.5)).current;
@@ -95,7 +96,7 @@ export function Toolbar({
           <ToolbarButton
             style={at.sidebarButton}
             palette={palette}
-            icon="sidebar.left"
+            icon={sidebarRight ? "sidebar.right" : "sidebar.left"}
             size={GLYPH}
             onPress={() => useBrowser.getState().toggleSidebar(windowId)}
             tooltip="Auto-Hide Tabs (⌘S)"
