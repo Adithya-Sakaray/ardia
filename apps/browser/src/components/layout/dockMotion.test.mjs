@@ -219,6 +219,7 @@ test("the peek panel covers the page up to its right edge, only while it's out",
 
 test("a right-hand peek panel covers the page from its left edge to the window's right", () => {
   dm.setPeekShown("w1", true, 1200 - 5 - 240, Infinity);
+  assert.deepEqual(dm.useDockMotion.getState().peeks.w1, { from: 955, to: Infinity }, "its span is what the page's panels move clear of");
   assert.equal(dm.overPeek("w1", 954), false);
   assert.equal(dm.overPeek("w1", 955), true);
   assert.equal(dm.overPeek("w1", 1199), true);
@@ -276,6 +277,7 @@ test("the sidebar goes right only in the sidebar layout, and a window opening th
   S().updateSettings({ sidebarSide: "right" });
   assert.equal(sidebarSideOf(S(), w), "right");
   assert.deepEqual(openingLightsCenter(S(), w), dm.lightsBarCenter(0));
+  assert.equal(sidebarSideOf({ ...S(), windows: { ...S().windows, [w]: { ...S().windows[w], kind: "small" } } }, w), "left", "Little Ardia has no sidebar");
   S().toggleTabLayout(w);
   assert.equal(sidebarSideOf(S(), w), "left", "tabs across the top have no side");
   assert.deepEqual(openingLightsCenter(S(), w), [...dm.TOP_STRIP_LIGHTS_CENTER]);
