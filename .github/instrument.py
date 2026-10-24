@@ -11,4 +11,7 @@ probe = '''  {
   }
 '''
 s = s.replace(anchor, anchor + probe, 1)
+old = '{ id: "w1", tabIds: ["p1", "p2", "t1", "t2", "t3", "t4"], activeTabIds: { default: "t1" }, frame: [80, 80, 1280, 800], createdAt: 1 }'
+assert old in s
+s = s.replace(old, old.replace("[80, 80, 1280, 800]", "[120, 80, 780, 600]"), 1)
 open(p, "w").write(s)
