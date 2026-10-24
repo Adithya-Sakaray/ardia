@@ -16,6 +16,7 @@ const email = `mailto:?subject=${encodeURIComponent("Ardia, for my Mac")}&body=$
     </svg>
     Send to my Mac
   </a>
+  <p class="send-note" data-send-note hidden>Not sent yet. Copy the link or email it to yourself.</p>
   <div class="send-more">
     <button type="button" class="send-link" data-send="share" hidden>Share</button>
     <button type="button" class="send-link" data-send="copy"><span data-copy-label aria-live="polite">Copy link</span></button>
@@ -58,6 +59,22 @@ const email = `mailto:?subject=${encodeURIComponent("Ardia, for my Mac")}&body=$
   }
   .send-link[hidden] {
     display: none;
+  }
+  .send-note {
+    margin: 10px 0 0;
+    text-align: center;
+    font-size: var(--t-small);
+    color: var(--ink);
+  }
+  .send-note[hidden] {
+    display: none;
+  }
+  .send[data-fallback] .send-more .send-link {
+    font-weight: 600;
+    text-decoration-color: currentColor;
+  }
+  .send[data-fallback] .send-more {
+    animation: flash 900ms var(--ease-out);
   }
   .send[data-flash] .send-main {
     animation: flash 900ms var(--ease-out);

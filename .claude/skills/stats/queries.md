@@ -73,7 +73,7 @@ WHERE SITE AND event = '$dead_click' AND timestamp > now() - INTERVAL 24 HOUR GR
 ## Phones: Send to my Mac
 
 ```sql
--- Panel funnel: taps, then how the link got out (outcome: shared|copied|blocked|failed; fallback: copied|selected|email)
+-- Panel funnel: taps, then how the link got out (outcome: shared|copied|blocked|failed; fallback: shown after a closed share sheet, then via = 'fallback' on the copy or email that follows)
 SELECT event, properties['outcome'] AS outcome, properties['action'] AS action, uniqExact(distinct_id)
 FROM telemetry.events WHERE SITE AND event IN ('send_to_mac_clicked', 'send_to_mac_fallback')
   AND timestamp > now() - INTERVAL 24 HOUR GROUP BY event, outcome, action ORDER BY event, 4 DESC;

@@ -32,8 +32,17 @@ function wire(panel: HTMLElement) {
   const share = panel.querySelector<HTMLButtonElement>('[data-send="share"]');
   const copyBtn = panel.querySelector<HTMLButtonElement>('[data-send="copy"]');
   const copyLabel = copyBtn?.querySelector<HTMLElement>("[data-copy-label]");
+  const note = panel.querySelector<HTMLElement>("[data-send-note]");
+  const fallbackVia = () => (panel.hasAttribute("data-fallback") ? "fallback" : undefined);
 
-  email?.addEventListener("click", () => report(location, "email"));
+  const offerFallback = () => {
+    if (!note || panel.hasAttribute("data-fallback")) return;
+    note.hidden = false;
+    panel.setAttribute("data-fallback", "");
+    track("send_to_mac_fallback", { location, action: "shown", ...(inapp ? { inapp } : {}) });
+  };
+
+  email?.addEventListener("click", () => report(location, "email", undefined, fallbackVia()));
 
   const canShare = typeof navigator.share === "function" && (!navigator.canShare || navigator.canShare(DATA));
   const openSheet = async (via: string) => {
@@ -42,6 +51,7 @@ function wire(panel: HTMLElement) {
       report(location, "share", "shared", via);
     } catch (e) {
       report(location, "share", e instanceof DOMException && e.name === "AbortError" ? "cancelled" : "error", via);
+      offerFallback();
     }
   };
   main?.addEventListener("click", (e) => {
@@ -57,7 +67,7 @@ function wire(panel: HTMLElement) {
   let timer = 0;
   copyBtn?.addEventListener("click", async () => {
     const ok = await copy();
-    report(location, "copy", ok ? "copied" : "blocked");
+    report(location, "copy", ok ? "copied" : "blocked", fallbackVia());
     if (!copyLabel) return;
     copyLabel.textContent = ok ? "Link copied" : "Blocked here: email it";
     clearTimeout(timer);
