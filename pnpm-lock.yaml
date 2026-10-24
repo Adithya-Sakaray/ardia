@@ -7,7 +7,7 @@ settings:
 patchedDependencies:
   expo-constants@18.0.14: 155fdfd0fbdc2bfd58e850ef9315d748086924312cd6ed1c4dbf252361636089
   expo-modules-core@3.0.30: 337a95f8c8d761424dcab431b793da289b11d26d5748341e27ea6b66b3430719
-  react-native-macos@0.81.9: ed05251a8e51fa13fca04bc1e9270b8c093e4e2b8e51b6e803368414f8128e7b
+  react-native-macos@0.81.9: 437ed2ba7d73e1c97e392687fa5cc71a20d1133614131a3155cf1f3d5dcee3cb
 
 importers:
 
