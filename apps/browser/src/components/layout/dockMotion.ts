@@ -28,6 +28,13 @@ export const LIGHTS_CENTER: readonly [number, number] = [25, 27];
 export const ARC_LIGHTS_CENTER: readonly [number, number] = [25, 24];
 export const TOP_STRIP_LIGHTS_CENTER: readonly [number, number] = [20.75, 20.75];
 
+export const LIGHTS_BAR = { height: 34, lights: [18, 17] as const, ms: 150, hideDelayMs: 120 } as const;
+
+export function lightsBarCenter(shown: number): [number, number] {
+  const [x, y] = LIGHTS_BAR.lights;
+  return [x, Math.round((y - LIGHTS_BAR.height * (1 - shown)) * 2) / 2];
+}
+
 export const PEEK_ORIGIN: readonly [number, number] = [5, 5];
 export const PEEK_BOTTOM = 5;
 export const PEEK_RADIUS = 12;
@@ -39,24 +46,32 @@ export function lightsCenter(offset: number, down = 0, base: readonly [number, n
 
 export const cardLeft = (dock: number, width: number, inset: number) => inset + (width - inset) * dock;
 
-type DockMotion = { moving: Record<string, true> };
-export const useDockMotion = create<DockMotion>()(() => ({ moving: {} }));
+type DockMotion = { moving: Record<string, true>; revealing: Record<string, true> };
+export const useDockMotion = create<DockMotion>()(() => ({ moving: {}, revealing: {} }));
 
-export const dockMoving = (windowId: string) => !!useDockMotion.getState().moving[windowId];
+export const dockMoving = (windowId: string) => {
+  const m = useDockMotion.getState();
+  return !!m.moving[windowId] || !!m.revealing[windowId];
+};
 
-export function setDockMoving(windowId: string, moving: boolean) {
-  const current = useDockMotion.getState().moving;
-  if (!!current[windowId] === moving) return;
+function flag(key: keyof DockMotion, windowId: string, on: boolean) {
+  const current = useDockMotion.getState()[key];
+  if (!!current[windowId] === on) return;
   const { [windowId]: _, ...rest } = current;
-  useDockMotion.setState({
-    moving: moving ? { ...current, [windowId]: true } : rest,
-  });
+  useDockMotion.setState({ [key]: on ? { ...current, [windowId]: true } : rest });
 }
 
-const peeking = new Map<string, number>();
-export const setPeekShown = (windowId: string, shown: boolean, rightEdge = 0) => void (shown ? peeking.set(windowId, rightEdge) : peeking.delete(windowId));
+export const setDockMoving = (windowId: string, moving: boolean) => flag("moving", windowId, moving);
+export const setLightsBarMoving = (windowId: string, moving: boolean) => flag("revealing", windowId, moving);
+
+const peeking = new Map<string, { from: number; to: number }>();
+export const setPeekShown = (windowId: string, shown: boolean, from = -Infinity, to = 0) =>
+  void (shown ? peeking.set(windowId, { from, to }) : peeking.delete(windowId));
 export const peekShown = (windowId: string) => peeking.has(windowId);
-export const overPeek = (windowId: string, x: number) => x < (peeking.get(windowId) ?? -Infinity);
+export const overPeek = (windowId: string, x: number) => {
+  const span = peeking.get(windowId);
+  return !!span && x >= span.from && x < span.to;
+};
 export const devPeeks: Record<string, { show(): void; hide(): void }> = {};
 
 export const HEADER_TOOLS = { toggleX: 70.75 + 27, pitch: 35, edge: 7, lightsRight: 70.75 + 7 } as const;
@@ -65,8 +80,8 @@ export const HEADER_MIN_GAP = 2;
 
 export type HeaderButton = "back" | "forward" | "reload";
 
-export function navButtonsFitting(width: number, button = 30, toggle = true): { buttons: HeaderButton[]; step: number } {
-  const { toggleX, pitch, edge } = HEADER_TOOLS;
+export function navButtonsFitting(width: number, button = 30, toggle = true, toggleX: number = HEADER_TOOLS.toggleX): { buttons: HeaderButton[]; step: number } {
+  const { pitch, edge } = HEADER_TOOLS;
   const span = width - edge - button / 2 - (toggle ? toggleX : toggleX - pitch);
   const count = Math.max(0, Math.min(3, Math.floor(span / (button + HEADER_MIN_GAP))));
   const buttons: HeaderButton[] = count === 3 ? ["back", "forward", "reload"] : count === 2 ? ["back", "forward"] : count === 1 ? ["back"] : [];
