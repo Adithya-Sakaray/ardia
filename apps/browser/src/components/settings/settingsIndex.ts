@@ -114,6 +114,11 @@ const ROWS: Record<SettingsPane, Section[]> = {
           description: "As in Arc: up to four tiles across in balanced rows, and a wider sidebar makes them larger. Off, as in Dia, each row fills with as many tiles as fit.",
           keywords: ["pinned tiles", "favorites", "grid", "columns", "rows", "arc"],
         },
+        sidebarSide: {
+          title: "Sidebar on the right",
+          description: "The traffic lights hide with it; point at the top edge of the window to bring them back.",
+          keywords: ["right sidebar", "left sidebar", "sidebar position", "move sidebar", "side"],
+        },
       },
     },
     {
