@@ -1,0 +1,92 @@
+name: Preview DMG
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: preview-dmg-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      ARDIACORE_PREBUILT_REPO: mantrakp04/ardia
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Engine tree
+        id: engine
+        run: echo "tree=$(git rev-parse HEAD:engine)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: apps/browser/build-ardiacore/prebuilt
+          key: ardiacore-prebuilt-${{ steps.engine.outputs.tree }}
+
+      - uses: actions/cache@v4
+        with:
+          path: packages/ardiacore/vendor/ubo
+          key: ubo-${{ hashFiles('packages/ardiacore/scripts/ubo.sh') }}
+
+      - uses: actions/cache@v4
+        with:
+          path: apps/browser/macos/Pods
+          key: pods-${{ hashFiles('apps/browser/macos/Podfile.lock', 'pnpm-lock.yaml', 'patches/**') }}
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Pods
+        run: pnpm pods
+
+      - name: Prebuilt engine
+        run: packages/ardiacore/scripts/fetch-engine.sh
+
+      - name: Build
+        working-directory: apps/browser
+        run: |
+          xcodebuild -workspace macos/Ardia.xcworkspace -scheme Ardia-macOS -configuration Release \
+            -destination 'generic/platform=macOS' ARCHS=arm64 ONLY_ACTIVE_ARCH=NO \
+            -xcconfig macos/AdHoc.xcconfig -derivedDataPath build build > build.log 2>&1 \
+            || { grep -E "error:|BUILD FAILED" -A3 build.log | tail -80; exit 1; }
+          grep -E "\*\* BUILD" build.log
+
+      - name: DMG
+        id: dmg
+        run: echo "path=$(scripts/preview-dmg.sh apps/browser/build/Build/Products/Release/Ardia.app dist)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ardia-preview-${{ github.run_number }}
+          path: ${{ steps.dmg.outputs.path }}
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-log-${{ github.run_number }}
+          path: apps/browser/build.log
+          retention-days: 7
+
+      - name: Prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="preview-${{ github.run_number }}"
+          gh release create "$tag" "${{ steps.dmg.outputs.path }}" --prerelease --target "$GITHUB_SHA" \
+            --title "Ardia Preview #${{ github.run_number }} ($(git rev-parse --short HEAD))" \
+            --notes "Ad-hoc signed preview of $(git rev-parse --short HEAD), Apple Silicon, macOS 14 or later. It installs as Ardia Preview, beside Ardia, with its own data and no auto-update. macOS blocks it on first open: run \`xattr -dr com.apple.quarantine \"/Applications/Ardia Preview.app\"\` after copying it to Applications, or use System Settings › Privacy & Security › Open Anyway."
