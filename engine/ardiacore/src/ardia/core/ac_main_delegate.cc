@@ -53,6 +53,7 @@
 #include "ardia/core/ac_context_menu.h"
 #include "ardia/core/ac_navigation_hold.h"
 #include "ardia/core/ac_page_channel.h"
+#include "ardia/core/ac_safe_storage.h"
 #include "ardia/core/ac_seams.h"
 #include "ardia/core/ac_strings.h"
 #include "content/public/browser/web_contents_view_delegate.h"
@@ -365,6 +366,7 @@ std::optional<int> ACMainDelegate::BasicStartupComplete() {
   g_ardia_begin_frame_bridge = EnvIs("ARDIA_BEGIN_FRAME_BRIDGE", "on");
   if (!command_line->HasSwitch(switches::kProcessType)) {
     KeepRealProfileClosed(command_line, "at startup");
+    GuardSafeStorageKey(*command_line);
     command_line->AppendSwitch(switches::kNoStartupWindow);
     command_line->AppendSwitch(switches::kNoFirstRun);
     command_line->AppendSwitch(switches::kNoDefaultBrowserCheck);
@@ -421,7 +423,6 @@ void ACMainDelegate::PreSandboxStartup() {
   if (process_type.empty()) {
     InstallAppOverrides();
     InstallChromeHooks();
-    g_ardia_user_agent_brand = "Google Chrome";
   }
   ChromeMainDelegate::PreSandboxStartup();
 }

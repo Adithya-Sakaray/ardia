@@ -1,5 +1,6 @@
 #import "ardia/core/public/ArdiaCore.h"
 
+#include <cmath>
 #include <map>
 #include <sstream>
 #include <memory>
@@ -64,6 +65,7 @@
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "components/favicon/content/content_favicon_driver.h"
 #include "components/sessions/content/session_tab_helper.h"
+#include "content/public/browser/media_session.h"
 #include "components/version_info/version_info.h"
 #include "content/public/browser/navigation_controller.h"
 #include "content/public/browser/navigation_entry.h"
@@ -72,6 +74,7 @@
 #include "url/gurl.h"
 #include "url/origin.h"
 #include "url/scheme_host_port.h"
+#include "url/url_constants.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "content/public/browser/spare_render_process_host_manager.h"
 #include "content/public/browser/web_contents.h"
@@ -84,6 +87,7 @@
 #include "ardia/core/ac_autofill_prompt.h"
 #include "ardia/core/ac_browser.h"
 #include "ardia/core/ac_content_hooks.h"
+#include "ardia/core/ac_contents_background.h"
 #include "ardia/core/ac_browser_window.h"
 #include "ardia/core/ac_extension_view.h"
 #include "ardia/core/ac_installed_bubble.h"
@@ -114,6 +118,7 @@
 #include "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h"
 #include "chrome/browser/media/webrtc/media_stream_capture_indicator.h"
 #include "chrome/browser/picture_in_picture/auto_picture_in_picture_tab_helper.h"
+#include "chrome/browser/picture_in_picture/picture_in_picture_window_manager.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/tracing_controller.h"
 #include "content/public/browser/web_contents_media_capture_id.h"
@@ -267,6 +272,7 @@ NSString* PngDataURL(const gfx::Image& image) {
 bool g_auto_picture_in_picture = true;
 
 void ApplyAutoPictureInPicture(Profile* profile) {
+  g_ardia_auto_picture_in_picture_off = !g_auto_picture_in_picture;
   HostContentSettingsMapFactory::GetForProfile(profile)->SetDefaultContentSetting(
       ContentSettingsType::AUTO_PICTURE_IN_PICTURE,
       g_auto_picture_in_picture ? CONTENT_SETTING_ALLOW : CONTENT_SETTING_BLOCK);
@@ -923,6 +929,7 @@ void WatchTracingStart(std::shared_ptr<TracingStart> start, int checks_left) {
 
 + (void)setAutoPictureInPicture:(BOOL)enabled {
   g_auto_picture_in_picture = enabled;
+  g_ardia_auto_picture_in_picture_off = !enabled;
   for (Profile* profile : g_browser_process->profile_manager()->GetLoadedProfiles()) {
     if (!profile->IsOffTheRecord()) {
       ApplyAutoPictureInPicture(profile);
@@ -1299,6 +1306,7 @@ void WatchTracingStart(std::shared_ptr<TracingStart> start, int checks_left) {
   ardiacore::TabBridge* bridge = ardiacore::TabBridge::GetOrCreate(contents);
   if (ahead) {
     bridge->set_made_ahead();
+    ardiacore::MarkAheadBlank(contents);
   }
   return bridge->tab();
 }
@@ -1745,6 +1753,9 @@ std::optional<bool> RunPageCommand(content::WebContents* contents, int command) 
   }
   content::NavigationController::LoadURLParams params(
       GURL(base::SysNSStringToUTF8(url)));
+  if (params.url.SchemeIs(url::kJavaScriptScheme)) {
+    ardiacore::EndAheadBlank(_contents);
+  }
   params.transition_type = userInitiated
                                ? ui::PageTransitionFromInt(
                                      ui::PAGE_TRANSITION_TYPED |
@@ -1788,13 +1799,10 @@ std::optional<bool> RunPageCommand(content::WebContents* contents, int command) 
 }
 
 - (void)executeJavaScript:(NSString*)code {
-  [self executeJavaScript:code userGesture:NO];
-}
-
-- (void)executeJavaScript:(NSString*)code userGesture:(BOOL)userGesture {
   if (_contents) {
+    ardiacore::EndAheadBlank(_contents);
     ardiacore::PageChannel::GetOrCreate(_contents)->Execute(
-        base::SysNSStringToUTF8(code), userGesture);
+        base::SysNSStringToUTF8(code));
   }
 }
 
@@ -1891,13 +1899,35 @@ std::optional<bool> RunPageCommand(content::WebContents* contents, int command) 
     return;
   }
   if (!color) {
-    _contents->SetPageBaseBackgroundColor(std::nullopt);
+    ardiacore::SetHostPageBaseBackgroundColor(_contents, std::nullopt);
     return;
   }
   NSColor* rgb = [color colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
-  _contents->SetPageBaseBackgroundColor(SkColorSetARGB(
-      rgb.alphaComponent * 255, rgb.redComponent * 255, rgb.greenComponent * 255,
-      rgb.blueComponent * 255));
+  ardiacore::SetHostPageBaseBackgroundColor(
+      _contents, SkColorSetARGB(rgb.alphaComponent * 255, rgb.redComponent * 255,
+                                rgb.greenComponent * 255, rgb.blueComponent * 255));
+}
+
+- (NSColor*)contentsBackgroundColor {
+  std::optional<SkColor> color =
+      _contents ? ardiacore::ContentsBackgroundColor(_contents) : std::nullopt;
+  return color ? [NSColor colorWithSRGBRed:SkColorGetR(*color) / 255.0
+                                     green:SkColorGetG(*color) / 255.0
+                                      blue:SkColorGetB(*color) / 255.0
+                                     alpha:1]
+               : nil;
+}
+
+- (void)setContentsBackgroundColor:(NSColor*)color {
+  if (!_contents) {
+    return;
+  }
+  NSColor* rgb = [color colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+  ardiacore::SetContentsBackgroundColor(
+      _contents, rgb ? std::optional<SkColor>(SkColorSetRGB(std::lround(rgb.redComponent * 255),
+                                                            std::lround(rgb.greenComponent * 255),
+                                                            std::lround(rgb.blueComponent * 255)))
+                     : std::nullopt);
 }
 
 - (NSString*)executeExtensionAction:(NSString*)extensionId {
@@ -2191,7 +2221,8 @@ std::optional<bool> RunPageCommand(content::WebContents* contents, int command) 
   }
   const GURL& url = _contents->GetLastCommittedURL();
   Profile* profile = Profile::FromBrowserContext(_contents->GetBrowserContext());
-  return helper->HasAutoPictureInPictureBeenRegistered() &&
+  return !g_ardia_auto_picture_in_picture_off &&
+         helper->HasAutoPictureInPictureBeenRegistered() &&
          (url.SchemeIs(url::kHttpsScheme) || url.SchemeIsFile()) &&
          MediaCaptureDevicesDispatcher::GetInstance()
              ->GetMediaStreamCaptureIndicator()
@@ -2270,24 +2301,20 @@ TabSharingInfoBarDelegate* TabSharingDelegateFor(content::WebContents* contents,
 
 - (void)executeJavaScript:(NSString*)code frame:(NSString*)frameId {
   if (_contents) {
+    ardiacore::EndAheadBlank(_contents);
     ardiacore::PageChannel::GetOrCreate(_contents)->ExecuteInFrame(
         base::SysNSStringToUTF8(frameId), base::SysNSStringToUTF8(code));
   }
 }
 
 - (void)evaluate:(NSString*)code completion:(void (^)(NSString*))completion {
-  [self evaluate:code userGesture:NO completion:completion];
-}
-
-- (void)evaluate:(NSString*)code
-     userGesture:(BOOL)userGesture
-      completion:(void (^)(NSString*))completion {
   if (!_contents) {
     completion(nil);
     return;
   }
+  ardiacore::EndAheadBlank(_contents);
   ardiacore::PageChannel::GetOrCreate(_contents)->Evaluate(
-      base::SysNSStringToUTF8(code), userGesture,
+      base::SysNSStringToUTF8(code),
       base::BindOnce(
           [](void (^completion)(NSString*), const std::optional<std::string>& json) {
             completion(json ? NS(*json) : nil);
@@ -2295,8 +2322,54 @@ TabSharingInfoBarDelegate* TabSharingDelegateFor(content::WebContents* contents,
           completion));
 }
 
+- (void)enterPictureInPictureForClickAt:(NSTimeInterval)clickTime
+                             completion:(void (^)(NSString* route, BOOL opened))completion {
+  if (!_contents) {
+    completion(@"none", NO);
+    return;
+  }
+  const ardiacore::PictureInPictureRoute route =
+      ardiacore::PageChannel::GetOrCreate(_contents)->EnterPictureInPictureForClick(
+          clickTime > 0 ? std::optional<base::TimeTicks>(base::TimeTicks() +
+                                                         base::Seconds(clickTime))
+                        : std::nullopt,
+          base::BindOnce(
+              [](void (^completion)(NSString*, BOOL), bool opened) {
+                completion(@"element", opened);
+              },
+              completion));
+  if (route == ardiacore::PictureInPictureRoute::kMediaSession) {
+    completion(@"session", NO);
+  } else if (route == ardiacore::PictureInPictureRoute::kNone) {
+    completion(@"none", NO);
+  }
+}
+
+- (void)exitPictureInPicture {
+  if (!_contents) {
+    return;
+  }
+  base::SingleThreadTaskRunner::GetCurrentDefault()->PostTask(
+      FROM_HERE, base::BindOnce(
+                     [](base::WeakPtr<content::WebContents> contents) {
+                       PictureInPictureWindowManager* manager =
+                           PictureInPictureWindowManager::GetInstance();
+                       if (contents && manager->GetWebContents() == contents.get()) {
+                         manager->ExitPictureInPicture();
+                       }
+                     },
+                     _contents->GetWeakPtr()));
+}
+
+- (BOOL)hasLiveFrame:(NSString*)frameId {
+  return _contents && (!frameId.length ||
+                       ardiacore::PageChannel::GetOrCreate(_contents)->HasFrame(
+                           base::SysNSStringToUTF8(frameId)));
+}
+
 - (void)callPage:(NSString*)kind json:(NSString*)json {
   if (_contents) {
+    ardiacore::EndAheadBlank(_contents);
     ardiacore::PageChannel::GetOrCreate(_contents)->CallPage(
         base::SysNSStringToUTF8(kind), base::SysNSStringToUTF8(json));
   }
@@ -2304,6 +2377,7 @@ TabSharingInfoBarDelegate* TabSharingDelegateFor(content::WebContents* contents,
 
 - (void)callFrame:(NSString*)frameId kind:(NSString*)kind json:(NSString*)json {
   if (_contents) {
+    ardiacore::EndAheadBlank(_contents);
     ardiacore::PageChannel::GetOrCreate(_contents)->CallFrame(
         base::SysNSStringToUTF8(frameId), base::SysNSStringToUTF8(kind),
         base::SysNSStringToUTF8(json));
@@ -2382,7 +2456,11 @@ TabSharingInfoBarDelegate* TabSharingDelegateFor(content::WebContents* contents,
 
 - (void)loadURL:(NSString*)url {
   if (_contents) {
-    _contents->GetController().LoadURL(GURL(base::SysNSStringToUTF8(url)),
+    GURL target(base::SysNSStringToUTF8(url));
+    if (target.SchemeIs(url::kJavaScriptScheme)) {
+      ardiacore::EndAheadBlank(_contents);
+    }
+    _contents->GetController().LoadURL(target,
                                        content::Referrer(),
                                        ui::PAGE_TRANSITION_TYPED, std::string());
   }
@@ -2436,6 +2514,31 @@ TabSharingInfoBarDelegate* TabSharingDelegateFor(content::WebContents* contents,
 - (void)stop {
   if (_contents) {
     _contents->Stop();
+  }
+}
+
+- (BOOL)temporary {
+  return _contents && ardiacore::TabBridge::GetOrCreate(_contents)->temporary();
+}
+
+- (void)setTemporary:(BOOL)temporary {
+  if (_contents) {
+    ardiacore::TabBridge::GetOrCreate(_contents)->SetTemporary(temporary);
+  }
+}
+
+- (void)deliverHeldPageMessages {
+  if (_contents) {
+    ardiacore::PageChannel::GetOrCreate(_contents)->DeliverHeld();
+  }
+}
+
+- (void)setTemporarySource:(ArdiaCoreTab*)source {
+  if (_contents) {
+    ardiacore::TabBridge::GetOrCreate(_contents)->SetTemporarySource(
+        source && source->_contents
+            ? sessions::SessionTabHelper::IdForTab(source->_contents).id()
+            : 0);
   }
 }
 

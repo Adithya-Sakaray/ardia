@@ -628,8 +628,9 @@ static void StartEarlyWindow() {
       "--enable-smooth-scrolling",
       "--disable-stack-profiler",
       std::string("--disable-features=MacAppCodeSignClone,DevToolsAcceptDebuggingConnections") +
-          (biometricsCheckPerTab ? "" : ",AutofillAiWalletPrivatePasses"),
-      std::string("--enable-features=WebContentsDiscard,ImprovedStartupBestEffortDelay:StartupDelayStopOnLoadingTimedOut/true,"
+          (biometricsCheckPerTab ? "" : ",AutofillAiWalletPrivatePasses") +
+          (freezeLeastRecentTabs ? "" : ",InfiniteTabsFreezing"),
+      std::string("--enable-features=WebContentsDiscard,BrowserInitiatedAutomaticPictureInPicture,ImprovedStartupBestEffortDelay:StartupDelayStopOnLoadingTimedOut/true,"
                   "CPUMeasurementInFreezingPolicy:freezing_visible_protection_time/0s") +
           (freezeLeastRecentTabs ? (thawFrozenTabsRarely ? ",InfiniteTabsFreezing:ardia_unconnected_unfreeze_interval/600s" : ",InfiniteTabsFreezing") : "") + (throttleMainFramesTo60Hz ? (fullRateAfterInput ? ",ThrottleMainFrameTo60Hz,UrgentMainFrameForInput" : ",ThrottleMainFrameTo60Hz:ardia_full_rate_after_input/0s,UrgentMainFrameForInput") : ""),
       "--profile-directory=Default",
