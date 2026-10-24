@@ -1,0 +1,87 @@
+name: Sidebar checks
+
+on:
+  push:
+    branches: [checks/sidebar-on-the-right]
+
+jobs:
+  icons:
+    runs-on: xcode-27
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Regenerate sidebar.right
+        run: node apps/demo/scripts/icons/regenerate.mjs --only sidebar.right --sheet
+      - run: git diff --stat && git diff > icons.diff
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: icons
+          path: |
+            icons.diff
+            apps/demo/src/shims/web/symbols/data.ts
+            /tmp/ardia-icons/*.png
+          retention-days: 7
+
+  tab-drag:
+    runs-on: xcode-27
+    timeout-minutes: 120
+    env:
+      ARDIACORE_PREBUILT_REPO: mantrakp04/ardia
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Engine tree
+        id: engine
+        run: echo "tree=$(git rev-parse HEAD:engine)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: apps/browser/build-ardiacore/prebuilt
+          key: ardiacore-prebuilt-${{ steps.engine.outputs.tree }}
+      - uses: actions/cache@v4
+        with:
+          path: packages/ardiacore/vendor/ubo
+          key: ubo-${{ hashFiles('packages/ardiacore/scripts/ubo.sh') }}
+      - uses: actions/cache@v4
+        with:
+          path: apps/browser/macos/Pods
+          key: pods-${{ hashFiles('apps/browser/macos/Podfile.lock', 'pnpm-lock.yaml', 'patches/**') }}
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm pods
+      - run: packages/ardiacore/scripts/fetch-engine.sh
+      - name: Debug build
+        working-directory: apps/browser
+        run: |
+          xcodebuild -workspace macos/Ardia.xcworkspace -scheme Ardia-macOS -configuration Debug \
+            -destination 'platform=macOS,arch=arm64' -xcconfig macos/AdHoc.xcconfig -derivedDataPath build build > build.log 2>&1 \
+            || { grep -E "error:|BUILD FAILED" -A3 build.log | tail -80; exit 1; }
+          grep -E "\*\* BUILD" build.log
+      - name: Metro
+        working-directory: apps/browser
+        run: |
+          nohup pnpm exec react-native start > ../../metro.log 2>&1 &
+          for i in $(seq 1 90); do curl -fs http://localhost:8081/status | grep -q running && exit 0; sleep 2; done
+          cat ../../metro.log; exit 1
+      - name: Tab drag test
+        env:
+          VERBOSE: "1"
+        run: node apps/browser/scripts/tab-drag-test.mjs apps/browser/build/Build/Products/Debug/Ardia.app
+      - name: Logs
+        if: always()
+        run: mkdir -p logs && cp "$TMPDIR"/ac-tab-drag-*/tab-drag-test.log logs/ 2>/dev/null; cp metro.log logs/ 2>/dev/null; cp apps/browser/build.log logs/ 2>/dev/null; true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tab-drag-logs
+          path: logs
+          retention-days: 7
