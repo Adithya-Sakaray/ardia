@@ -64,6 +64,7 @@ export function useLightsBar(windowId: string, enabled: boolean): LightsBar {
     };
   }, [windowId, enabled, shown]);
   useEffect(() => () => clearTimeout(hideTimer.current), []);
+  ((globalThis as { __acLights?: Record<string, unknown> }).__acLights ??= {})[windowId] = { show, hide };
   return { shown, open, drawn, show, hide };
 }
 
@@ -97,7 +98,7 @@ export function LightsBarCover({
     () => bar.shown.interpolate({ inputRange: [0, 1], outputRange: [inset.top + layout.cardRadius, LIGHTS_BAR.height + layout.cardRadius] }),
     [bar.shown, inset.top],
   );
-  if (!bar.drawn || !window.width) return null;
+  if (!bar.drawn || !window.width || (globalThis as { __acNoCover?: boolean }).__acNoCover) return null;
   return (
     <AnimatedClip pointerEvents="none" holeLeft={inset.left} holeRadius={layout.cardRadius} style={{ position: "absolute", left: 0, top: 0, right, height }}>
       <WindowBackdrop

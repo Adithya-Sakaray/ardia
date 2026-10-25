@@ -183,10 +183,13 @@ void InstallTrafficLightsOrigin(Class frameClass) {
   if (!class_addMethod(frameClass, sel, ours, method_getTypeEncoding(method))) method_setImplementation(method, ours);
 }
 
+BOOL gNoTrackingRefresh = NO;
+
 void RetileTrafficLights(NSWindow *window) {
   NSView *frameView = window.contentView.superview;
   const SEL sel = NSSelectorFromString(@"_updateButtonPositions");
   if ([frameView respondsToSelector:sel]) ((void (*)(id, SEL))objc_msgSend)(frameView, sel);
+  if (gNoTrackingRefresh) return;
   NSButton *close = [window standardWindowButton:NSWindowCloseButton];
   for (NSView *view = close.superview; view; view = view == frameView ? nil : view.superview) [view updateTrackingAreas];
   for (NSWindowButton kind : {NSWindowCloseButton, NSWindowMiniaturizeButton, NSWindowZoomButton}) [[window standardWindowButton:kind] updateTrackingAreas];
@@ -1778,6 +1781,94 @@ NSString *Describe(NSView *view) {
   return [chain componentsJoinedByString:@" < "];
 }
 
+NSDictionary *LayerTree(CALayer *layer, int depth) {
+  NSMutableArray *subs = [NSMutableArray array];
+  if (depth < 5) for (CALayer *sub in layer.sublayers) [subs addObject:LayerTree(sub, depth + 1)];
+  CALayer *shown = layer.presentationLayer ?: layer;
+  return @{@"class" : NSStringFromClass(layer.class), @"frame" : NSStringFromRect(layer.frame), @"shown" : NSStringFromRect(shown.frame),
+           @"bounds" : NSStringFromRect(layer.bounds), @"flipped" : @(layer.geometryFlipped), @"hidden" : @(layer.hidden),
+           @"ty" : @(layer.transform.m42), @"subTy" : @(layer.sublayerTransform.m42), @"subs" : subs};
+}
+
+NSDictionary *ViewTree(NSView *view, int depth) {
+  NSMutableArray *subs = [NSMutableArray array];
+  if (depth < 5) for (NSView *sub in view.subviews) [subs addObject:ViewTree(sub, depth + 1)];
+  return @{@"class" : NSStringFromClass(view.class), @"frame" : NSStringFromRect(view.frame), @"flipped" : @(view.isFlipped),
+           @"inWindow" : NSStringFromRect([view convertRect:view.bounds toView:nil]), @"hidden" : @(view.hidden),
+           @"layer" : view.layer ? LayerTree(view.layer, depth) : @{}, @"subs" : subs};
+}
+
+NSString *PageFrames(NSView *root) {
+  NSMutableArray *out = [NSMutableArray array];
+  NSMutableArray<NSView *> *stack = [NSMutableArray arrayWithObject:root];
+  Class webView = NSClassFromString(@"ArdiaCoreWebView");
+  while (stack.count) {
+    NSView *v = stack.lastObject;
+    [stack removeLastObject];
+    if ([v isKindOfClass:webView] && !v.isHiddenOrHasHiddenAncestor) {
+      NSMutableArray *chain = [NSMutableArray array];
+      for (NSView *a = v.superview; a && a != root && chain.count < 8; a = a.superview)
+        [chain addObject:@{@"class" : NSStringFromClass(a.class), @"frame" : NSStringFromRect(a.frame), @"flipped" : @(a.isFlipped),
+                           @"inWindow" : NSStringFromRect([a convertRect:a.bounds toView:nil])}];
+      [out addObject:@{@"chain" : chain, @"tree" : ViewTree(v, 0)}];
+      continue;
+    }
+    for (NSView *s in v.subviews) [stack addObject:s];
+  }
+  NSData *json = [NSJSONSerialization dataWithJSONObject:out options:NSJSONWritingPrettyPrinted error:nil];
+  return json ? [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding] : @"[]";
+}
+
+NSString *LightsDump(NSWindow *window) {
+  NSMutableArray *buttons = [NSMutableArray array];
+  for (NSWindowButton kind : {NSWindowCloseButton, NSWindowMiniaturizeButton, NSWindowZoomButton}) {
+    NSButton *b = [window standardWindowButton:kind];
+    if (!b) continue;
+    NSMutableArray *chain = [NSMutableArray array];
+    for (NSView *v = b.superview; v && chain.count < 4; v = v.superview)
+      [chain addObject:[NSString stringWithFormat:@"%@ hidden=%d alpha=%.2f frame=%@", NSStringFromClass(v.class), v.hidden, v.alphaValue, NSStringFromRect(v.frame)]];
+    [buttons addObject:@{@"kind" : @(kind), @"frame" : NSStringFromRect(b.frame), @"inWindow" : NSStringFromRect([b convertRect:b.bounds toView:nil]),
+                         @"hidden" : @(b.hidden), @"alpha" : @(b.alphaValue), @"tx" : @(b.layer.affineTransform.tx), @"ty" : @(b.layer.affineTransform.ty),
+                         @"layerHidden" : @(b.layer.hidden), @"layerOpacity" : @(b.layer.opacity), @"chain" : chain}];
+  }
+  NSMutableArray *order = [NSMutableArray array];
+  for (NSView *v in window.contentView.superview.subviews)
+    [order addObject:[NSString stringWithFormat:@"%@ hidden=%d frame=%@ z=%.1f", NSStringFromClass(v.class), v.hidden, NSStringFromRect(v.frame), v.layer.zPosition]];
+  NSValue *center = ACTrafficLightsCenter(window);
+  NSMutableArray *areas = [NSMutableArray array];
+  NSButton *close = [window standardWindowButton:NSWindowCloseButton];
+  NSButton *mini = [window standardWindowButton:NSWindowMiniaturizeButton];
+  NSMutableArray<NSView *> *watched = [NSMutableArray array];
+  for (NSView *v = close.superview; v; v = v == window.contentView.superview ? nil : v.superview) [watched addObject:v];
+  for (NSWindowButton kind : {NSWindowCloseButton, NSWindowMiniaturizeButton, NSWindowZoomButton}) if (NSButton *b = [window standardWindowButton:kind]) [watched addObject:b];
+  for (NSView *v in watched)
+    for (NSTrackingArea *a in v.trackingAreas)
+      [areas addObject:[NSString stringWithFormat:@"%@ rect=%@ inWindow=%@ options=%lu owner=%@", NSStringFromClass(v.class), NSStringFromRect(a.rect),
+                                                  NSStringFromRect([v convertRect:a.rect toView:nil]), (unsigned long)a.options, NSStringFromClass([a.owner class])]];
+  BOOL inGroup = NO;
+  const SEL group = NSSelectorFromString(@"_mouseInGroup:");
+  if ([close.superview respondsToSelector:group]) inGroup = ((BOOL (*)(id, SEL, id))objc_msgSend)(close.superview, group, close);
+  NSRect miniScreen = [window convertRectToScreen:[mini convertRect:mini.bounds toView:nil]];
+  const CGFloat top = NSMaxY(NSScreen.screens.firstObject.frame);
+  NSPoint mouse = window.mouseLocationOutsideOfEventStream;
+  NSMutableArray *groupSelectors = [NSMutableArray array];
+  for (Class c = close.superview.class; c && c != NSView.class; c = class_getSuperclass(c)) {
+    unsigned n = 0;
+    Method *list = class_copyMethodList(c, &n);
+    for (unsigned i = 0; i < n; i++) {
+      NSString *name = NSStringFromSelector(method_getName(list[i]));
+      if ([name rangeOfString:@"ouse" options:0].location != NSNotFound || [name rangeOfString:@"rack" options:0].location != NSNotFound || [name rangeOfString:@"roup" options:0].location != NSNotFound)
+        [groupSelectors addObject:[NSString stringWithFormat:@"%@.%@", NSStringFromClass(c), name]];
+    }
+    free(list);
+  }
+  NSDictionary *out = @{@"areas" : areas, @"inGroup" : @(inGroup), @"miniScreen" : [NSString stringWithFormat:@"%.1f,%.1f", NSMidX(miniScreen), top - NSMidY(miniScreen)],
+                        @"mouseInWindow" : NSStringFromPoint(mouse), @"groupSelectors" : groupSelectors, @"buttons" : buttons, @"frameSubviews" : order, @"center" : center ? NSStringFromPoint(center.pointValue) : @"nil",
+                        @"styleMask" : @(window.styleMask), @"titlebarTransparent" : @(window.titlebarAppearsTransparent)};
+  NSData *json = [NSJSONSerialization dataWithJSONObject:out options:NSJSONWritingPrettyPrinted error:nil];
+  return json ? [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding] : @"{}";
+}
+
 NSPoint WindowPoint(NSWindow *window, NSString *spec) {
   NSArray<NSString *> *n = [spec componentsSeparatedByString:@","];
   if (n.count < 2) return NSMakePoint(-1, -1);
@@ -1967,6 +2058,12 @@ NSDictionary *ProbeFrame(NSWindow *window, ACWindowFullScreen *state, CFTimeInte
     return json ? [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding] : @"{}";
   }
   NSView *frameView = window.contentView.superview;
+  if ([action isEqualToString:@"pageFrames"]) return PageFrames(frameView);
+  if ([action isEqualToString:@"lights"]) return LightsDump(window);
+  if ([action hasPrefix:@"trackingRefresh:"]) {
+    gNoTrackingRefresh = [action hasSuffix:@"off"];
+    return gNoTrackingRefresh ? @"off" : @"on";
+  }
   if ([action isEqualToString:@"children"]) {
     NSMutableArray *children = [NSMutableArray array];
     for (NSWindow *child in window.childWindows)
