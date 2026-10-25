@@ -479,6 +479,7 @@ function PageOverlays({
   const zoom = useTabValue(tabId, (t) => t?.zoom ?? 1);
   const sidebarRight = useBrowser((s) => addressBarInSidebar(s, windowId) && sidebarSideOf(s, windowId) === "right");
   const popoverSide = toolbar || sidebarRight ? { right: POPOVER_MARGIN } : { left: POPOVER_MARGIN };
+  const promptLeft = (panel: number) => Math.max(POPOVER_MARGIN, sidebarRight ? width - panel : Math.min(geometry.urlLeft, width - panel));
   return (
     <>
       <FindBar tabId={tabId} />
@@ -491,18 +492,18 @@ function PageOverlays({
           <CliControlPill />
         </Animated.View>
       )}
-      {!newTabShown && <PermissionPrompt tabId={tabId} left={Math.max(POPOVER_MARGIN, Math.min(geometry.urlLeft, width - 308))} top={POPOVER_MARGIN} />}
+      {!newTabShown && <PermissionPrompt tabId={tabId} left={promptLeft(308)} top={POPOVER_MARGIN} />}
       <PasswordPrompt tabId={tabId} right={POPOVER_MARGIN} top={POPOVER_MARGIN} />
       <AutofillPrompt tabId={tabId} right={POPOVER_MARGIN} top={POPOVER_MARGIN} />
-      {!newTabShown && <ExternalAppPrompt tabId={tabId} left={Math.max(POPOVER_MARGIN, Math.min(geometry.urlLeft, width - 348))} top={POPOVER_MARGIN} />}
-      {!newTabShown && <EngineOfferPrompt tabId={tabId} left={Math.max(POPOVER_MARGIN, Math.min(geometry.urlLeft, width - 348))} top={POPOVER_MARGIN} />}
+      {!newTabShown && <ExternalAppPrompt tabId={tabId} left={promptLeft(348)} top={POPOVER_MARGIN} />}
+      {!newTabShown && <EngineOfferPrompt tabId={tabId} left={promptLeft(348)} top={POPOVER_MARGIN} />}
       {popovers && <SiteControls tabId={tabId} open={popover === "siteControls"} {...popoverSide} top={POPOVER_MARGIN} />}
       {popovers && popover === "popups" && <BlockedPopupsPrompt tabId={tabId} {...popoverSide} top={POPOVER_MARGIN} />}
       {popovers && popover === "zoom" && <ZoomPopover tabId={tabId} {...popoverSide} top={POPOVER_MARGIN} />}
       <SharePicker tabId={tabId} paneWidth={width} />
-      {!newTabShown && <DeviceChooser tabId={tabId} left={Math.max(POPOVER_MARGIN, Math.min(geometry.urlLeft, width - 348))} top={POPOVER_MARGIN} />}
+      {!newTabShown && <DeviceChooser tabId={tabId} left={promptLeft(348)} top={POPOVER_MARGIN} />}
       <CastPicker tabId={tabId} paneWidth={width} />
-      <NavigationOverlays tabId={tabId} windowId={windowId} geometry={geometry} />
+      <NavigationOverlays tabId={tabId} windowId={windowId} geometry={geometry} right={sidebarRight} />
       <SelectionPopover tabId={tabId} zoom={zoom} />
     </>
   );

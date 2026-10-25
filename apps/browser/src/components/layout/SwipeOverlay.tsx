@@ -35,11 +35,11 @@ export function spring(value: Animated.Value, toValue: number, response: number,
   return Animated.spring(value, { toValue, ...springParams(response, dampingRatio), useNativeDriver: native });
 }
 
-export function NavigationOverlays({ tabId, windowId, geometry }: { tabId: string; windowId: string; geometry: ToolbarGeometry }) {
+export function NavigationOverlays({ tabId, windowId, geometry, right = false }: { tabId: string; windowId: string; geometry: ToolbarGeometry; right?: boolean }) {
   return (
     <>
       <SwipeOverlay tabId={tabId} />
-      <HistoryPopover tabId={tabId} windowId={windowId} anchors={{ back: geometry.back, forward: geometry.forward }} />
+      <HistoryPopover tabId={tabId} windowId={windowId} anchors={{ back: geometry.back, forward: geometry.forward }} right={right} />
     </>
   );
 }
