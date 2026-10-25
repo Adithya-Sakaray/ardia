@@ -1,8 +1,8 @@
 import { WindowBackdrop } from "@ardia/shaders";
-import { setTrafficLightsCenter, WindowDragRegion } from "@ardia/shell";
-import { useEffect, useRef, useState } from "react";
+import { LightsBarClip, setTrafficLightsCenter, WindowDragRegion } from "@ardia/shell";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet } from "react-native";
-import { useTheme } from "../../lib/theme";
+import { layout, useTheme } from "../../lib/theme";
 import { LIGHTS_BAR, lightsBarCenter } from "./dockMotion";
 
 const EASE = Easing.inOut(Easing.sin);
@@ -70,14 +70,27 @@ export function LightsBarZone({ bar, rest, right }: { bar: LightsBar; rest: numb
   );
 }
 
-export function LightsBarCover({ bar, right, window }: { bar: LightsBar; right: Animated.AnimatedInterpolation<number> | number; window: { width: number; height: number } }) {
+const AnimatedClip = Animated.createAnimatedComponent(LightsBarClip);
+
+export function LightsBarCover({
+  bar,
+  right,
+  window,
+  inset,
+}: {
+  bar: LightsBar;
+  right: Animated.AnimatedInterpolation<number> | number;
+  window: { width: number; height: number };
+  inset: { top: number; left: number };
+}) {
   const theme = useTheme();
+  const height = useMemo(
+    () => bar.shown.interpolate({ inputRange: [0, 1], outputRange: [inset.top + layout.cardRadius, LIGHTS_BAR.height + layout.cardRadius] }),
+    [bar.shown, inset.top],
+  );
   if (!bar.drawn || !window.width) return null;
   return (
-    <Animated.View
-      pointerEvents="none"
-      style={{ position: "absolute", left: 0, top: 0, right, height: bar.shown.interpolate({ inputRange: [0, 1], outputRange: [0, LIGHTS_BAR.height] }), overflow: "hidden" }}
-    >
+    <AnimatedClip pointerEvents="none" holeLeft={inset.left} holeRadius={layout.cardRadius} style={{ position: "absolute", left: 0, top: 0, right, height }}>
       <WindowBackdrop
         vibrancy
         {...theme.backdrop}
@@ -85,6 +98,6 @@ export function LightsBarCover({ bar, right, window }: { bar: LightsBar; right: 
         grainOpacity={theme.grain}
         style={{ position: "absolute", left: 0, top: 0, width: window.width, height: window.height }}
       />
-    </Animated.View>
+    </AnimatedClip>
   );
 }

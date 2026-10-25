@@ -368,6 +368,7 @@ export const WindowDragRegion = requireNativeViewManager<
   ViewProps & { titleBarDoubleClick?: boolean; onRegionDoubleClick?: () => void; clickable?: boolean; onRegionClick?: () => void }
 >("ArdiaShell");
 
+export const LightsBarClip = requireNativeViewManager<ViewProps & { holeLeft?: number; holeRadius?: number }>("ArdiaLightsBarClip");
 export const OutsidePressArea = requireNativeViewManager<ViewProps & { onOutsidePress?: (event: { nativeEvent: { timestamp?: number } }) => void }>("ArdiaOutsidePressArea");
 
 export type SymbolProps = ViewProps & {

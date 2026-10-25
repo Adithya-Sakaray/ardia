@@ -141,7 +141,7 @@ export function DockedLayout({
         {!fullscreen && <WindowDragRegion style={StyleSheet.absoluteFill} />}
         {children}
       </Animated.View>
-      {right && !fullscreen && <LightsBarCover bar={bar} right={edge} window={{ width: windowWidth, height }} />}
+      {right && !fullscreen && <LightsBarCover bar={bar} right={edge} window={{ width: windowWidth, height }} inset={inset} />}
       {right && !fullscreen && <LightsBarZone bar={bar} rest={inset.top} right={edge} />}
       {!topTabs && (
         <SidebarDock
