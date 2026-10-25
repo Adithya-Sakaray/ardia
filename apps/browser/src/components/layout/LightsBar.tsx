@@ -15,7 +15,15 @@ export function useLightsBar(windowId: string, enabled: boolean): LightsBar {
   const [drawn, setDrawn] = useState(false);
   const opened = useRef(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const place = useRef<((value: number) => void) | null>(null);
+  const listener = useRef<string | undefined>(undefined);
+  const follow = () => {
+    if (listener.current !== undefined) shown.removeListener(listener.current);
+    const to = place.current;
+    listener.current = to ? shown.addListener(({ value }) => to(value)) : undefined;
+  };
   const slide = (to: 0 | 1) => {
+    follow();
     opened.current = to === 1;
     setOpen(to === 1);
     if (to === 1) setDrawn(true);
@@ -34,17 +42,18 @@ export function useLightsBar(windowId: string, enabled: boolean): LightsBar {
   useEffect(() => {
     if (!enabled) return;
     let sent = "";
-    const place = (value: number) => {
+    place.current = (value: number) => {
       const center = lightsBarCenter(value);
       const key = center.join(",");
       if (key === sent) return;
       sent = key;
       void setTrafficLightsCenter(windowId, center);
     };
-    place((shown as unknown as { __getValue(): number }).__getValue());
-    const listener = shown.addListener(({ value }) => place(value));
+    place.current((shown as unknown as { __getValue(): number }).__getValue());
+    follow();
     return () => {
-      shown.removeListener(listener);
+      place.current = null;
+      follow();
       clearTimeout(hideTimer.current);
       shown.stopAnimation();
       shown.setValue(0);
