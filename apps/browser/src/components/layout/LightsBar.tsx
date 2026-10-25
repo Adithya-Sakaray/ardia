@@ -1,23 +1,26 @@
+import { WindowBackdrop } from "@ardia/shaders";
 import { setTrafficLightsCenter, WindowDragRegion } from "@ardia/shell";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet } from "react-native";
-import { LIGHTS_BAR, lightsBarCenter, setLightsBarMoving } from "./dockMotion";
+import { useTheme } from "../../lib/theme";
+import { LIGHTS_BAR, lightsBarCenter } from "./dockMotion";
 
 const EASE = Easing.inOut(Easing.sin);
 
-export type LightsBar = { shown: Animated.Value; open: boolean; show(): void; hide(): void };
+export type LightsBar = { shown: Animated.Value; open: boolean; drawn: boolean; show(): void; hide(): void };
 
 export function useLightsBar(windowId: string, enabled: boolean): LightsBar {
   const shown = useRef(new Animated.Value(0)).current;
   const [open, setOpen] = useState(false);
+  const [drawn, setDrawn] = useState(false);
   const opened = useRef(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const slide = (to: 0 | 1) => {
     opened.current = to === 1;
     setOpen(to === 1);
-    setLightsBarMoving(windowId, true);
+    if (to === 1) setDrawn(true);
     Animated.timing(shown, { toValue: to, duration: LIGHTS_BAR.ms, easing: EASE, useNativeDriver: false }).start(
-      ({ finished }) => finished && setLightsBarMoving(windowId, false),
+      ({ finished }) => finished && to === 0 && setDrawn(false),
     );
   };
   const show = () => {
@@ -47,12 +50,12 @@ export function useLightsBar(windowId: string, enabled: boolean): LightsBar {
       shown.setValue(0);
       opened.current = false;
       setOpen(false);
-      setLightsBarMoving(windowId, false);
+      setDrawn(false);
       void setTrafficLightsCenter(windowId, null);
     };
   }, [windowId, enabled, shown]);
   useEffect(() => () => clearTimeout(hideTimer.current), []);
-  return { shown, open, show, hide };
+  return { shown, open, drawn, show, hide };
 }
 
 export function LightsBarZone({ bar, rest, right }: { bar: LightsBar; rest: number; right: Animated.AnimatedInterpolation<number> | number }) {
@@ -63,6 +66,25 @@ export function LightsBarZone({ bar, rest, right }: { bar: LightsBar; rest: numb
       style={{ position: "absolute", left: 0, top: 0, right, height: bar.open ? LIGHTS_BAR.height : rest }}
     >
       <WindowDragRegion style={StyleSheet.absoluteFill} />
+    </Animated.View>
+  );
+}
+
+export function LightsBarCover({ bar, right, window }: { bar: LightsBar; right: Animated.AnimatedInterpolation<number> | number; window: { width: number; height: number } }) {
+  const theme = useTheme();
+  if (!bar.drawn || !window.width) return null;
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={{ position: "absolute", left: 0, top: 0, right, height: bar.shown.interpolate({ inputRange: [0, 1], outputRange: [0, LIGHTS_BAR.height] }), overflow: "hidden" }}
+    >
+      <WindowBackdrop
+        vibrancy
+        {...theme.backdrop}
+        colors={theme.windowTint}
+        grainOpacity={theme.grain}
+        style={{ position: "absolute", left: 0, top: 0, width: window.width, height: window.height }}
+      />
     </Animated.View>
   );
 }

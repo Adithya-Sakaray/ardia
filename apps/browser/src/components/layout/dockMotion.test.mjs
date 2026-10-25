@@ -235,15 +235,6 @@ test("the lights bar slides the traffic lights down from above the window to Zen
   assert.deepEqual(dm.lightsBarCenter(0.5), [18, 0]);
 });
 
-test("the dock and the lights bar each hold the card's measuring until both settle", () => {
-  dm.setDockMoving("w1", true);
-  dm.setLightsBarMoving("w1", true);
-  dm.setDockMoving("w1", false);
-  assert.equal(dm.dockMoving("w1"), true);
-  dm.setLightsBarMoving("w1", false);
-  assert.equal(dm.dockMoving("w1"), false);
-});
-
 test("Arc's layout keeps the address bar in a hidden sidebar (no toolbar on the card); Dia's layout and the switch off don't", async () => {
   const { addressBarInSidebar } = await import("./windowLayout.ts");
   const { reloadSwitches } = await import("../../lib/killSwitches.ts");

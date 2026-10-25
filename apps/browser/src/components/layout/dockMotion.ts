@@ -47,23 +47,19 @@ export function lightsCenter(offset: number, down = 0, base: readonly [number, n
 export const cardLeft = (dock: number, width: number, inset: number) => inset + (width - inset) * dock;
 
 export type PeekSpan = { from: number; to: number };
-type DockMotion = { moving: Record<string, true>; revealing: Record<string, true>; peeks: Record<string, PeekSpan> };
-export const useDockMotion = create<DockMotion>()(() => ({ moving: {}, revealing: {}, peeks: {} }));
+type DockMotion = { moving: Record<string, true>; peeks: Record<string, PeekSpan> };
+export const useDockMotion = create<DockMotion>()(() => ({ moving: {}, peeks: {} }));
 
-export const dockMoving = (windowId: string) => {
-  const m = useDockMotion.getState();
-  return !!m.moving[windowId] || !!m.revealing[windowId];
-};
+export const dockMoving = (windowId: string) => !!useDockMotion.getState().moving[windowId];
 
-function flag(key: "moving" | "revealing", windowId: string, on: boolean) {
-  const current = useDockMotion.getState()[key];
-  if (!!current[windowId] === on) return;
+export function setDockMoving(windowId: string, moving: boolean) {
+  const current = useDockMotion.getState().moving;
+  if (!!current[windowId] === moving) return;
   const { [windowId]: _, ...rest } = current;
-  useDockMotion.setState({ [key]: on ? { ...current, [windowId]: true } : rest });
+  useDockMotion.setState({
+    moving: moving ? { ...current, [windowId]: true } : rest,
+  });
 }
-
-export const setDockMoving = (windowId: string, moving: boolean) => flag("moving", windowId, moving);
-export const setLightsBarMoving = (windowId: string, moving: boolean) => flag("revealing", windowId, moving);
 
 export function setPeekShown(windowId: string, shown: boolean, from = -Infinity, to = 0) {
   const current = useDockMotion.getState().peeks;

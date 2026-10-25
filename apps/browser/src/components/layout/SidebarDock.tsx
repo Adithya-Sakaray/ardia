@@ -1,5 +1,5 @@
 import { onWindowEvent, setTrafficLightsCenter, Surface, watchSidebarEdge, WindowDragRegion } from "@ardia/shell";
-import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from "react-native";
 import { useShallow } from "zustand/react/shallow";
 import { switchOn } from "../../lib/killSwitches";
@@ -16,7 +16,6 @@ import {
   ARC_LIGHTS_CENTER,
   devPeeks,
   DOCK_SPRING,
-  LIGHTS_BAR,
   LIGHTS_CENTER,
   lightsCenter,
   PEEK_BOTTOM,
@@ -28,7 +27,7 @@ import {
   springConfig,
   useDockMotion,
 } from "./dockMotion";
-import { LightsBarZone, useLightsBar } from "./LightsBar";
+import { LightsBarCover, LightsBarZone, useLightsBar } from "./LightsBar";
 import { useTabDrag } from "./tabDrag";
 import { usePeek } from "./usePeek";
 import { sidebarSideOf, type SidebarSide } from "./windowLayout";
@@ -121,20 +120,18 @@ export function DockedLayout({
       }),
     [dock, width, rest],
   );
-  const top = useMemo(
-    () => bar.shown.interpolate({ inputRange: [0, 1], outputRange: [inset.top, LIGHTS_BAR.height] }),
-    [bar.shown, inset.top],
-  );
+  const [height, setHeight] = useState(0);
   return (
     <>
       <Animated.View
+        onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
         style={
           fullscreen
             ? { flex: 1 }
             : {
                 flex: 1,
                 flexDirection: "row",
-                paddingTop: right ? top : inset.top,
+                paddingTop: inset.top,
                 paddingRight: right ? edge : inset.right,
                 paddingBottom: inset.bottom,
                 paddingLeft: topTabs || right ? inset.left : edge,
@@ -144,6 +141,7 @@ export function DockedLayout({
         {!fullscreen && <WindowDragRegion style={StyleSheet.absoluteFill} />}
         {children}
       </Animated.View>
+      {right && !fullscreen && <LightsBarCover bar={bar} right={edge} window={{ width: windowWidth, height }} />}
       {right && !fullscreen && <LightsBarZone bar={bar} rest={inset.top} right={edge} />}
       {!topTabs && (
         <SidebarDock
