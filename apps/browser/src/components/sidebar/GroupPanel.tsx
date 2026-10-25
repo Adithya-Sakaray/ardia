@@ -10,6 +10,7 @@ import { activeTabId } from "../../store/model";
 import { sharedTabsIn, sharesTabs } from "../../store/tabShare";
 import type { Tab } from "../../store/types";
 import { PANEL, PopoverSeparator, PopoverSurface, popoverRowFill } from "../layout/controls";
+import { useSidebarSide } from "../layout/windowLayout";
 import { focusHeroBar } from "../omnibox/barState";
 import { clickTab, tabTitle } from "./actions";
 import { byRecentUse, groupTabIds, matchingRows, type GroupPanelTab } from "./groupPanelRows";
@@ -68,7 +69,7 @@ export function GroupPanel({ groupId, windowId, anchor, windowHeight }: { groupI
   const current = Math.max(0, Math.min(selected, rows.length - 1));
   const listHeight = LIST_PAD * 2 + Math.max(1, Math.min(MAX_ROWS, all.length)) * ROW;
   const panelHeight = SEARCH_ROW + SEPARATOR + listHeight;
-  const at = hoverCardOrigin(anchor);
+  const at = hoverCardOrigin(anchor, WIDTH, useSidebarSide());
   const top = Math.max(EDGE, Math.min(at.top, windowHeight - panelHeight - EDGE));
 
   const takeFocus = () => {
