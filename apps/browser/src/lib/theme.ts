@@ -3,13 +3,14 @@ import { createContext, createElement, useContext, type ReactNode } from "react"
 import { useBrowser, type BrowserState } from "../store/browser";
 import { PageProfileContext, WindowContext } from "../store/hooks";
 import type { Profile, ProfileColor, ProfileTheme } from "../store/types";
-import { opaqueThemeTint, PRESET_BACKDROP, readableDark, resolveTheme, rgbToHsl, themeAccent, themeBackdrop, themeDark, themePalette, type ThemeBackdropProps } from "./profileTheme";
+import { opaqueThemeTint, opaqueThemeTintTopRight, PRESET_BACKDROP, readableDark, resolveTheme, rgbToHsl, themeAccent, themeBackdrop, themeDark, themePalette, type ThemeBackdropProps } from "./profileTheme";
 import { backdropTint, opaqueTint, tintForHue, type BackdropTint } from "./windowTint";
 
 export type Theme = typeof dark & {
   profileColor: ProfileColor | "incognito";
   backdrop: BackdropTint & ThemeBackdropProps;
   windowTint: [string, string];
+  windowTintTopRight: string;
   powerUpColor: string | null;
   powerUpPalette: string[] | null;
   custom: ProfileTheme | null;
@@ -177,11 +178,13 @@ export function themeFor(key: string): Theme {
     const spec = color === "incognito" ? null : (PROFILE_COLORS[color] ?? PROFILE_COLORS.plum);
     const powerUpColor = !spec ? null : spec.palette ? (spec.powerUp ?? spec.swatch) : "#808080A6";
     const backdrop = backdropTint(spec ? (spec.tint ?? tintForHue(spec.swatch, !spec.palette)) : INCOGNITO_TINT, !spec?.palette);
+    const windowTint = opaqueTint(backdrop, base.dark);
     theme = {
       ...base,
       profileColor: color,
       backdrop: { ...backdrop, ...PRESET_BACKDROP },
-      windowTint: opaqueTint(backdrop, base.dark),
+      windowTint,
+      windowTintTopRight: windowTint[0],
       powerUpColor,
       powerUpPalette: powerUpColor ? [powerUpColor] : null,
       custom: null,
@@ -230,6 +233,7 @@ function customTheme(custom: ProfileTheme, color: ProfileColor, appDark: boolean
         ...(dark === requested ? {} : { themeAppearance: dark ? ("dark" as const) : ("light" as const) }),
       },
       windowTint: opaqueThemeTint(look, dark),
+      windowTintTopRight: opaqueThemeTintTopRight(look, dark),
       powerUpColor: accent,
       powerUpPalette: palette.length > 1 ? palette : [palette[0] ?? accent],
       custom,

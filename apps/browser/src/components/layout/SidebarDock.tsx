@@ -300,7 +300,7 @@ function SidebarDock({
             style={[StyleSheet.absoluteFill, peekStyle, { opacity: panelOpacity }]}
           >
             <Surface
-              fill={hex(theme.windowTint[0])}
+              fill={hex(side === "right" ? theme.windowTintTopRight : theme.windowTint[0])}
               cornerRadius={PEEK_RADIUS}
               borderColor={hex(theme.panelBorder)}
               borderWidth={0.5}
