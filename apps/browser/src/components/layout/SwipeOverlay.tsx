@@ -5,7 +5,7 @@ import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../lib/theme";
 import { useBrowser } from "../../store/browser";
 import { Favicon, NewTabIcon } from "../primitives";
-import { HistoryPopover } from "./HistoryPopover";
+import { HistoryPopover, type HistoryAt } from "./HistoryPopover";
 import { goBack, goForward, goToHistoryItem, historyItems, openHistoryMenu, useHistoryAvailability, useHistoryMenu, type HistoryItem } from "./history";
 import type { ToolbarGeometry } from "./geometry";
 import {
@@ -35,11 +35,11 @@ export function spring(value: Animated.Value, toValue: number, response: number,
   return Animated.spring(value, { toValue, ...springParams(response, dampingRatio), useNativeDriver: native });
 }
 
-export function NavigationOverlays({ tabId, windowId, geometry, right = false }: { tabId: string; windowId: string; geometry: ToolbarGeometry; right?: boolean }) {
+export function NavigationOverlays({ tabId, windowId, geometry, history }: { tabId: string; windowId: string; geometry: ToolbarGeometry; history?: HistoryAt | null }) {
   return (
     <>
       <SwipeOverlay tabId={tabId} />
-      <HistoryPopover tabId={tabId} windowId={windowId} anchors={{ back: geometry.back, forward: geometry.forward }} right={right} />
+      {history !== null && <HistoryPopover tabId={tabId} windowId={windowId} anchors={{ back: geometry.back, forward: geometry.forward }} at={history} />}
     </>
   );
 }

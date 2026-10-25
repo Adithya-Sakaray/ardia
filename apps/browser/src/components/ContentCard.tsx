@@ -63,6 +63,7 @@ import { AutoHideBackdrop, AutoHideToolbar, useToolbarMode, useToolbarMotion } f
 import { publishPaneChrome, WindowToolbar } from "./WindowToolbar";
 import { noteScroll, revealToolbar } from "./layout/toolbarAutoHide";
 import { NavigationOverlays } from "./layout/SwipeOverlay";
+import { HISTORY_WIDTH, HistoryPopover } from "./layout/HistoryPopover";
 import "./layout/devExpose";
 import { closeWebNotification, showWebNotification } from "../lib/webNotifications";
 import { isSmallWindow } from "../store/small";
@@ -302,6 +303,7 @@ export function ContentCard() {
       {size.width > 0 && popoversOverCard && origin && activeRect && peekSpan !== undefined && (
         <BesidePeekPopovers
           tabId={popoversOverCard}
+          windowId={windowId}
           beside={
             peekSpan.to === Infinity
               ? { right: Math.min(activeRect.x + activeRect.width, peekSpan.from - origin.x) - POPOVER_MARGIN }
@@ -492,25 +494,26 @@ function PageOverlays({
           <CliControlPill />
         </Animated.View>
       )}
-      {!newTabShown && <PermissionPrompt tabId={tabId} left={promptLeft(308)} top={POPOVER_MARGIN} />}
+      {popovers && !newTabShown && <PermissionPrompt tabId={tabId} left={promptLeft(308)} top={POPOVER_MARGIN} />}
       <PasswordPrompt tabId={tabId} right={POPOVER_MARGIN} top={POPOVER_MARGIN} />
       <AutofillPrompt tabId={tabId} right={POPOVER_MARGIN} top={POPOVER_MARGIN} />
-      {!newTabShown && <ExternalAppPrompt tabId={tabId} left={promptLeft(348)} top={POPOVER_MARGIN} />}
-      {!newTabShown && <EngineOfferPrompt tabId={tabId} left={promptLeft(348)} top={POPOVER_MARGIN} />}
+      {popovers && !newTabShown && <ExternalAppPrompt tabId={tabId} left={promptLeft(348)} top={POPOVER_MARGIN} />}
+      {popovers && !newTabShown && <EngineOfferPrompt tabId={tabId} left={promptLeft(348)} top={POPOVER_MARGIN} />}
       {popovers && <SiteControls tabId={tabId} open={popover === "siteControls"} {...popoverSide} top={POPOVER_MARGIN} />}
       {popovers && popover === "popups" && <BlockedPopupsPrompt tabId={tabId} {...popoverSide} top={POPOVER_MARGIN} />}
       {popovers && popover === "zoom" && <ZoomPopover tabId={tabId} {...popoverSide} top={POPOVER_MARGIN} />}
       <SharePicker tabId={tabId} paneWidth={width} />
-      {!newTabShown && <DeviceChooser tabId={tabId} left={promptLeft(348)} top={POPOVER_MARGIN} />}
+      {popovers && !newTabShown && <DeviceChooser tabId={tabId} left={promptLeft(348)} top={POPOVER_MARGIN} />}
       <CastPicker tabId={tabId} paneWidth={width} />
-      <NavigationOverlays tabId={tabId} windowId={windowId} geometry={geometry} right={sidebarRight} />
+      <NavigationOverlays tabId={tabId} windowId={windowId} geometry={geometry} history={!popovers ? null : sidebarRight ? { top: POPOVER_MARGIN, right: POPOVER_MARGIN } : undefined} />
       <SelectionPopover tabId={tabId} zoom={zoom} />
     </>
   );
 }
 
-function BesidePeekPopovers({ tabId, beside, top, room }: { tabId: string; beside: { left: number } | { right: number }; top: number; room: number }) {
+function BesidePeekPopovers({ tabId, windowId, beside, top, room }: { tabId: string; windowId: string; beside: { left: number } | { right: number }; top: number; room: number }) {
   const popover = usePages((s) => s.popover[tabId] ?? null);
+  const newTabShown = usePages((s) => !!s.pages[tabId]?.newTabShown);
   const fit = (width: number) => {
     const left = "left" in beside ? beside.left : beside.right - width;
     return { left: Math.max(POPOVER_MARGIN, Math.min(left, room - width - POPOVER_MARGIN)), top };
@@ -520,6 +523,11 @@ function BesidePeekPopovers({ tabId, beside, top, room }: { tabId: string; besid
       <SiteControls tabId={tabId} open={popover === "siteControls"} {...fit(SITE_PANEL.width)} />
       {popover === "popups" && <BlockedPopupsPrompt tabId={tabId} {...fit(BLOCKED_POPUPS_WIDTH)} />}
       {popover === "zoom" && <ZoomPopover tabId={tabId} {...fit(ZOOM_POPOVER_WIDTH)} />}
+      {!newTabShown && <PermissionPrompt tabId={tabId} {...fit(300)} />}
+      {!newTabShown && <ExternalAppPrompt tabId={tabId} {...fit(340)} />}
+      {!newTabShown && <EngineOfferPrompt tabId={tabId} {...fit(340)} />}
+      {!newTabShown && <DeviceChooser tabId={tabId} {...fit(340)} />}
+      <HistoryPopover tabId={tabId} windowId={windowId} anchors={NO_TOOLBAR} at={fit(HISTORY_WIDTH)} />
     </>
   );
 }
