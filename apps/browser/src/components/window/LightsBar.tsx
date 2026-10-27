@@ -63,6 +63,7 @@ export function useLightsBar(windowId: string, enabled: boolean): LightsBar {
     };
   }, [windowId, enabled, shown]);
   useEffect(() => () => clearTimeout(hideTimer.current), []);
+  ((globalThis as { __acLights?: Record<string, unknown> }).__acLights ??= {})[windowId] = { show, hide };
   return { shown, open, drawn, show, hide };
 }
 
