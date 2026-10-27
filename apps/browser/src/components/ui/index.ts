@@ -27,6 +27,7 @@ export {
   GlassEffect,
   MagnifyArea,
   MouseArea,
+  LightsBarClip,
   OutsidePressArea,
   PopoverBubble,
   PowerUp,

@@ -261,6 +261,8 @@ export function opaqueThemeTint(theme: ProfileTheme, dark: boolean): [string, st
   return [toHex(composite(theme, dark, 0, 0)), toHex(composite(theme, dark, 1, 1))];
 }
 
+export const opaqueThemeTintTopRight = (theme: ProfileTheme, dark: boolean): string => toHex(composite(theme, dark, 1, 0));
+
 const SAMPLE_POINTS = [0, 0.5, 1];
 const MIN_BLACK_TEXT_CONTRAST = 3;
 const MIN_WHITE_TEXT_CONTRAST = 2;

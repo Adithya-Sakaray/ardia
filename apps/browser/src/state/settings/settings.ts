@@ -31,6 +31,7 @@ export type Settings = {
   commandBarPreference: "website" | "search";
 
   tabLayout: "sidebar" | "top";
+  sidebarSide: "left" | "right";
   hideToolbarWhileScrolling: boolean;
   newTabPosition: "top" | "bottom" | "nextToCurrent";
   newTabButtonPosition: "top" | "bottom";
@@ -121,6 +122,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showSelectionSearch: true,
   commandBarPreference: "website",
   tabLayout: "sidebar",
+  sidebarSide: "left",
   hideToolbarWhileScrolling: true,
   newTabPosition: "bottom",
   newTabButtonPosition: "bottom",

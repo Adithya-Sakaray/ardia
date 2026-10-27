@@ -15,6 +15,7 @@ import { toggleBookmarkOfTab } from "../../state/bookmarks/actions";
 import { closePane, openSplitPane, showSplitMenu } from "../../state/splits/actions";
 import { toolbarPalette, useEasedColor, type ToolbarPalette } from "../ui/toolbarColors";
 import { setToolbarExtensionsWidth } from "../../state/windows/layout";
+import { useSidebarOnRight } from "../../state/windows/hooks";
 import { SIDEBAR_FIELD } from "../sidebar/geometry";
 import { showUrlBarMenu } from "../../state/omnibox/paste";
 import { ToolbarExtensions, useToolbarExtensionsWidth } from "../extensions/ToolbarExtensions";
@@ -65,6 +66,7 @@ export function Toolbar({
   const palette = toolbarPalette(theme, website);
   const band = useEasedColor(bare ? null : palette.background);
   const history = useHistoryAvailability(tabId);
+  const sidebarRight = useSidebarOnRight(windowId);
   const extensionsWidth = useToolbarExtensionsWidth(windowId);
   useEffect(() => setToolbarExtensionsWidth(windowId, extensionsWidth), [windowId, extensionsWidth]);
   const dim = useRef(new Animated.Value(focused ? 1 : 0.5)).current;
@@ -96,7 +98,7 @@ export function Toolbar({
           <Button variant="icon" toolbar
             style={at.sidebarButton}
             palette={palette}
-            icon="sidebar.left"
+            icon={sidebarRight ? "sidebar.right" : "sidebar.left"}
             size={GLYPH}
             onPress={() => toggleSidebar(windowId)}
             tooltip={withShortcut("Auto-Hide Tabs", sidebarHint)}

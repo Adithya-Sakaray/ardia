@@ -4,6 +4,8 @@ import { addFolderToSidebar } from "../../state/bookmarks/bookmarkGroups";
 import { useBookmarkProfileId, useBookmarks, useSidebarEdge } from "../../state/bookmarks/hooks";
 import { openModeFor, openUrl } from "../../state/bookmarks/actions";
 import { useWindowId } from "../../state/browser/hooks";
+import { useCardAnchors } from "../../state/windows/layout";
+import { useSidebarOnRight } from "../../state/windows/hooks";
 import { openImport } from "../../state/settings/settingsWindows";
 import { Favicon } from "../favicon/Favicon";
 import { useSidebarWidth } from "../sidebar/tokens";
@@ -45,8 +47,11 @@ export function BarItem({
   const node = useBookmarks((b) => b.nodes[id]);
   const width = useSidebarWidth(windowId);
   const sidebarEdge = useSidebarEdge(windowId, width);
-  const edge = useRef(sidebarEdge);
-  edge.current = sidebarEdge;
+  const right = useSidebarOnRight(windowId);
+  const card = useCardAnchors((s) => s[windowId]);
+  const overSidebarAt = (x: number) => sidebarEdge > 0 && (right ? !!card && x > card.left + card.width : x < sidebarEdge);
+  const edge = useRef({ over: overSidebarAt, right });
+  edge.current = { over: overSidebarAt, right };
   const dx = useRef(new Animated.Value(0)).current;
   const left = useRef(0);
   const [dragging, setDragging] = useState(false);
@@ -60,8 +65,8 @@ export function BarItem({
         onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 4,
         onPanResponderGrant: () => setDragging(true),
         onPanResponderMove: (_, g) => {
-          const toSidebar = folder.current && g.moveX < edge.current;
-          dx.setValue(toSidebar ? -left.current : g.dx);
+          const toSidebar = folder.current && edge.current.over(g.moveX);
+          dx.setValue(toSidebar && !edge.current.right ? -left.current : g.dx);
           setOverSidebar(toSidebar);
           handlers.current.onDragMove(toSidebar ? Infinity : g.dx);
         },
@@ -69,7 +74,7 @@ export function BarItem({
           dx.setValue(0);
           setDragging(false);
           setOverSidebar(false);
-          if (folder.current && g.moveX < edge.current) {
+          if (folder.current && edge.current.over(g.moveX)) {
             handlers.current.onDragMove(Infinity);
             addFolderToSidebar(id, windowId);
             return;

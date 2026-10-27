@@ -65,7 +65,7 @@ const shell: Modules["ArdiaShell"] = {
   pickFolder: () => Promise.resolve(null),
   animateWindowClose: () => Promise.resolve(),
   restoreFullScreen: () => Promise.resolve(),
-  watchLeftEdge: () => Promise.resolve(),
+  watchSidebarEdge: () => Promise.resolve(),
   dragPreviewBegin: () => Promise.resolve(),
   dragPreviewPage: () => Promise.resolve(),
   dragPreviewUpdate: () => Promise.resolve(),
@@ -164,8 +164,8 @@ const app: Modules["ArdiaApp"] = {
   devClick: () => Promise.resolve({}),
   crashReports: () => Promise.resolve([]),
   devCrash: () => Promise.resolve(),
-  devLeftEdgePointer: () => Promise.resolve(false),
-  devLeftEdgeStats: () => Promise.resolve({}),
+  devSidebarEdgePointer: () => Promise.resolve(false),
+  devSidebarEdgeStats: () => Promise.resolve({}),
 };
 
 const system: Modules["ArdiaSystem"] = {

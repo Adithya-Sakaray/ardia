@@ -8,7 +8,7 @@ import { useBookmarks } from "../../state/bookmarks/hooks";
 import { currentBookmarks } from "../../state/browser/current";
 import { FieldLabel, FolderPicker } from "./DialogParts";
 import { bookmarkDialog, folderPicker } from "./tokens";
-import { useAddressBarInSidebar } from "../../state/windows/layout";
+import { useAddressBarInSidebar, useSidebarSide } from "../../state/windows/layout";
 import { SIDEBAR_HEADER_WITH_FIELD } from "../sidebar/geometry";
 
 export function BookmarkDialog() {
@@ -20,6 +20,7 @@ export function BookmarkDialog() {
 
 function DialogPanel({ state }: { state: BookmarkDialogState }) {
   const addressBar = useAddressBarInSidebar();
+  const side = useSidebarSide();
   const bookmark = useBookmarks((b) => (state.kind === "page" ? b.nodes[state.bookmarkId] : undefined));
   const profileId = state.kind === "page" ? profileOfBookmark(state.bookmarkId) : state.profileId;
   const [name, setName] = useState(() => (state.kind === "page" ? (bookmark?.title ?? "") : ""));
@@ -65,7 +66,7 @@ function DialogPanel({ state }: { state: BookmarkDialogState }) {
       onDismiss={done}
       place={
         addressBar
-          ? { top: SIDEBAR_HEADER_WITH_FIELD + bookmarkDialog.belowField, left: layout.sidebarInset }
+          ? { top: SIDEBAR_HEADER_WITH_FIELD + bookmarkDialog.belowField, [side]: layout.sidebarInset }
           : { top: layout.cardTop + layout.toolbarHeight - bookmarkDialog.belowToolbar, right: layout.cardInset + bookmarkDialog.rightInset }
       }
     >

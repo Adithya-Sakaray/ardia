@@ -10,6 +10,7 @@ import { newTab } from "../../state/tabs/actions";
 import { Box, Button, curve, font, hairline, hex, radius, space, Surface, Symbol, Text, useHover, useTheme, weight } from "../ui";
 import { cardHoverProps, dismissHover } from "../../state/sidebar/hover";
 import { hoverCardOrigin } from "../sidebar/hoverMotion";
+import { useSidebarSide } from "../../state/windows/layout";
 import type { Anchor } from "../../state/sidebar/sidebarUi";
 import { TabIcon } from "../sidebar/TabIcon";
 import { liveMotion, liveShadow, liveType, useLiveColors, type LiveColors } from "./tokens";
@@ -22,8 +23,9 @@ const CHIP_HEIGHT = 17;
 
 export function HoverSurface({ anchor, width, children }: { anchor: Anchor; width: number; children: ReactNode }) {
   const theme = useTheme();
+  const side = useSidebarSide();
   return (
-    <View onLayout={cardHoverProps.onLayout} style={{ position: "absolute", ...hoverCardOrigin(anchor), width }}>
+    <View onLayout={cardHoverProps.onLayout} style={{ position: "absolute", ...hoverCardOrigin(anchor, width, side), width }}>
       <Surface
         onMouseEnter={cardHoverProps.onMouseEnter}
         onMouseLeave={cardHoverProps.onMouseLeave}

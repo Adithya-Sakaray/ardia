@@ -69,6 +69,7 @@ function BrowserWindow() {
       <WindowProfile />
       <ProfileTint />
       <DockedLayout
+        windowWidth={width}
         fullscreen={fullscreen}
         topTabs={topTabs}
         inset={topTabs ? { top: TOP_STRIP_HEIGHT, right: TOP_CARD_INSET, bottom: TOP_CARD_INSET, left: TOP_CARD_INSET } : { top: layout.cardTop, right: layout.cardInset, bottom: layout.cardInset, left: layout.cardInset }}

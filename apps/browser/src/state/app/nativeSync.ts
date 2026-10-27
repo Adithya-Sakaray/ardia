@@ -185,7 +185,7 @@ export function menuState(s: BrowserState): MenuState {
 
   const disabled: string[] = [];
   if (!tab || !splitOf(s, tab.id)) disabled.push("focusNextPane", "focusPreviousPane");
-  if (w && (w.tabLayout ?? s.settings.tabLayout) === "top") disabled.push("toggleAddressBar");
+  if (w && (w.tabLayout ?? s.settings.tabLayout) === "top") disabled.push("toggleAddressBar", "toggleSidebarSide");
   if (!w) disabled.push(...WINDOW_COMMANDS);
   else {
     if (!page?.url) disabled.push(...PAGE_COMMANDS);
@@ -206,6 +206,7 @@ export function menuState(s: BrowserState): MenuState {
   if (s.settings.addressBar === "sidebar") checked.push("toggleAddressBar");
   checked.push(`setBookmarksBar:${s.settings.bookmarksBar}`);
   if ((w?.tabLayout ?? s.settings.tabLayout) === "sidebar") checked.push("toggleTabLayout");
+  if (s.settings.sidebarSide === "right") checked.push("toggleSidebarSide");
   if (w && !w.sidebarOpen) checked.push("toggleSidebar");
 
   const titles: Record<string, string> = {};

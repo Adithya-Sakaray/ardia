@@ -7,7 +7,7 @@ export {
   setWindowTitle,
   setWindowActivity,
   setTrafficLightsCenter,
-  watchLeftEdge,
+  watchSidebarEdge,
   raiseView,
   windowFrame,
   windowIds,

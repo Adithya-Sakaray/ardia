@@ -12,7 +12,7 @@ import { NO_TOOLBAR, toolbarGeometry, type Rect, type ToolbarGeometry } from "./
 import { startPermissionPrompts } from "../../state/site/permissions";
 import { useFullscreenTab } from "../../state/tabs/pageState";
 import { DropTargets, SplitDividers, SplitToast } from "../split/SplitChrome";
-import { dockMoving, usePeekEdge, whenDockStill } from "../../state/windows/dockMotion";
+import { dockMoving, usePeekSpan, whenDockStill } from "../../state/windows/dockMotion";
 import { FrozenPage } from "./FrozenPage";
 import { setCardAnchor, setUrlAnchor, useAddressBarInSidebar, useTabLayout, watchToolbarExtensionsWidth } from "../../state/windows/layout";
 import { startSelectionTools } from "../../state/site/selection";
@@ -93,9 +93,9 @@ export function ContentCard() {
   );
 
   const windowToolbar = !split && !fullscreenTab && !addressInSidebar && !small;
-  const peekEdge = usePeekEdge(windowId);
+  const peekSpan = usePeekSpan(windowId);
   const activeRect = activeId ? panes[activeId] : undefined;
-  const popoversOverCard = peekEdge !== undefined && addressInSidebar && !small && !fullscreenTab && origin && activeRect ? activeId : undefined;
+  const popoversOverCard = peekSpan !== undefined && addressInSidebar && !small && !fullscreenTab && origin && activeRect ? activeId : undefined;
 
   return (
     <View
@@ -144,10 +144,15 @@ export function ContentCard() {
         <FrozenPage windowId={windowId} tabId={activeId} top={(!addressInSidebar && !small && !hideWhileScrolling ? layout.toolbarHeight : 0) + (barMode === "always" && !small && !hideWhileScrolling ? BOOKMARKS_BAR_HEIGHT : 0)} />
       )}
       {split && !fullscreenTab && <SplitDividers split={split} dividers={dividers} width={size.width} height={size.height} />}
-      {size.width > 0 && popoversOverCard && origin && activeRect && peekEdge !== undefined && (
+      {size.width > 0 && popoversOverCard && origin && activeRect && peekSpan !== undefined && (
         <BesidePeekPopovers
           tabId={popoversOverCard}
-          left={Math.max(activeRect.x, peekEdge - origin.x) + POPOVER_MARGIN}
+          windowId={windowId}
+          beside={
+            peekSpan.to === Infinity
+              ? { right: Math.min(activeRect.x + activeRect.width, peekSpan.from - origin.x) - POPOVER_MARGIN }
+              : { left: Math.max(activeRect.x, peekSpan.to - origin.x) + POPOVER_MARGIN }
+          }
           top={activeRect.y + POPOVER_MARGIN}
           room={size.width}
         />

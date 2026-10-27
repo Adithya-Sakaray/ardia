@@ -12,6 +12,7 @@ import { clickTab, returnFocusToPage, tabTitle } from "../../state/sidebar/actio
 import { byRecentUse, matchingRows, type GroupPanelTab } from "../../state/sidebar/groupPanelRows";
 import { cardHoverProps, dismissHover, holdHover } from "../../state/sidebar/hover";
 import { hoverCardOrigin } from "./hoverMotion";
+import { useSidebarSide } from "../../state/windows/layout";
 import { useSidebarUi, type Anchor } from "../../state/sidebar/sidebarUi";
 import { TabIcon } from "./TabIcon";
 
@@ -56,7 +57,7 @@ export function GroupPanel({ groupId, windowId, anchor, windowHeight }: { groupI
   const current = Math.max(0, Math.min(selected, rows.length - 1));
   const listHeight = LIST_PAD * 2 + Math.max(1, Math.min(MAX_ROWS, all.length)) * ROW;
   const panelHeight = SEARCH_ROW + SEPARATOR + listHeight;
-  const at = hoverCardOrigin(anchor);
+  const at = hoverCardOrigin(anchor, WIDTH, useSidebarSide());
   const top = Math.max(EDGE, Math.min(at.top, windowHeight - panelHeight - EDGE));
 
   const takeFocus = () => {
