@@ -3,6 +3,7 @@ name: Port check
 on:
   push:
     branches: [checks/port-mac]
+  workflow_dispatch:
 
 jobs:
   lights:
