@@ -14,7 +14,8 @@ import {
   viewTabIds,
   without,
 } from "../browser/model";
-import { nextPinChoice, placeChoiceKey, restoringGroup } from "../pins/organize";
+import { restoringGroup } from "../pins/organize";
+import { markPinned } from "../pins/pinChoices";
 import { hasLoadedPage } from "../tabs/pageSession";
 import { adoptParkedPins, parkWindowPins } from "../pins/parkedPins";
 import { settleMovedPins } from "../pins/pinMirror";
@@ -118,10 +119,7 @@ function intoProfile(s: BrowserState, tabId: string, profileId: string): Browser
   const loaded = hasLoadedPage(tab);
   const { adoptId: _, wakeAdoptId: _w, ...rest } = tab;
   const moved: Tab = { ...rest, profileId, navigation: loaded ? navigationTo(tab.url) : null, lastActiveAt: Date.now() };
-  const movedKey = pinKeyOf(moved);
-  const pinChoices = tab.pinned
-    ? { ...next.pinChoices, [profileId]: { ...next.pinChoices[profileId], [movedKey]: nextPinChoice(), [placeChoiceKey(movedKey)]: nextPinChoice() } }
-    : next.pinChoices;
+  const pinChoices = tab.pinned ? markPinned(next.pinChoices, profileId, { tabs: [pinKeyOf(moved)], placed: [pinKeyOf(moved)] }) : next.pinChoices;
   const tabs = { ...next.tabs, [tabId]: moved };
   const index = Math.min(w.tabIds.indexOf(tabId), base.tabIds.length);
   const tabIds = [...base.tabIds];

@@ -8,6 +8,15 @@ export const nextPinChoice = () => (lastPinChoice = Math.max(Date.now(), lastPin
 export const groupChoiceKey = (key: string) => `group:${key}`;
 export const placeChoiceKey = (key: string) => `place:${key}`;
 export const orderChoiceKey = (key: string) => `order:${key}`;
+export const tabChoiceKey = (key: string) => key;
+
+export function markPinned(choices: PinChoices, profileId: string, marks: { groups?: readonly string[]; tabs?: readonly string[]; placed?: readonly string[] }): PinChoices {
+  const mine = { ...choices[profileId] };
+  for (const key of marks.groups ?? []) mine[groupChoiceKey(key)] = nextPinChoice();
+  for (const key of marks.tabs ?? []) mine[tabChoiceKey(key)] = nextPinChoice();
+  for (const key of marks.placed ?? []) mine[placeChoiceKey(key)] = nextPinChoice();
+  return { ...choices, [profileId]: mine };
+}
 
 export function notePinChoices(choices: PinChoices) {
   for (const mine of Object.values(choices)) for (const n of Object.values(mine)) if (n > lastPinChoice) lastPinChoice = n;
@@ -32,7 +41,7 @@ export function livePinTable<T>(table: Record<string, Record<string, T>>, s: Pic
     add(g.profileId, orderChoiceKey(pinKeyOf(g)));
     for (const id of g.tabIds) members.add(id);
   }
-  for (const t of Object.values(s.tabs)) if (t.pinned || members.has(t.id)) (add(t.profileId, pinKeyOf(t)), add(t.profileId, placeChoiceKey(pinKeyOf(t))));
+  for (const t of Object.values(s.tabs)) if (t.pinned || members.has(t.id)) (add(t.profileId, tabChoiceKey(pinKeyOf(t))), add(t.profileId, placeChoiceKey(pinKeyOf(t))));
   for (const [profileId, park] of Object.entries(s.parkedPins)) {
     for (const p of park.tabs) (add(profileId, p.id), add(profileId, placeChoiceKey(p.id)));
     for (const g of park.groups) {

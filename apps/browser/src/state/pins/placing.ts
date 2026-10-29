@@ -2,7 +2,7 @@ import type { BrowserState } from "../browser/store";
 import { ancestorIds, innermostGroupOf, insertAll, leaveGroups, nestGroups, orderSections, placeGroups, reparent, syncGroupOrder } from "../groups/groups";
 import { isIncognitoProfile, isPinnedRow, pinKeyOf } from "../browser/model";
 import { splitOf, splitRowHead, splitRowPanes, withSplitRows } from "../splits/splits";
-import { nextPinChoice, placeChoiceKey } from "./pinChoices";
+import { markPinned } from "./pinChoices";
 import { groupOf, withRowsGrouped } from "./tabGrouping";
 import type { BrowserWindow, TileFolder } from "../browser/types";
 import { pinnedGroupMembers } from "../browser/structure";
@@ -31,7 +31,7 @@ export function placing(s: BrowserState, ids: string[], p: TabPlacement): Browse
   const movingSet = new Set(moving);
 
   const tabs = { ...s.tabs };
-  let chosen: Record<string, number> | null = null;
+  let pinChoices = s.pinChoices;
   let pinSync = s.pinSync;
   const pinnedGroupOf = (id: string) => {
     const g = innermostGroupOf(s.groups, id);
@@ -52,9 +52,7 @@ export function placing(s: BrowserState, ids: string[], p: TabPlacement): Browse
         pinSync = { ...pinSync, [t.profileId]: { ...pinSync[t.profileId], [pinKeyOf(t)]: kept } };
       }
       if ((p.pinned || intoPinnedGroup) && !isIncognitoProfile(t.profileId)) {
-        chosen ??= { ...s.pinChoices[t.profileId] };
-        if (p.pinned) chosen[pinKeyOf(t)] = nextPinChoice();
-        if (placed) chosen[placeChoiceKey(pinKeyOf(t))] = nextPinChoice();
+        pinChoices = markPinned(pinChoices, t.profileId, { tabs: p.pinned ? [pinKeyOf(t)] : [], placed: placed ? [pinKeyOf(t)] : [] });
       }
     }
     const folder = p.pinned && !row ? (p.tileFolder === undefined ? tabs[id]!.tileFolder : (p.tileFolder ?? undefined)) : undefined;
@@ -88,7 +86,6 @@ export function placing(s: BrowserState, ids: string[], p: TabPlacement): Browse
   let tabIds = placeGroups(rest, groups, w.id);
   tabIds = orderSections(tabIds, tabs, groups);
   const window: BrowserWindow = { ...w, tabIds };
-  const pinChoices = chosen ? { ...s.pinChoices, [first.profileId]: chosen } : s.pinChoices;
   return { ...s, tabs, pinChoices, pinSync, groups: syncGroupOrder(groups, window), windows: { ...s.windows, [w.id]: window } };
 }
 

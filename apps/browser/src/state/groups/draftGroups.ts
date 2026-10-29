@@ -1,6 +1,6 @@
 import type { BrowserState } from "../browser/store";
 import { insertAll, nestGroups, orderSections, syncGroupOrder } from "./groups";
-import { groupChoiceKey, nextPinChoice, placeChoiceKey } from "../pins/organize";
+import { markPinned } from "../pins/pinChoices";
 import { IDLE_LIVE, isIncognitoProfile, makeTab, newId } from "../browser/model";
 import { pageKey, pinnedPages } from "../tabs/pageKeys";
 import type { BookmarkFolder, Bookmarks, TabGroup } from "../browser/types";
@@ -82,10 +82,7 @@ export function withDraftGroups(s: BrowserState, windowId: string, profileId: st
   const window = { ...w, tabIds: orderSections(ids, tabs, groups) };
   let pinChoices = s.pinChoices;
   if (!isIncognitoProfile(profileId)) {
-    const mine = { ...pinChoices[profileId] };
-    for (const id of all) mine[groupChoiceKey(id)] = nextPinChoice();
-    for (const id of order) mine[placeChoiceKey(id)] = nextPinChoice();
-    pinChoices = { ...pinChoices, [profileId]: mine };
+    pinChoices = markPinned(pinChoices, profileId, { groups: all, placed: order });
   }
   return [{ ...s, tabs, live, pinChoices, groups: syncGroupOrder(groups, window), windows: { ...s.windows, [windowId]: window } }, { made, carried, skipped }];
 }
