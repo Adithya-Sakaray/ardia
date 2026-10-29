@@ -1,6 +1,7 @@
 import { useBrowser, type BrowserState } from "../browser/store";
 import { activeTabId } from "../browser/model";
-import { appInfo, capture, isSharing, useTelemetry } from "./client";
+import { capture, isSharing, useTelemetry } from "./client";
+import { appInfo, percentile } from "./transport";
 import { jsStartedAt } from "./jsStart";
 import { fieldTiming } from "../../platform/fieldTiming";
 
@@ -28,7 +29,7 @@ export function emitJourneys(final = false) {
   const props: Record<string, number> = {};
   for (const [step, list] of samples) {
     list.sort((a, b) => a - b);
-    const at = (p: number) => list[Math.min(list.length - 1, Math.floor(p * list.length))]!;
+    const at = (p: number) => percentile(list, p);
     props[`${step}_p50`] = at(0.5);
     props[`${step}_p75`] = at(0.75);
     props[`${step}_p95`] = at(0.95);

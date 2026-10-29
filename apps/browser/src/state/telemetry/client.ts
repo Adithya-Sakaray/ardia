@@ -1,11 +1,11 @@
-import { engineInfo, systemInfo, type SystemInfo } from "../../platform/app";
+import { engineInfo } from "../../platform/app";
 import { readDocument, saveDocument, writeDocument } from "../../platform/documents";
-import { devTestValue } from "../../platform/launchConfig";
 import { create } from "zustand";
-import { DEV_SEND_TEST_KEY, LOGS_URL, MAX_BODY_BYTES } from "./config";
+import { MAX_BODY_BYTES } from "./config";
 import { EVENTS_SCOPE, eventRecord, LOGS_SCOPE, logRecord, logsRequest, outcome, type OtlpLogRecord, type QueuedEvent } from "./otlp";
 import { cleanProperties } from "./sanitize";
-import { logRequest, type RequestLogEntry } from "./requestLog";
+import type { RequestLogEntry } from "./requestLog";
+import { appInfo, mayPost, post } from "./transport";
 import { parseSaved, versionedJson, unchanged, type Migrations, type SavedObject } from "../../lib/savedDocument";
 
 const STATE_DOC = "telemetry.json";
@@ -84,15 +84,10 @@ export const useTelemetry = create<{ sharing: boolean; decided: boolean; askDone
 
 export const isSharing = () => saved.sharing;
 
-let app: SystemInfo | null = null;
-export const appInfo = () => (app ??= systemInfo());
 let engineVersion: string | null = null;
 
 export const environment = (): "dev" | "test" | "production" =>
   __DEV__ ? "dev" : appInfo().isolatedInstance ? "test" : "production";
-
-const devSendAllowed = () => devTestValue(DEV_SEND_TEST_KEY) === "1";
-const canSend = () => !__DEV__ || devSendAllowed();
 
 function context(): Record<string, unknown> {
   const info = appInfo();
@@ -228,24 +223,14 @@ function scheduleFlush(delay: number) {
 
 const inflight = new Set<AbortController>();
 
-async function post(kind: RequestLogEntry["kind"], url: string, body: string, count: number) {
-  const entry: RequestLogEntry = { at: new Date().toISOString(), kind, url, count, bytes: body.length, status: null };
-  if (!canSend()) {
-    logRequest({ ...entry, dryRun: true }, body);
-    return 200;
-  }
+async function send(kind: RequestLogEntry["kind"], body: string, count: number) {
   const abort = new AbortController();
   inflight.add(abort);
   try {
-    const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body, signal: abort.signal });
-    entry.status = response.status;
-  } catch {
-    entry.status = 0;
+    return await post(kind, body, count, abort.signal);
   } finally {
     inflight.delete(abort);
   }
-  logRequest(entry, body);
-  return entry.status;
 }
 
 function resource(): Record<string, unknown> {
@@ -286,7 +271,7 @@ async function drain<T>(
       size = Math.ceil(batch.length / 2);
       continue;
     }
-    const status = await post(kind, LOGS_URL, body, batch.length);
+    const status = await send(kind, body, batch.length);
     if (gen !== generation) return "stale";
     const result = outcome(status, batch.length);
     if (result === "retry") return "failed";
@@ -400,7 +385,7 @@ export function endSession() {
 export const crashCursor = () => saved.crashCursor;
 export const advanceCrashCursor = (to: number) => to > saved.crashCursor && save({ crashCursor: to });
 
-export const devState = () => ({ saved, queued: { events: queue.events.length, logs: queue.logs.length }, droppedWhileOff, canSend: canSend() });
+export const devState = () => ({ saved, queued: { events: queue.events.length, logs: queue.logs.length }, droppedWhileOff, canSend: mayPost("events") });
 
 function hex(n: number) {
   return Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16)).join("");
