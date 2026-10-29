@@ -14,16 +14,15 @@ import {
   FONTS,
   LOGOS,
   LONG,
-  MARK_SVGS,
   SHORT,
   SHOTS,
   ZIP_NAME,
   logoFile,
   megabytes,
-  oklch,
-  pressZip,
   shotFile,
 } from "../../data/press";
+import { MARK_SVGS, pressZip } from "../../lib/pressAssets";
+import { oklch } from "../../lib/oklch";
 
 const press = `${base}/press`;
 const zipSize = megabytes((await pressZip()).length);
