@@ -75,7 +75,7 @@ fi
 run gh release create "v$version" -R "$REPO" "${release_flags[@]}" --verify-tag --title "Ardia $version" \
   --notes-file "$dist/release-notes.md" "${assets[@]}"
 if [ "$channel" = nightly ]; then
-  nightly_notes="The newest nightly, always as Ardia-Nightly.dmg (https://ardia.dev/nightly). Now $version: its notes and source are at $REPO_URL/releases/tag/v$version. Every nightly's notes: https://ardia.dev/release-notes"
+  nightly_notes="The newest nightly, always as Ardia-Nightly.dmg (https://ardia.dev/nightly). Now $version: its notes and source are at $REPO_URL/releases/tag/v$version. Every nightly's notes: $RELEASE_NOTES_URL"
   if ! gh release view nightly -R "$REPO" >/dev/null 2>&1; then
     run gh release create nightly -R "$REPO" --prerelease --latest=false --title "Ardia Nightly" --notes "$nightly_notes"
   fi

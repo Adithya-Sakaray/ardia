@@ -146,6 +146,11 @@ scripts/release.sh <version>     # ~15–25 min with notarization; run it in the
 For a nightly, set `MARKETING_VERSION` to `<version>` (`0.2.37-nightly.1`) the same way, commit as "Nightly <version>",
 and run `scripts/release.sh <version>`: the version alone makes it a nightly.
 
+`release.sh` checks everything first, then runs the stages in `scripts/release/` in order: `archive.sh`,
+`export-sign.sh`, `verify.sh`, `launch-check.sh`, `notarize.sh`, `package.sh`, `notes.sh`, `appcast.sh`. When one
+fails, read its log in `dist/<version>/` and rerun that stage alone (each prints its usage); `notes.sh` prints the
+GitHub notes without touching anything.
+
 To release from CI instead, push the commit and dispatch the Release workflow (step 5): it runs this same `release.sh`
 on GitHub's runner, so everything below about what it checks holds there too.
 When `engine/` changed since the last published engine, publish the engine you built first, or CI has nothing to link:

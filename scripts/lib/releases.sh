@@ -2,6 +2,7 @@ REPO="mantrakp04/ardia"
 REPO_URL="https://github.com/$REPO"
 LATEST_DOWNLOAD_URL="$REPO_URL/releases/latest/download"
 NIGHTLY_DMG_URL="$REPO_URL/releases/download/nightly/Ardia-Nightly.dmg"
+RELEASE_NOTES_URL="https://ardia.dev/release-notes"
 APPCAST_PY="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/.claude/skills/release/scripts/appcast.py"
 
 channel_of() {

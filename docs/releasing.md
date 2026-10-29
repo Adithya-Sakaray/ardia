@@ -123,7 +123,10 @@ stays up. That's GPL-3.0 §6(d) for the GPL parts (uBlock Origin today), and it'
    `headline`, if the tree under `apps/browser`, `packages`, `engine` or `scripts/dmg` has uncommitted changes, or if the engine
    framework is older than the tree's ArdiaCore sources or the Chromium tree differs from `engine/ardiacore`
    (`apply.sh --check`), if the version doesn't fit the channel or the notes' `channel`, if it can't read the published
-   appcast, or if the build number isn't above every build in it. It writes `dist/<version>/`:
+   appcast, if the build number isn't above every build in it, or (outside `--rc`) if `prebuilt-engines.tsv` lists no
+   published engine for HEAD's `engine/` tree. Then it runs the stages in `scripts/release/` (`archive.sh`,
+   `export-sign.sh`, `verify.sh`, `launch-check.sh`, `notarize.sh`, `package.sh`, `notes.sh`, `appcast.sh`; each
+   prints its usage and runs alone). It writes `dist/<version>/`:
    - archives the Release configuration of `apps/browser/macos` for arm64, staging the engine into its own derived
      data so a development build restaging can't change it mid-build, and exports it with Developer ID. Here the export is Xcode's
      (`-allowProvisioningUpdates`, which needs Xcode signed in to the team); with `RELEASE_PROVISIONING_PROFILE` set (CI)
