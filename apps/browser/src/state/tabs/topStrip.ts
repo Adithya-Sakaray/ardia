@@ -5,7 +5,7 @@ import { groupIndex, splitIndex, stableList } from "../browser/structure";
 import { movingTabIds, resolveDrop, slotDrop, type DragSource, type DropSpot, type Lane } from "../drag/drops";
 import { hiddenEmptyCard } from "../omnibox/newTabBarPolicy";
 import { groupLabel } from "../pins/organize";
-import { folderIn, folderLabel, folderMembers, tileFolderOf } from "../pins/tileFolders";
+import { folderCell, folderIn, folderLabel, folderMembers, tileFolderOf } from "../pins/tileFolders";
 import { clickTab } from "../sidebar/actions";
 import { groupEntries } from "../sidebar/entries";
 import { renameFolder } from "../sidebar/tileFolderUi";
@@ -24,7 +24,47 @@ export function tuckTarget(s: BrowserState, windowId: string, profileId: string,
 }
 
 
-const stripMemo = new Map<string, { inputs: unknown[]; result: string[] }>();
+export type StripMember = { kind: "tab"; id: string; group: string | null } | { kind: "split" | "folder"; id: string; tabIds: string[]; group: string | null };
+export type StripGroupEntry = { kind: "group"; id: string; collapsed: boolean; members: StripMember[] };
+export type StripDock = { kind: "dock"; ids: string[]; members: Map<string, string[]> };
+export type StripEntry = StripDock | StripGroupEntry | StripMember;
+
+const stripMemo = new Map<string, { inputs: unknown[]; keys: string[]; entries: StripEntry[] }>();
+
+function parseStrip(keys: string[], previousDock: StripDock | undefined): StripEntry[] {
+  const out: StripEntry[] = [];
+  const groups = new Map<string, StripGroupEntry>();
+  const dockKeys: string[] = [];
+  for (const key of keys) {
+    const [kind, id, a, b] = key.split(":");
+    if (kind === "pinned" || kind === "tilefolder") {
+      dockKeys.push(key);
+      const cell = kind === "tilefolder" ? folderCell(id!) : id!;
+      const last = out[out.length - 1];
+      const dock = last?.kind === "dock" ? last : { kind: "dock" as const, ids: [], members: new Map<string, string[]>() };
+      if (dock !== last) out.push(dock);
+      dock.ids.push(cell);
+      if (kind === "tilefolder") dock.members.set(cell, a!.split(","));
+      continue;
+    }
+    if (kind === "group") {
+      const group: StripGroupEntry = { kind, id: id!, collapsed: a === "1", members: [] };
+      groups.set(group.id, group);
+      out.push(group);
+      continue;
+    }
+    const member: StripMember = kind === "split" || kind === "folder" ? { kind, id: id!, tabIds: a!.split(","), group: b || null } : { kind: "tab", id: id!, group: a || null };
+    const group = member.group ? groups.get(member.group) : undefined;
+    if (group) group.members.push(member);
+    else out.push(member);
+  }
+  const dockAt = out.findIndex((e) => e.kind === "dock");
+  if (dockAt >= 0 && previousDock && dockSignature.get(previousDock) === dockKeys.join()) out[dockAt] = previousDock;
+  else if (dockAt >= 0) dockSignature.set(out[dockAt] as StripDock, dockKeys.join());
+  return out;
+}
+
+const dockSignature = new WeakMap<StripDock, string>();
 
 function foldersUnderRoots(groups: BrowserState["groups"]): Map<string, string> {
   const folderOf = new Map<string, string>();
@@ -35,11 +75,11 @@ function foldersUnderRoots(groups: BrowserState["groups"]): Map<string, string> 
   return folderOf;
 }
 
-export function stripEntries(s: BrowserState, windowId: string, profileId: string): string[] {
+export function stripEntries(s: BrowserState, windowId: string, profileId: string): StripEntry[] {
   const key = `${windowId}|${profileId}`;
   const inputs = [s.tabs, s.windows, s.groups, s.splits, s.settings.newTabOpens];
   const cached = stripMemo.get(key);
-  if (cached && cached.inputs.every((v, i) => v === inputs[i])) return cached.result;
+  if (cached && cached.inputs.every((v, i) => v === inputs[i])) return cached.entries;
   const groups = groupIndex(s.groups);
   const folders = foldersUnderRoots(s.groups);
   const splits = splitIndex(s.splits);
@@ -81,10 +121,11 @@ export function stripEntries(s: BrowserState, windowId: string, profileId: strin
     }
     out.push(`tab:${id}:${group?.id ?? ""}`);
   }
-  const result = stableList(cached?.result, [...dock, ...out]);
-  stripMemo.set(key, { inputs, result });
+  const keys = stableList(cached?.keys, [...dock, ...out]);
+  const entries = cached && keys === cached.keys ? cached.entries : parseStrip(keys, cached?.entries.find((e): e is StripDock => e.kind === "dock"));
+  stripMemo.set(key, { inputs, keys, entries });
   if (stripMemo.size > 8) for (const k of stripMemo.keys()) if (!s.windows[k.split("|")[0]!]) stripMemo.delete(k);
-  return result;
+  return entries;
 }
 
 type FolderMenuItem = ChoiceItem<{ tabId: string }>;

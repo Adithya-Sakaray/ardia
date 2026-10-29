@@ -169,7 +169,10 @@ test("the top strip's pinned dock shows a folder as one cell, the active member 
   const { w, ids: [a, b, c, d] } = pinnedWindow();
   act((s) => folders.addToTileFolder(s, [c, d], b));
   const fid = folderOf(b).id;
-  const dock = () => stripEntries(S(), w, "default").filter((e) => e.startsWith("pinned:") || e.startsWith("tilefolder:"));
+  const dock = () =>
+    stripEntries(S(), w, "default").flatMap((e) =>
+      e.kind === "dock" ? e.ids.map((cell) => (e.members.has(cell) ? `tilefolder:${folders.folderIdOfCell(cell)}:${e.members.get(cell).join(",")}` : `pinned:${cell}`)) : [],
+    );
   assert.deepEqual(dock(), [`pinned:${a}`, `tilefolder:${fid}:${b},${c},${d}`]);
   S().activate(c);
   assert.deepEqual(dock(), [`pinned:${a}`, `tilefolder:${fid}:${b},${c},${d}`, `pinned:${c}`]);

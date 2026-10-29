@@ -2,13 +2,13 @@ import { memo, useContext, useEffect, useMemo, useRef } from "react";
 import { Animated, ScrollView } from "react-native";
 import { PageProfileContext, useWindowId } from "../../state/browser/hooks";
 import { tabDragging } from "../../state/drag/tabDrag";
-import { useShownTabIdFor, useStripEntries } from "../../state/tabs/topStrip";
+import { useShownTabIdFor, useStripEntries, type StripGroupEntry, type StripMember } from "../../state/tabs/topStrip";
 import { setMeasuredWidth, useMeasuredWidths } from "../../state/windows/measuredWidths";
 import { usePageStyle } from "../../state/windows/profilePager";
 import { ThemeScope } from "../window/ThemeScope";
 import { DockContext, FloatingStrip } from "./context";
 import { IncomingGap, useIncomingTab } from "./IncomingTab";
-import { chipKey, dockWidth, folderKey, holds, parseEntries, tabsOf, units, type DropTarget, type GroupEntry, type Member, type Strip } from "./model";
+import { chipKey, dockWidth, folderKey, holds, tabsOf, units, type DropTarget, type Strip } from "./model";
 import { NewTabButton } from "./NewTabButton";
 import { PinnedDock } from "./PinnedDock";
 import { SplitChip } from "./SplitChip";
@@ -21,13 +21,12 @@ export const StripPage = memo(function StripPage({ profileId, slot, pageWidth, c
   const windowId = useWindowId();
   const flare = useContext(FloatingStrip) ? 0 : FLARE;
   const pageStyle = usePageStyle(windowId, slot, pageWidth + flare * 2);
-  const entries = useStripEntries(windowId, profileId);
+  const parsed = useStripEntries(windowId, profileId);
   const activeId = useShownTabIdFor(windowId, profileId);
-  const parsed = useMemo(() => parseEntries(entries), [entries]);
   const groupIds = parsed.flatMap((e) => (e.kind === "group" ? [e.id] : []));
   const chipWidths = useMeasuredWidths(groupIds.map(chipKey));
   const chipOf = (groupId: string) => chipWidths[groupIds.indexOf(groupId)];
-  const visible = parsed.flatMap((e): Member[] => (e.kind === "group" ? (e.collapsed ? e.members.filter((m) => holds(m, activeId)) : e.members) : e.kind === "dock" ? [] : [e]));
+  const visible = parsed.flatMap((e): StripMember[] => (e.kind === "group" ? (e.collapsed ? e.members.filter((m) => holds(m, activeId)) : e.members) : e.kind === "dock" ? [] : [e]));
   const folderIds = parsed.flatMap((e) => (e.kind === "group" ? e.members.flatMap((m) => (m.kind === "folder" ? [m.id] : [])) : []));
   const folderWidths = useMeasuredWidths(folderIds.map(folderKey));
   const folderChip = (groupId: string) => folderWidths[folderIds.indexOf(groupId)];
@@ -43,7 +42,7 @@ export const StripPage = memo(function StripPage({ profileId, slot, pageWidth, c
     min: MIN_CHIP,
     max: MAX_CHIP,
   });
-  const memberWidth = (m: Member) => (m.kind === "folder" ? (folderChip(m.id) ?? 0) + (holds(m, activeId) ? MEMBERS_INSET + chip : 0) : chip * units(m, activeId));
+  const memberWidth = (m: StripMember) => (m.kind === "folder" ? (folderChip(m.id) ?? 0) + (holds(m, activeId) ? MEMBERS_INSET + chip : 0) : chip * units(m, activeId));
   const top = dragGeometry(
     parsed.flatMap((e): DragSlot[] => {
       if (e.kind === "dock") return [];
@@ -58,9 +57,10 @@ export const StripPage = memo(function StripPage({ profileId, slot, pageWidth, c
   const targets = parsed.flatMap((e): (DropTarget | null)[] => (e.kind === "dock" ? [] : e.kind === "group" || e.kind === "tab" ? [{ kind: e.kind, id: e.id }] : [null]));
   const slotOf = (id: string) => top.slots.findIndex((slot) => slot.tabIds[0] === id);
   const dockIds = parsed.flatMap((e) => (e.kind === "dock" ? e.ids : []));
-  const dockTabs = (cell: string) => parsed.find((e) => e.kind === "dock")?.members.get(cell) ?? [cell];
+  const dock = parsed.find((e) => e.kind === "dock");
+  const dockTabs = (cell: string) => dock?.members.get(cell) ?? [cell];
   const grow = useRef(new Animated.Value(0)).current;
-  const dockGeometry = useMemo(() => dragGeometry(dockIds.map((id) => ({ tabIds: dockTabs(id), width: PINNED_CELL })), PINNED_SPACING), [entries.filter((e) => e.startsWith("pinned:") || e.startsWith("tilefolder:")).join()]);
+  const dockGeometry = useMemo(() => dragGeometry(dockIds.map((id) => ({ tabIds: dockTabs(id), width: PINNED_CELL })), PINNED_SPACING), [dock]);
   const strip: Strip = { top, targets, chip, grow, dock: dockIds.length ? { ids: dockIds, left: -(dockWidth(dockIds.length) + DOCK_GAP), geometry: dockGeometry } : null };
   const incoming = useIncomingTab(windowId, current, top);
   const scroll = useRef<ScrollView>(null);
@@ -71,7 +71,7 @@ export const StripPage = memo(function StripPage({ profileId, slot, pageWidth, c
     const i = top.slots.findIndex((slot) => slot.tabIds.includes(tabId));
     if (i < 0) return null;
     const left = flare + (dockIds.length ? dockWidth(dockIds.length) + DOCK_GAP : 0) + top.lefts[i]!;
-    const group = parsed.find((e): e is GroupEntry => e.kind === "group" && e.members.some((m) => holds(m, tabId)));
+    const group = parsed.find((e): e is StripGroupEntry => e.kind === "group" && e.members.some((m) => holds(m, tabId)));
     if (!group) return [left, top.slots[i]!.width];
     const at = group.members.findIndex((m) => holds(m, tabId));
     const widths = group.members.map(memberWidth);

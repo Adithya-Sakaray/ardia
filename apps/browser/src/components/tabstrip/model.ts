@@ -1,51 +1,19 @@
 import type { Animated } from "react-native";
 import type { DropSpot } from "../../state/drag/drops";
-import { folderCell } from "../../state/pins/tileFolders";
-import { dropTabsAt, dropTabsInSlot, useStripOntoIs } from "../../state/tabs/topStrip";
+import { dropTabsAt, dropTabsInSlot, useStripOntoIs, type StripMember } from "../../state/tabs/topStrip";
 import type { DragGeometry } from "./stripGroups";
 import { PINNED_CELL, PINNED_SPACING } from "./tokens";
 
-export type Member = { kind: "tab"; id: string; group: string | null } | { kind: "split" | "folder"; id: string; tabIds: string[]; group: string | null };
-export type GroupEntry = { kind: "group"; id: string; collapsed: boolean; members: Member[] };
-export type Entry = { kind: "dock"; ids: string[]; members: Map<string, string[]> } | GroupEntry | Member;
 export type DropTarget = { kind: "tab" | "group"; id: string };
 
 export const ontoKey = (target: DropTarget | null) => (target ? `${target.kind}:${target.id}` : null);
 export const useOnto = (target: DropTarget) => useStripOntoIs(ontoKey(target));
 
-export function parseEntries(keys: string[]): Entry[] {
-  const out: Entry[] = [];
-  const groups = new Map<string, GroupEntry>();
-  for (const key of keys) {
-    const [kind, id, a, b] = key.split(":");
-    if (kind === "pinned" || kind === "tilefolder") {
-      const cell = kind === "tilefolder" ? folderCell(id!) : id!;
-      const last = out[out.length - 1];
-      const dock = last?.kind === "dock" ? last : { kind: "dock" as const, ids: [], members: new Map<string, string[]>() };
-      if (dock !== last) out.push(dock);
-      dock.ids.push(cell);
-      if (kind === "tilefolder") dock.members.set(cell, a!.split(","));
-      continue;
-    }
-    if (kind === "group") {
-      const group: GroupEntry = { kind, id: id!, collapsed: a === "1", members: [] };
-      groups.set(group.id, group);
-      out.push(group);
-      continue;
-    }
-    const member: Member = kind === "split" || kind === "folder" ? { kind, id: id!, tabIds: a!.split(","), group: b || null } : { kind: "tab", id: id!, group: a || null };
-    const group = member.group ? groups.get(member.group) : undefined;
-    if (group) group.members.push(member);
-    else out.push(member);
-  }
-  return out;
-}
-
 export const chipKey = (groupId: string) => `strip-group-chip|${groupId}`;
 export const folderKey = (groupId: string) => `strip-folder-chip|${groupId}`;
-export const holds = (m: Member, tabId: string) => (m.kind === "tab" ? m.id === tabId : m.tabIds.includes(tabId));
-export const tabsOf = (m: Member) => (m.kind === "tab" ? [m.id] : m.tabIds);
-export const units = (m: Member, activeId: string) => (m.kind === "split" ? Math.min(m.tabIds.length, 2) : m.kind === "folder" ? (holds(m, activeId) ? 1 : 0) : 1);
+export const holds = (m: StripMember, tabId: string) => (m.kind === "tab" ? m.id === tabId : m.tabIds.includes(tabId));
+export const tabsOf = (m: StripMember) => (m.kind === "tab" ? [m.id] : m.tabIds);
+export const units = (m: StripMember, activeId: string) => (m.kind === "split" ? Math.min(m.tabIds.length, 2) : m.kind === "folder" ? (holds(m, activeId) ? 1 : 0) : 1);
 
 export type StripDrag = {
   tabId: string | null;

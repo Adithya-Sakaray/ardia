@@ -26,9 +26,7 @@ function dockWith() {
 }
 
 const dockSlots = (w) =>
-  stripEntries(S(), w, S().windows[w].profileId)
-    .filter((key) => key.startsWith("pinned:"))
-    .map((key) => ({ tabIds: [key.slice("pinned:".length)] }));
+  stripEntries(S(), w, S().windows[w].profileId).flatMap((e) => (e.kind === "dock" ? e.ids.filter((cell) => !e.members.has(cell)).map((cell) => ({ tabIds: [cell] })) : []));
 
 const dock = (w) => {
   const pinned = S().windows[w].tabIds.filter((id) => S().tabs[id].pinned);

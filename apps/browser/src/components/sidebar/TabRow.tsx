@@ -4,7 +4,7 @@ import { toggleMute } from "../../state/browser/actions";
 import { hex, layout, useTheme } from "../ui/theme";
 import { useIsActiveTab, usePageProfileId, useTab, useWindow, useWindowId } from "../../state/browser/hooks";
 import { returnToPinnedUrl } from "../../state/pins/actions";
-import { useSplitRowKey } from "../../state/sidebar/hooks";
+import { useSplitRowPanes } from "../../state/sidebar/hooks";
 import { useMuteState } from "../../state/tabs/hooks";
 import { muteTitle } from "../../state/tabs/mute";
 import { HoverSlot } from "../ui/HoverSlot";
@@ -205,7 +205,7 @@ export const SplitRowItem = memo(function SplitRowItem({
   motion?: EntryMotion | null;
 }) {
   const windowId = useWindowId();
-  const tabIds = useSplitRowKey(splitId).split(",").filter(Boolean);
+  const tabIds = useSplitRowPanes(splitId);
   const { wrapper, handle } = useDragItem(entryKey("split", splitId), { kind: "split", tabIds, section, parentGroup }, motion?.clip);
   const theme = useTheme();
   const glow = useSelectedTabGlow();

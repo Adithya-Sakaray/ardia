@@ -13,7 +13,8 @@ import { ContextMenuArea, Symbol, useHover } from "../ui";
 import { curve } from "../ui/motion";
 import { useTheme } from "../ui/theme";
 import { font, weight, withAlpha } from "../ui/tokens";
-import { folderKey, type GroupOut, type Member } from "./model";
+import { folderKey, type GroupOut } from "./model";
+import type { StripMember } from "../../state/tabs/topStrip";
 import { SplitChip } from "./SplitChip";
 import { MEMBERS_INSET, TUCK_FADE_MS, type DragGeometry } from "./stripGroups";
 import { DraggableChip, TabChip } from "./TabChip";
@@ -35,7 +36,7 @@ export function GroupMember({
   tuck,
   out,
 }: {
-  member: Member;
+  member: StripMember;
   width: number;
   start: number;
   offset: number;

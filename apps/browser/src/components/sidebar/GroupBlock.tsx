@@ -6,7 +6,7 @@ import { updateGroup } from "../../state/groups/actions";
 import { useGroupLabel } from "../../state/groups/hooks";
 import { useSelectionInGroup } from "../../state/pins/hooks";
 import { newCapture } from "../../state/sidebar/listCapture";
-import { useCapturedGroupEntries, useGroupFirstTabIcon, useKeptEntry } from "../../state/sidebar/hooks";
+import { useCapturedGroupEntries, useGroupFirstTabIcon, useGroupTabIds, useKeptEntry } from "../../state/sidebar/hooks";
 import { MeetingTimeLabel, useMeetingCountdown } from "../live/MeetingCountdown";
 import { HoverSlot } from "../ui/HoverSlot";
 import { Button, ContextMenuArea, FadeLabel, font, ink, radius, Surface, Symbol, weight, withAlpha } from "../ui";
@@ -84,14 +84,14 @@ export const GroupBlock = memo(function GroupBlock({
   const stored = useGroup(groupId, (g) => !!g?.collapsed);
   const collapsed = useDragFolded(entryKey("group", groupId)) || stored;
   const color = useGroup(groupId, (g) => g?.color ?? null);
-  const tabIds = useGroup(groupId, (g) => g?.tabIds.join(",") ?? "");
+  const tabIds = useGroupTabIds(groupId);
   const [captured] = useState(newCapture);
   const entries = useCapturedGroupEntries(groupId, captured);
   const selectedInside = useSelectionInGroup(windowId, groupId);
   const profileId = usePageProfileId();
   const activeEntry = useKeptEntry(windowId, profileId, entries);
   const foldedHeight = () => foldedGroupHeight(windowId, profileId, groupId);
-  const { wrapper, handle, headerRef } = useDragItem(entryKey("group", groupId), { kind: "group", tabIds: tabIds.split(",").filter(Boolean), section, groupId, collapsed: stored, foldedHeight, parentGroup }, own?.clip);
+  const { wrapper, handle, headerRef } = useDragItem(entryKey("group", groupId), { kind: "group", tabIds, section, groupId, collapsed: stored, foldedHeight, parentGroup }, own?.clip);
   const tail = useDragItem(tailKey({ group: groupId }), { kind: "tail", tabIds: [], section, parentGroup: groupId });
 
   const fold = useFold(collapsed);
