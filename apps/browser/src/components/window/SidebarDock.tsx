@@ -196,7 +196,7 @@ function SidebarDock({
   const shown = fullscreen ? "fullscreen" : open ? "docked" : peek.live ? "peek" : "away";
   useLayoutEffect(() => () => dismissHoverIn(windowId), [windowId, shown]);
   const watching = !open && !fullscreen && !moving;
-  const draggingTab = useTabDrag((d) => d.windowId === windowId && d.tabIds.length > 0);
+  const draggingTab = useTabDrag((d) => d.phase === "tab" && d.windowId === windowId);
   const nativeHold = peeking ? holdWidth : draggingTab ? STRIP_WIDTH : 0;
   useEffect(() => {
     if (!watching) return;

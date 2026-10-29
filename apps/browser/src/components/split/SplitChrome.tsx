@@ -89,12 +89,12 @@ function DividerHandle({ split, divider, width, height }: { split: SplitView; di
 
 export function DropTargets({ panes, origin }: { panes: Record<string, Rect>; origin: { x: number; y: number } | null }) {
   const windowId = useWindowId();
-  const dragging = useTabDrag((s) => (s.windowId === windowId ? s.tabId : null));
-  const x = useTabDrag((s) => s.x);
-  const y = useTabDrag((s) => s.y);
-  const lifted = useTabDrag((s) => s.lifted);
-  const outside = useTabDrag((s) => s.outside);
-  const target = useTabDrag((s) => s.target);
+  const dragging = useTabDrag((s) => (s.phase === "tab" && s.windowId === windowId ? s.tabId : null));
+  const x = useTabDrag((s) => (s.phase === "tab" ? s.x : -1));
+  const y = useTabDrag((s) => (s.phase === "tab" ? s.y : -1));
+  const lifted = useTabDrag((s) => (s.phase === "tab" ? s.lifted : null));
+  const outside = useTabDrag((s) => s.phase === "tab" && s.outside);
+  const target = useTabDrag((s) => (s.phase === "tab" ? s.target : null));
   const full = Object.keys(panes).length >= 3;
   const fallback = useDragFallbackPane(dragging, panes, windowId);
   const candidates = useMemo((): [string, Rect][] => {

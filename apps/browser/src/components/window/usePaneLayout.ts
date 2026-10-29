@@ -36,7 +36,7 @@ export function usePaneLayout(windowId: string, activeId: string | undefined, sp
   const shownPanes = useMemo(() => (lingerId && lingerRect ? { ...panes, [lingerId]: lingerRect } : panes), [panes, lingerId, lingerRect?.width, lingerRect?.height]);
 
   const pagerPages = pagerFor(windowId).state((st) => st.pages);
-  const leaving = useTabDrag((d) => (d.windowId === windowId && d.tabIds.length && (d.outside || !!(d.lifted ?? d.onPage)) ? d.tabIds : null));
+  const leaving = useTabDrag((d) => (d.phase === "tab" && d.windowId === windowId && (d.outside || !!(d.lifted ?? d.onPage)) ? d.tabIds : null));
   const successor = useMemo(() => (leaving ? successorWhenLeaving(leaving, windowId) : undefined), [leaving, windowId]);
   const warm = useWarmTabIds(windowId, pagerPages, successor);
   const warmSplits = useSplitsOf(warm);

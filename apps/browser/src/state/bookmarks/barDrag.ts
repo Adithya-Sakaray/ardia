@@ -174,8 +174,7 @@ export function dropTabsOnBar(tabIds: string[], windowId: string, x: number, y: 
 
 export function followTabDragOnBar(d: TabDrag) {
   const s = useBarDrag.getState();
-  const live = d.tabIds.length > 0 && !!d.windowId && d.windowId !== "external" && !d.outside && d.x >= 0;
-  if (!live) {
+  if (d.phase !== "tab" || d.outside || d.x < 0) {
     if (s.source?.kind === "tabs") {
       finish();
       closeSprungMenus();
@@ -184,7 +183,7 @@ export function followTabDragOnBar(d: TabDrag) {
   }
   if (s.source && s.source.kind !== "tabs") return;
   if (!s.source || s.windowId !== d.windowId) useBarDrag.setState({ ...IDLE, windowId: d.windowId, source: { kind: "tabs", tabIds: d.tabIds } });
-  track(d.windowId!, d.x, d.y, null);
+  track(d.windowId, d.x, d.y, null);
 }
 
 let escapeWatchers = 0;

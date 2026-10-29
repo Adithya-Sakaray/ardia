@@ -25,7 +25,7 @@ export function DragGhost({ ghost }: { ghost: Ghost }) {
   const label = useDragGhostLabel(folder?.name, groupId, tab);
   const tile = item.kind === "tile";
   const folderTile = !!folderOf(item);
-  const onPage = useTabDrag((d) => d.onPage);
+  const onPage = useTabDrag((d) => d.phase === "tab" && d.onPage);
   return (
     <Animated.View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, width, height, opacity: onPage ? 0 : 1, transform: position.getTranslateTransform() }}>
       <Panel

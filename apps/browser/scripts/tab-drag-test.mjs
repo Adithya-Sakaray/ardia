@@ -144,7 +144,7 @@ try {
       const begin = ac.shell.dragPreview.begin;
       ac.shell.dragPreview.begin = (...a) => { log.picture.push(performance.now() - t0); return begin(...a); };
       // The drag's own store says when it starts and ends (the drop's store update comes right after, in the same task).
-      const stop = globalThis.acTabDrag.subscribe((d, was) => { if (!d.tabIds.length !== !was.tabIds.length) log.drag.push([d.tabIds.length > 0, performance.now() - t0]); });
+      const stop = globalThis.acTabDrag.subscribe((d, was) => { if ((d.phase === "idle") !== (was.phase === "idle")) log.drag.push([d.phase !== "idle", performance.now() - t0]); });
       return act("w1", "drag:${path.map((p) => p.join(",")).join(";")}").then(() => settle(${path.length * 12 * 16 + 1200})).then(() => {
         stop(); unsubscribe(); tabs.call = send; ac.shell.dragPreview.begin = begin;
         return log;
@@ -447,7 +447,7 @@ try {
       const [a, , c] = rows;
       const sx = Math.round(a.x + a.w / 2), sy = Math.round(a.y + a.h / 2), to = Math.round(c.y + c.h * 0.85);
       const before = await order("w1");
-      const seen = await run(`const seen = []; const iv = setInterval(() => { const d = globalThis.acTabDrag.getState(); if (d.tabIds.length) seen.push([d.onPage, d.target]); }, 40);
+      const seen = await run(`const seen = []; const iv = setInterval(() => { const d = globalThis.acTabDrag.getState(); if (d.phase === "tab") seen.push([d.onPage, d.target]); }, 40);
         return act("w1", "drag:${sx},${sy};${sx},${sy + 10};${sx},${to};${sx},${to}").then(() => settle(1600)).then(() => { clearInterval(iv); return seen; });`);
       assert.deepEqual(await run(`return Object.values(st().splits).map((v) => v.tabIds);`), [], "no split");
       assert.ok(seen.every(([onPage, target]) => !onPage && !target), `no page target under the sidebar: ${JSON.stringify(seen.slice(-3))}`);
@@ -457,7 +457,7 @@ try {
       const hold = Array.from({ length: 6 }, () => `${sx},${to}`).join(";");
       const cancelled = await run(`setTimeout(() => ac.shell.devTypeKeys("key", "\\u001b", 0), ${150 + 16 * 12 * 2 + 200});
         let ended = null; const t0 = performance.now();
-        const stop = globalThis.acTabDrag.subscribe((d, was) => { if (was.tabIds.length && !d.tabIds.length && ended === null) ended = performance.now() - t0; });
+        const stop = globalThis.acTabDrag.subscribe((d, was) => { if (was.phase !== "idle" && d.phase === "idle" && ended === null) ended = performance.now() - t0; });
         return act("w1", "drag:${sx},${sy};${sx},${sy + 10};${sx},${to};${hold}").then(() => settle(${150 + 16 * 12 * 8 + 600})).then(() => { stop(); return { ended, order: st().windows.w1.tabIds }; });`);
       assert.deepEqual(cancelled.order, after, "Esc: nothing moved");
       assert.ok(cancelled.ended !== null && cancelled.ended < 150 + 16 * 12 * 7, `Esc ended the drag before the release: ${cancelled.ended}`);
@@ -766,7 +766,7 @@ try {
     const out = await run(`const FD = ac.shell.devFileDrag; const before = new Set(Object.keys(st().tabs)); let gap = null;
       return FD.drag("w1", "move", ${x + 30}, 20, { files: [${JSON.stringify(pdf)}] }).then(() => settle(400)).then(() => FD.drag("w1", "move", ${x}, 20)).then(() => settle(400))
         .then(() => { gap = globalThis.acTabDrag.getState().insert; return FD.drag("w1", "drop", ${x}, 20); }).then((r) => settle(900).then(() => ({ r, gap,
-          added: st().windows.w1.tabIds.filter((id) => !before.has(id)), order: st().windows.w1.tabIds, idle: globalThis.acTabDrag.getState().tabIds.length === 0 })));`);
+          added: st().windows.w1.tabIds.filter((id) => !before.has(id)), order: st().windows.w1.tabIds, idle: globalThis.acTabDrag.getState().phase === "idle" })));`);
     assert.match(out.r, /FileDropView performed/, JSON.stringify(out));
     assert.ok(out.gap?.beforeId && loose.indexOf(out.gap.beforeId) > 0, `an incoming gap inside the strip: ${JSON.stringify(out.gap)} in ${loose}`);
     assert.equal(out.added.length, 1);
@@ -774,9 +774,9 @@ try {
     assert.ok(out.idle, "the strip's drag state is idle again");
     await run(`st().closeTabs(${JSON.stringify(out.added)}); return settle(500);`);
     const ended = await run(`const FD = ac.shell.devFileDrag;
-      return FD.drag("w1", "move", ${x}, 20, { files: [${JSON.stringify(pdf)}] }).then(() => settle(400)).then(() => { const busy = globalThis.acTabDrag.getState().tabIds.length;
-        return FD.drag("w1", "end", ${x}, 20).then(() => settle(400)).then(() => ({ busy, idle: globalThis.acTabDrag.getState().tabIds.length === 0 })); });`);
-    assert.deepEqual(ended, { busy: 1, idle: true }, "a drag that just ends frees the strip for tab drags");
+      return FD.drag("w1", "move", ${x}, 20, { files: [${JSON.stringify(pdf)}] }).then(() => settle(400)).then(() => { const busy = globalThis.acTabDrag.getState().phase;
+        return FD.drag("w1", "end", ${x}, 20).then(() => settle(400)).then(() => ({ busy, idle: globalThis.acTabDrag.getState().phase === "idle" })); });`);
+    assert.deepEqual(ended, { busy: "external", idle: true }, "a drag that just ends frees the strip for tab drags");
   });
 
   await check("file drop: a private window takes a dropped file too", async () => {
