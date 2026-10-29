@@ -1,10 +1,10 @@
 import { assignPositions, type Extraction } from "../../platform/sync";
 import { ancestorIds, depthOf } from "../groups/groups";
 import { groupChoiceKey, placeChoiceKey } from "../pins/organize";
-import { pinKeyOf } from "../pins/pinMirror";
 import type { Tab, TabGroup } from "../browser/types";
 import { PIN_TAB, PIN_GROUP, legacyColor, PIN_NEST, PIN_ROW, type NestGroupValue, type NestTabValue, type PinGroupValue, type PinValue } from "./pinRecords";
 import { homeWindow, openWindows, settleChoices, store } from "./pinnedSyncState";
+import { pinKeyOf } from "../browser/model";
 
 export function extractPinned(profileId: string, base: (key: string) => unknown, queued: (key: string) => boolean, now: number): Extraction {
   const s = store();

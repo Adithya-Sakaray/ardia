@@ -1,12 +1,11 @@
 import type { ApplyRecords } from "../../platform/sync";
 import { useBrowser } from "../browser/store";
 import { depthOf, leaveGroups, orderSections, syncGroupOrder, withParent } from "../groups/groups";
-import { makeTab, newId, without } from "../browser/model";
+import { makeTab, newId, pinKeyOf, without } from "../browser/model";
 import { noteRemotePinDeletion, type PinSyncEntry } from "../pins/organize";
 import { adoptParkedPins, parkWindowPins } from "../pins/parkedPins";
 import { arrangePinnedArea } from "../pins/pinnedArea";
 import { fromSync } from "../pins/pinOrderChoices";
-import { pinKeyOf } from "../pins/pinMirror";
 import { removeTabs } from "../tabs/tabs";
 import type { Tab, TabGroup } from "../browser/types";
 import {

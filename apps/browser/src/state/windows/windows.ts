@@ -8,6 +8,7 @@ import {
   isIncognitoProfile,
   navigationTo,
   newId,
+  pinKeyOf,
   resolveWindowId,
   snapshotTab,
   viewTabIds,
@@ -117,7 +118,7 @@ function intoProfile(s: BrowserState, tabId: string, profileId: string): Browser
   const loaded = hasLoadedPage(tab);
   const { adoptId: _, wakeAdoptId: _w, ...rest } = tab;
   const moved: Tab = { ...rest, profileId, navigation: loaded ? navigationTo(tab.url) : null, lastActiveAt: Date.now() };
-  const movedKey = moved.pinKey ?? moved.id;
+  const movedKey = pinKeyOf(moved);
   const pinChoices = tab.pinned
     ? { ...next.pinChoices, [profileId]: { ...next.pinChoices[profileId], [movedKey]: nextPinChoice(), [placeChoiceKey(movedKey)]: nextPinChoice() } }
     : next.pinChoices;

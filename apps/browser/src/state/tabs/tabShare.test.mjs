@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
 const model = await import("../browser/model.ts");
-const { pinKeyOf } = await import("../pins/pinMirror.ts");
+const { pinKeyOf } = model;
 
 const S = () => useBrowser.getState();
 const reset = () => S().hydrate({});

@@ -1,6 +1,6 @@
 import type { BrowserState } from "../browser/store";
 import { ancestorIds, innermostGroupOf, insertAll, leaveGroups, nestGroups, orderSections, placeGroups, reparent, syncGroupOrder } from "../groups/groups";
-import { isIncognitoProfile, isPinnedRow } from "../browser/model";
+import { isIncognitoProfile, isPinnedRow, pinKeyOf } from "../browser/model";
 import { splitOf, splitRowHead, splitRowPanes, withSplitRows } from "../splits/splits";
 import { nextPinChoice, placeChoiceKey } from "./pinChoices";
 import { groupOf, withRowsGrouped } from "./tabGrouping";
@@ -46,15 +46,15 @@ export function placing(s: BrowserState, ids: string[], p: TabPlacement): Browse
     if (placed || !!t.pinnedAsRow !== row) {
       const { pinnedAsRow: _, ...rest } = tabs[id]!;
       tabs[id] = row ? { ...rest, pinnedAsRow: true } : rest;
-      const entry = placed ? pinSync[t.profileId]?.[t.pinKey ?? t.id] : undefined;
+      const entry = placed ? pinSync[t.profileId]?.[pinKeyOf(t)] : undefined;
       if (entry?.g) {
         const { g: __, w: ___, ...kept } = entry;
-        pinSync = { ...pinSync, [t.profileId]: { ...pinSync[t.profileId], [t.pinKey ?? t.id]: kept } };
+        pinSync = { ...pinSync, [t.profileId]: { ...pinSync[t.profileId], [pinKeyOf(t)]: kept } };
       }
       if ((p.pinned || intoPinnedGroup) && !isIncognitoProfile(t.profileId)) {
         chosen ??= { ...s.pinChoices[t.profileId] };
-        if (p.pinned) chosen[t.pinKey ?? t.id] = nextPinChoice();
-        if (placed) chosen[placeChoiceKey(t.pinKey ?? t.id)] = nextPinChoice();
+        if (p.pinned) chosen[pinKeyOf(t)] = nextPinChoice();
+        if (placed) chosen[placeChoiceKey(pinKeyOf(t))] = nextPinChoice();
       }
     }
     const folder = p.pinned && !row ? (p.tileFolder === undefined ? tabs[id]!.tileFolder : (p.tileFolder ?? undefined)) : undefined;

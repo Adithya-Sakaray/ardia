@@ -3,10 +3,10 @@ import { useBrowser } from "../browser/store";
 import { orderSections } from "../groups/groups";
 import { arrangeParked, arrangePinnedArea } from "../pins/pinnedArea";
 import { fromSync } from "../pins/pinOrderChoices";
-import { pinKeyOf } from "../pins/pinMirror";
 import type { Tab } from "../browser/types";
 import { PIN_TAB, anchorIn, PIN_ORDER, PIN_ROW, ROW, TILE, type PinValue } from "./pinRecords";
 import { homeWindow, openWindows, settleChoices, store } from "./pinnedSyncState";
+import { pinKeyOf } from "../browser/model";
 
 export function pinnedRowsAdapter(profileId: string): Adapter {
   const keyOf = (k: string) => k.slice(PIN_ROW.length);

@@ -2,10 +2,10 @@ import type { Adapter, Extraction } from "../../platform/sync";
 import { useBrowser } from "../browser/store";
 import { fromSync } from "../pins/pinOrderChoices";
 import { pinnedGroupMembers } from "../browser/structure";
-import { pinKeyOf } from "../pins/pinMirror";
 import type { Tab } from "../browser/types";
 import { PIN_TAB, PIN_HOME, syncedHome, syncedHomeIn } from "./pinRecords";
 import { homeWindow, openWindows, store } from "./pinnedSyncState";
+import { pinKeyOf } from "../browser/model";
 
 function parkedAt<T extends { url: string; pinnedUrl?: string | null; restoreFrom?: string }>(p: T, home: string): T {
   if (p.url === home) return { ...p, pinnedUrl: home };

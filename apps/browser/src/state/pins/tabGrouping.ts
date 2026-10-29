@@ -1,7 +1,7 @@
 import type { BrowserState } from "../browser/store";
 import { autoGroupName } from "../groups/groupNames";
 import { ancestorIds, canNest, commonGroup, innermostGroupOf, insertAll, leaveGroups, nestGroups, orderSections, placeBlock, placeGroups, reparent, syncGroupOrder, withParent } from "../groups/groups";
-import { inPinnedContainer, isIncognitoProfile, isPinnedRow, newId } from "../browser/model";
+import { inPinnedContainer, isIncognitoProfile, isPinnedRow, newId, pinKeyOf } from "../browser/model";
 import { withSplitRows } from "../splits/splits";
 import { groupChoiceKey, nextPinChoice, placeChoiceKey } from "./pinChoices";
 import type { BrowserWindow, Tab, TabGroup } from "../browser/types";
@@ -108,7 +108,7 @@ export function withRowsGrouped(s: BrowserState, asked: string[], o: { name?: st
   const g = next.groups[id];
   if (!g) return [s, ""];
   if (isIncognitoProfile(g.profileId)) return [next, id];
-  const mine = { ...next.pinChoices[g.profileId], [groupChoiceKey(g.pinKey ?? g.id)]: nextPinChoice() };
+  const mine = { ...next.pinChoices[g.profileId], [groupChoiceKey(pinKeyOf(g))]: nextPinChoice() };
   for (const tabId of g.tabIds) mine[placeChoiceKey(next.tabs[tabId]?.pinKey ?? tabId)] = nextPinChoice();
   return [{ ...next, pinChoices: { ...next.pinChoices, [g.profileId]: mine } }, id];
 }
@@ -139,7 +139,7 @@ export function movingGroup(s: BrowserState, groupId: string, p: GroupPlacement)
   groups = nestGroups(reparent(groups, s.groups));
   let pinChoices = s.pinChoices;
   if (pinned && !g.pinned && !isIncognitoProfile(g.profileId)) {
-    const mine = { ...pinChoices[g.profileId], [groupChoiceKey(g.pinKey ?? g.id)]: nextPinChoice() };
+    const mine = { ...pinChoices[g.profileId], [groupChoiceKey(pinKeyOf(g))]: nextPinChoice() };
     for (const id of g.tabIds) if (s.tabs[id]) mine[placeChoiceKey(s.tabs[id]!.pinKey ?? id)] = nextPinChoice();
     pinChoices = { ...pinChoices, [g.profileId]: mine };
   }

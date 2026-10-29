@@ -1,11 +1,11 @@
 import type { Adapter, Extraction } from "../../platform/sync";
 import { useBrowser } from "../browser/store";
 import { fromSync } from "../pins/pinOrderChoices";
-import { pinKeyOf } from "../pins/pinMirror";
 import { tileFolderOf, withTileFolder } from "../pins/tileFolders";
 import type { Tab, TileFolder } from "../browser/types";
 import { PIN_TAB, FOLDER_NAME, syncedFolderId, syncedName, TILE_FOLDER, type FolderNameValue, type TileFolderValue } from "./pinRecords";
 import { homeWindow, openWindows, store } from "./pinnedSyncState";
+import { pinKeyOf } from "../browser/model";
 
 const localFolders = new Map<string, Set<string>>();
 

@@ -1,3 +1,4 @@
+import { pinKeyOf } from "../browser/model";
 import type { BrowserState } from "../browser/store";
 
 export type PinChoices = Record<string, Record<string, number>>;
@@ -27,11 +28,11 @@ export function livePinTable<T>(table: Record<string, Record<string, T>>, s: Pic
   const members = new Set<string>();
   for (const g of Object.values(s.groups)) {
     if (!g.pinned) continue;
-    add(g.profileId, groupChoiceKey(g.pinKey ?? g.id));
-    add(g.profileId, orderChoiceKey(g.pinKey ?? g.id));
+    add(g.profileId, groupChoiceKey(pinKeyOf(g)));
+    add(g.profileId, orderChoiceKey(pinKeyOf(g)));
     for (const id of g.tabIds) members.add(id);
   }
-  for (const t of Object.values(s.tabs)) if (t.pinned || members.has(t.id)) (add(t.profileId, t.pinKey ?? t.id), add(t.profileId, placeChoiceKey(t.pinKey ?? t.id)));
+  for (const t of Object.values(s.tabs)) if (t.pinned || members.has(t.id)) (add(t.profileId, pinKeyOf(t)), add(t.profileId, placeChoiceKey(pinKeyOf(t))));
   for (const [profileId, park] of Object.entries(s.parkedPins)) {
     for (const p of park.tabs) (add(profileId, p.id), add(profileId, placeChoiceKey(p.id)));
     for (const g of park.groups) {

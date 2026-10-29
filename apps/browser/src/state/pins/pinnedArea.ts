@@ -1,8 +1,8 @@
 import type { BrowserState } from "../browser/store";
 import { rootOf } from "../groups/groups";
-import { pinKeyOf } from "./pinMirror";
 import type { BrowserWindow, ParkedPins, TabGroup } from "../browser/types";
 import { entryKey, parseEntry } from "../sidebar/entryKey";
+import { pinKeyOf } from "../browser/model";
 
 type Block = { key: string; row: boolean; ids: string[] };
 

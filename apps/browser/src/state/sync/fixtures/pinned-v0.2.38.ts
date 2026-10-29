@@ -1,9 +1,8 @@
 import { assignPositions, type Adapter, type Extraction } from "@ardia/sync";
 import { useBrowser, type BrowserState } from "../../browser/store";
 import { orderSections, syncGroupOrder } from "../../groups/groups";
-import { makeTab, without } from "../../browser/model";
+import { makeTab, pinKeyOf, without } from "../../browser/model";
 import { adoptParkedPins, parkWindowPins } from "../../pins/parkedPins";
-import { pinKeyOf } from "../../pins/pinMirror";
 import { removeTabs } from "../../tabs/tabs";
 import type { Tab, TabGroup } from "../../browser/types";
 

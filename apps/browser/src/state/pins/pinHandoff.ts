@@ -2,8 +2,8 @@ import { create } from "zustand";
 import { lastPicture } from "../tabs/tabPictures";
 import { webviews } from "../../platform/webviews";
 import { useBrowser } from "../browser/store";
-import { activeTabId } from "../browser/model";
-import { holderOf, shareKeyOf } from "./pinShare";
+import { activeTabId, familyKeyOf } from "../browser/model";
+import { holderOf } from "./pinShare";
 import { withDeadline } from "../../lib/deadline";
 
 const CAPTURE_DEADLINE_MS = 250;
@@ -55,7 +55,7 @@ async function handOff(copyId: string, commit: () => void): Promise<boolean> {
     commit();
     return false;
   }
-  const key = shareKeyOf(copy);
+  const key = familyKeyOf(copy);
   const token = ++requests;
   pending.set(key, token);
   const target = copy.windowId;
