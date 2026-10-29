@@ -20,7 +20,7 @@ import { plural } from "../../../state/browser/model";
 import { importPasswordsCsv, unlockPasswordsFor, usePasswordsUnlocked } from "../../../state/site/savedPasswords";
 import { hostLabel, matchesQuery } from "../../pages/PageLayout";
 import { Favicon } from "../../favicon/Favicon";
-import { Group, ProfilePicker, Row, SectionHeader, useSettingsProfile } from "../Form";
+import { Group, ProfilePicker, Row, SectionHeader, SheetActions, SheetTitle, useSettingsProfile } from "../Form";
 import { passwordAutofill, setPasswordAutofillFor } from "../../../state/settings/paneData";
 import { useResource } from "../../../state/settings/resources";
 import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/sheet";
@@ -170,7 +170,7 @@ function PasswordSheet({ profile, saved, onChanged }: { profile: string; saved: 
     <Sheet width={440} onClose={closeSettingsSheet}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         <Favicon url={saved.origin} size={22} />
-        <Text style={{ flex: 1, ...font.heading, fontWeight: weight.semibold, color: theme.textPrimary }}>{hostLabel(saved.origin)}</Text>
+        <SheetTitle style={{ flex: 1 }}>{hostLabel(saved.origin)}</SheetTitle>
       </View>
       <View style={{ marginTop: 14 }}>
         <Group>
@@ -202,9 +202,7 @@ function PasswordSheet({ profile, saved, onChanged }: { profile: string; saved: 
           </Row>
         </Group>
       </View>
-      <View style={{ flexDirection: "row", gap: 8, marginTop: 18 }}>
-        <Button title="Delete" kind="destructive" onPress={() => void remove()} />
-        <View style={{ flex: 1 }} />
+      <SheetActions destructive={<Button title="Delete" kind="destructive" onPress={() => void remove()} />}>
         {editing ? (
           <>
             <Button title="Cancel" onPress={() => setEditing(false)} />
@@ -216,7 +214,7 @@ function PasswordSheet({ profile, saved, onChanged }: { profile: string; saved: 
             <Button title="Done" kind="primary" onPress={closeSettingsSheet} />
           </>
         )}
-      </View>
+      </SheetActions>
     </Sheet>
   );
 }

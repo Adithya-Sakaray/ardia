@@ -20,9 +20,9 @@ import { Image, ScrollView, Text, View } from "react-native";
 import { useTheme } from "../../ui/theme";
 import { currentEngineProfile } from "../../../state/browser/current";
 import { useSettings } from "../../../state/browser/hooks";
-import { Button, Checkbox, font, PopUp, Sheet, Toggle, weight } from "../../ui";
+import { Button, Checkbox, font, PopUp, Sheet, Toggle } from "../../ui";
 import { Favicon } from "../../favicon/Favicon";
-import { Group, ProfilePicker, Row, SectionHeader, useSettingsProfile } from "../Form";
+import { Group, ProfilePicker, Row, SectionHeader, SheetTitle, useSettingsProfile } from "../Form";
 import { setting, type SettingId } from "../settingsIndex";
 import { appLinks, contentBlocker, siteOrigins, zoomLevels } from "../../../state/settings/paneData";
 import { useResource } from "../../../state/settings/resources";
@@ -137,7 +137,7 @@ function FilterListsSheet() {
   };
   return (
     <Sheet width={500} onClose={closeSettingsSheet}>
-      <Text style={{ ...font.heading, fontWeight: weight.semibold, color: theme.textPrimary }}>Advanced Ad Block Settings</Text>
+      <SheetTitle>Advanced Ad Block Settings</SheetTitle>
       <Text style={{ ...font.small, marginTop: 4, color: theme.textSecondary }}>{setting("privacy.filterLists").description}</Text>
       <ScrollView style={{ maxHeight: 420, marginTop: 8 }}>
         {CATEGORIES.map((c) => {
@@ -305,7 +305,7 @@ function SiteSheet({ profileId, origin, onChanged }: { profileId: string; origin
     <Sheet width={460} onClose={closeSettingsSheet}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         <Favicon url={origin} size={20} />
-        <Text style={{ flex: 1, ...font.heading, fontWeight: weight.semibold, color: theme.textPrimary }}>{origin.replace(/^https?:\/\//, "")}</Text>
+        <SheetTitle style={{ flex: 1 }}>{origin.replace(/^https?:\/\//, "")}</SheetTitle>
       </View>
       <ScrollView style={{ maxHeight: 380, marginTop: 12 }}>
         <Group>

@@ -14,7 +14,7 @@ import { useProfileRecords } from "../../../state/profiles/hooks";
 import { openUrlFromSettings, settingsBrowserWindow } from "../../../state/settings/settingsWindows";
 import { Button, font, Sheet, TextField, Toggle, weight } from "../../ui";
 import { Favicon } from "../../favicon/Favicon";
-import { Group, Row, SectionHeader } from "../Form";
+import { Group, Row, SectionHeader, SheetTitle } from "../Form";
 import { setting, type SettingId } from "../settingsIndex";
 import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/sheet";
 import { settingsType } from "../tokens";
@@ -144,7 +144,7 @@ function ConnectSheet({ id }: { id: LiveSourceId }) {
     <Sheet width={460} onClose={closeSettingsSheet}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
         <Favicon url={source.site} size={22} />
-        <Text style={{ flex: 1, ...font.heading, fontWeight: weight.semibold, color: theme.textPrimary }}>Connect {source.name}</Text>
+        <SheetTitle style={{ flex: 1 }}>Connect {source.name}</SheetTitle>
       </View>
       {body}
       {error ? <Text style={{ marginTop: 10, ...font.small, color: theme.destructive }}>{error}</Text> : null}

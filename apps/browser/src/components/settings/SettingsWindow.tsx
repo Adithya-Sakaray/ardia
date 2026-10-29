@@ -1,4 +1,4 @@
-import { Symbol, VisualEffect, WindowDragRegion, Button, font, Toggle, useHover, weight } from "../ui";
+import { Symbol, VisualEffect, WindowDragRegion, Button, font, Toggle, useHover } from "../ui";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../ui/theme";
@@ -9,7 +9,7 @@ import { preparePane, usePaneLoaded } from "../../state/settings/paneData";
 import { clearSettingsReveal, flashSetting, settingsSectionKey, useSettingsSearch } from "../../state/settings/searchState";
 import { anchorView } from "./anchors";
 import { ADVANCED_PANES, findSetting, PANES } from "./settingsIndex";
-import { SettingsPaneContext } from "./Form";
+import { SettingsPaneContext, SheetTitle } from "./Form";
 import { SettingsSearchField, SettingsSearchResults } from "./SettingsSearch";
 import { AdvancedPane } from "./panes/Advanced";
 import { AppearancePane } from "./panes/Appearance";
@@ -67,7 +67,6 @@ function usePrefetchAllPanes(enabled: boolean) {
 }
 
 export function SettingsWindow() {
-  const theme = useTheme();
   const look = useSettingsColors();
   const nav = useSettingsNav();
   const shown = useShownPane();
@@ -140,7 +139,7 @@ export function SettingsWindow() {
           <WindowDragRegion style={StyleSheet.absoluteFill} />
           <Button variant="icon" toolbar icon="chevron.left" size={13} box={28} radius={6} disabled={!nav.back.length} onPress={() => settingsBack()} tooltip="Back" />
           <Button variant="icon" toolbar icon="chevron.right" size={13} box={28} radius={6} disabled={!nav.forward.length} onPress={() => settingsForward()} tooltip="Forward" />
-          <Text style={{ marginLeft: 8, ...font.heading, fontWeight: weight.semibold, color: theme.textPrimary }}>{title}</Text>
+          <SheetTitle style={{ marginLeft: 8 }}>{title}</SheetTitle>
         </View>
         <ScrollView
           ref={scroller}

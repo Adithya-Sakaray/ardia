@@ -13,9 +13,9 @@ import { setWebsiteEngine } from "../../../state/engines/actions";
 import { useTheme } from "../../ui/theme";
 import { useSettings } from "../../../state/browser/hooks";
 import { updateSettings } from "../../../state/settings/actions";
-import { Button, font, PopUp, Sheet, TextField, Toggle, weight } from "../../ui";
+import { Button, font, PopUp, Sheet, TextField, Toggle } from "../../ui";
 import { Favicon } from "../../favicon/Favicon";
-import { Group, Row, SectionHeader } from "../Form";
+import { Group, Row, SectionHeader, SheetActions, SheetTitle } from "../Form";
 import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/sheet";
 
 const ENGINE_OPTIONS: { value: PageEngine; title: string }[] = [
@@ -127,7 +127,7 @@ function RuleSheet({ site, engine: initial }: { site?: string; engine?: PageEngi
   };
   return (
     <Sheet width={440} onClose={closeSettingsSheet}>
-      <Text style={{ ...font.heading, fontWeight: weight.semibold, color: theme.textPrimary }}>{site ? "Edit Website Rule" : "Add Website Rule"}</Text>
+      <SheetTitle>{site ? "Edit Website Rule" : "Add Website Rule"}</SheetTitle>
       <Text style={{ ...font.small, marginTop: 6, color: theme.textSecondary }}>
         A rule matches the site's address exactly: its scheme, host and port. Subdomains need their own rule.
       </Text>
@@ -140,21 +140,23 @@ function RuleSheet({ site, engine: initial }: { site?: string; engine?: PageEngi
         <PopUp value={engine} options={ENGINE_OPTIONS} onChange={setEngine} />
       </View>
       {error && <Text style={{ ...font.small, marginTop: 10, color: theme.destructive }}>{error}</Text>}
-      <View style={{ flexDirection: "row", gap: 8, marginTop: 18 }}>
-        {site && (
-          <Button
-            title="Remove"
-            kind="destructive"
-            onPress={() => {
-              setWebsiteEngine(site, null);
-              closeSettingsSheet();
-            }}
-          />
-        )}
-        <View style={{ flex: 1 }} />
+      <SheetActions
+        destructive={
+          site ? (
+            <Button
+              title="Remove"
+              kind="destructive"
+              onPress={() => {
+                setWebsiteEngine(site, null);
+                closeSettingsSheet();
+              }}
+            />
+          ) : null
+        }
+      >
         <Button title="Cancel" onPress={closeSettingsSheet} />
         <Button title={site ? "Save" : "Add"} kind="primary" onPress={save} />
-      </View>
+      </SheetActions>
     </Sheet>
   );
 }

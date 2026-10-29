@@ -1,5 +1,5 @@
 import { Children, createContext, isValidElement, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Animated, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { Animated, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import { settingsSectionKey, useSettingsSearch } from "../../state/settings/searchState";
 import { registerAnchor } from "./anchors";
 import { useProfiles, useSettings, useTabLayout } from "../../state/browser/hooks";
@@ -13,6 +13,7 @@ import { liquidGlass } from "../ui/Glass";
 import { findSetting, sectionEntries, setting, unshownSettings, type SettingEntry, type SettingId } from "./settingsIndex";
 import { Toggle } from "../ui/Switch";
 import { PopUp } from "../ui/Field";
+import { Text as UiText } from "../ui/Text";
 import { updateSettings } from "../../state/settings/actions";
 import type { Settings } from "../../state/settings/settings";
 import { settingsMotion } from "./tokens";
@@ -146,4 +147,22 @@ export function ProfilePicker({ value, onChange }: { value: string; onChange: (p
   const profiles = useProfiles();
   if (profiles.length < 2) return null;
   return <PopUp value={value} options={profiles.map((p) => ({ value: p.id, title: p.name }))} onChange={onChange} />;
+}
+
+export function SheetTitle({ children, style }: { children: ReactNode; style?: StyleProp<TextStyle> }) {
+  return (
+    <UiText size="heading" weight="semibold" style={style}>
+      {children}
+    </UiText>
+  );
+}
+
+export function SheetActions({ destructive, children }: { destructive?: ReactNode; children: ReactNode }) {
+  return (
+    <View style={{ flexDirection: "row", gap: 8, marginTop: 18 }}>
+      {destructive}
+      <View style={{ flex: 1 }} />
+      {children}
+    </View>
+  );
 }

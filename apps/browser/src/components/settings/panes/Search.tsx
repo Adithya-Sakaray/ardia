@@ -1,5 +1,5 @@
 import { engineHost, type SearchEngine } from "@ardia/core";
-import { Symbol, Button, font, Sheet, TextField, Toggle, weight } from "../../ui";
+import { Symbol, Button, font, Sheet, TextField, Toggle } from "../../ui";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { useTheme } from "../../ui/theme";
@@ -9,7 +9,7 @@ import { addCustomEngine, removeCustomEngine, setSearchEngine, updateCustomEngin
 import { controllingSearchExtension, defaultSearchEngine, searchEngines } from "../../../state/settings/settings";
 import { extensionsProfileId, setEnabled } from "../../../state/extensions/actions";
 import { Favicon } from "../../favicon/Favicon";
-import { Group, Row, SectionHeader, SettingToggle } from "../Form";
+import { Group, Row, SectionHeader, SettingToggle, SheetActions, SheetTitle } from "../Form";
 import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/sheet";
 import { openSettings } from "../../../state/settings/settingsWindows";
 
@@ -135,26 +135,28 @@ function EngineSheet({ engine }: { engine?: SearchEngine }) {
   );
   return (
     <Sheet width={440} onClose={closeSettingsSheet}>
-      <Text style={{ ...font.heading, fontWeight: weight.semibold, color: theme.textPrimary }}>{engine ? "Edit Search Engine" : "Add Search Engine"}</Text>
+      <SheetTitle>{engine ? "Edit Search Engine" : "Add Search Engine"}</SheetTitle>
       {field("Name", name, setName, "Wikipedia")}
       {field("Shortcut", keyword, setKeyword, "w")}
       {field("URL with %s in place of the query", url, setUrl, "https://en.wikipedia.org/w/index.php?search=%s")}
       {error && <Text style={{ ...font.small, marginTop: 10, color: theme.destructive }}>{error}</Text>}
-      <View style={{ flexDirection: "row", gap: 8, marginTop: 18 }}>
-        {engine && (
-          <Button
-            title="Delete"
-            kind="destructive"
-            onPress={() => {
-              removeCustomEngine(engine.id);
-              closeSettingsSheet();
-            }}
-          />
-        )}
-        <View style={{ flex: 1 }} />
+      <SheetActions
+        destructive={
+          engine ? (
+            <Button
+              title="Delete"
+              kind="destructive"
+              onPress={() => {
+                removeCustomEngine(engine.id);
+                closeSettingsSheet();
+              }}
+            />
+          ) : null
+        }
+      >
         <Button title="Cancel" onPress={closeSettingsSheet} />
         <Button title={engine ? "Save" : "Add"} kind="primary" onPress={save} />
-      </View>
+      </SheetActions>
     </Sheet>
   );
 }

@@ -10,9 +10,9 @@ import { openInternalPage } from "../../../state/pages/urls";
 import type { BatterySaverWhen } from "../../../state/settings/settings";
 import { keepSiteActive, stopKeepingSiteActive, type MemorySaverMode } from "../../../state/tabs/memorySaver";
 import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/sheet";
-import { Button, font, PopUp, Sheet, TextField, Toggle, weight } from "../../ui";
+import { Button, font, PopUp, Sheet, TextField, Toggle } from "../../ui";
 import { Favicon } from "../../favicon/Favicon";
-import { Group, Row, SectionHeader, SettingToggle } from "../Form";
+import { Group, Row, SectionHeader, SettingToggle, SheetActions, SheetTitle } from "../Form";
 import { engineVersion, widevine as widevineComponent } from "../../../state/settings/paneData";
 import { useResource } from "../../../state/settings/resources";
 
@@ -203,18 +203,17 @@ function KeepActiveSiteSheet() {
   };
   return (
     <Sheet width={440} onClose={closeSettingsSheet}>
-      <Text style={{ ...font.heading, fontWeight: weight.semibold, color: theme.textPrimary }}>Add Site</Text>
+      <SheetTitle>Add Site</SheetTitle>
       <Text style={{ ...font.small, marginTop: 6, color: theme.textSecondary }}>Sites you add will always stay active and memory won't be freed up from them.</Text>
       <View style={{ marginTop: 12 }}>
         <Text style={{ ...font.footnote, marginBottom: 5, color: theme.textSecondary }}>Site</Text>
         <TextField value={site} onChangeText={setSite} placeholder="youtube.com" onSubmit={() => void add()} onEscape={closeSettingsSheet} autoFocus />
       </View>
       {error && <Text style={{ ...font.small, marginTop: 10, color: theme.destructive }}>{error}</Text>}
-      <View style={{ flexDirection: "row", gap: 8, marginTop: 18 }}>
-        <View style={{ flex: 1 }} />
+      <SheetActions>
         <Button title="Cancel" onPress={closeSettingsSheet} />
         <Button title="Add" kind="primary" disabled={saving || !site.trim()} onPress={() => void add()} />
-      </View>
+      </SheetActions>
     </Sheet>
   );
 }
