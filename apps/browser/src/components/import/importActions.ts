@@ -114,7 +114,7 @@ export function importActions(s: ImportState, api: ImportApi) {
       }
       for (const k of result.failed) failed.set(k, [...(failed.get(k) ?? []), profile.name]);
       for (const w of result.warnings) {
-        if (["undecryptable", "skipped", "locked"].includes(w.code) && !result.failed.includes(w.kind!)) left.push(`${w.message}.`);
+        if ((w.code === "undecryptable" || w.code === "skipped" || w.code === "locked") && !result.failed.includes(w.kind)) left.push(`${w.message}.`);
       }
       const refused = (k: ImportKind) => {
         const names = failed.get(k) ?? [];
