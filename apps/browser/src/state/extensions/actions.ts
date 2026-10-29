@@ -24,7 +24,7 @@ import { engineProfile } from "../browser/model";
 import { shownPageId } from "../peek/peek";
 import { goToSettingsPane, openSettings, replaceSettingsPlace, settingsBack, useSettingsNav } from "../settings/settingsWindows";
 import { closeSidePanelsOf, toggleSidePanel } from "./sidePanels";
-import { extensionProfile, extensionsProfileId, pageProfile, shownIn, useExtensions, windowExtensions, readyTabOf, type Anchor } from "./store";
+import { extensionPageUrl, extensionProfile, extensionsProfileId, pageProfile, shownIn, useExtensions, windowExtensions, readyTabOf, type Anchor } from "./store";
 import { errorText } from "../../lib/errors";
 
 export { reloadExtension } from "../../platform/extensions";
@@ -215,7 +215,7 @@ export async function activateExtension(
   const result = web ? await web.executeExtensionAction(ext.id) : null;
   const readyTab = readyTabOf(tabId);
   if (!state && result === "popup" && readyTab) state = (await extensionActionStates(readyTab, [ext.id]))[ext.id];
-  const url = state ? state.popup : ext.popup ? `chrome-extension://${ext.id}/${ext.popup.replace(/^\//, "")}` : "";
+  const url = state ? state.popup : ext.popup ? extensionPageUrl(ext.id, ext.popup) : "";
   if (result === "none") return;
   if (result === "sidePanel") return void toggleSidePanel(windowId, ext.id);
   if (!url) return void (result === null && showExtensionMenu(windowId, ext));
