@@ -1,3 +1,4 @@
+import { devRegister } from "../dev/devRegister";
 import { useEffect } from "react";
 import { AppState } from "react-native";
 import { importModule } from "../../state/import/importApi";
@@ -55,9 +56,7 @@ export function useImportFlow() {
   };
 
   useEffect(() => {
-    if (!__DEV__) return;
-    const g = globalThis as { acImport?: object };
-    g.acImport = {
+    return devRegister("acImport", null, {
       select: (id: string) => {
         const b = s.browsers.find((x) => x.id === id);
         if (b) core.choose(b);
@@ -75,8 +74,7 @@ export function useImportFlow() {
       step,
       status: s.status,
       setSourceProfiles: s.setSourceProfiles,
-    };
-    return () => void delete g.acImport;
+    });
   });
 
   return { ...s, ...core, ...files, api, next };

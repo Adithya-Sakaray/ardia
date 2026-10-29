@@ -1,3 +1,4 @@
+import { devRegister } from "../dev/devRegister";
 import { createContext, memo, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Animated, View } from "react-native";
 import { layout, useTheme } from "../ui/theme";
@@ -197,10 +198,7 @@ function useMotion({ devKey, entries, from, planner, height, enabled, nativeTail
   const queued = useRef<Plan | null>(null);
   const clipping = useRef<object | null>(null);
   const [, rerender] = useState(0);
-  if (__DEV__ && enabled) {
-    const dev = globalThis as { sidebarMotion?: Record<string, unknown> };
-    dev.sidebarMotion = { ...dev.sidebarMotion, [devKey]: { slides, ghosts, clipped } };
-  }
+  if (enabled) devRegister("sidebarMotion", devKey, { slides, ghosts, clipped });
 
   const now = Date.now();
   for (const slide of slides.values()) {

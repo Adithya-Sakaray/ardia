@@ -1,3 +1,4 @@
+import { devRegister } from "../dev/devRegister";
 import { Surface } from "../ui";
 import { hex, layout, useTheme } from "../ui/theme";
 import { ink } from "../ui/tokens";
@@ -52,11 +53,9 @@ export function HoverPlayer({ tabId, windowId, anchor }: { tabId: string; window
   );
 }
 
-if (__DEV__) {
-  (globalThis as { acMediaHover?: unknown }).acMediaHover = async (windowId: string, tabId: string | null) => {
-    if (!tabId) return setSidebarUi({ hover: null });
-    const anchor = await measureRow(windowId, tabId);
-    if (anchor) setSidebarUi({ hover: { windowId, kind: "tab", id: tabId, anchor } });
-    return anchor;
-  };
-}
+devRegister("acMediaHover", null, async (windowId: string, tabId: string | null) => {
+  if (!tabId) return setSidebarUi({ hover: null });
+  const anchor = await measureRow(windowId, tabId);
+  if (anchor) setSidebarUi({ hover: { windowId, kind: "tab", id: tabId, anchor } });
+  return anchor;
+});
