@@ -1,11 +1,13 @@
 import { applyBookmarkOps, bookmarkTree, onBookmarksChanged, watchBookmarks, type BookmarkOp, type EngineBookmark } from "../../platform/bookmarks";
-import { readDocument, removeDocument, writeDocument } from "../../platform/documents";
+import { readDocument, writeDocument } from "../../platform/documents";
 import { parseSaved, versionedJson, type Migrations } from "../../lib/savedDocument";
 import { bookmarkUuidFor, isBookmarkUuid, ROOT_TITLES, rootIdsFor } from "./bookmarks";
 import { applyOps, bookmarkOps, flatFromEngine, flatFromStore, type Flat } from "./flatBookmarks";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { engineProfile, isIncognitoProfile } from "../browser/model";
 import type { BookmarkFolder, BookmarkNode, Bookmarks } from "../browser/types";
+import { engineProfiles, profilesUsing } from "../profiles/engineProfiles";
+import { migrateLegacyFile } from "../app/legacyFiles";
 
 const LEGACY_FILE = "bookmarks.json";
 const LEGACY_KEPT_MS = 10_000;
@@ -29,11 +31,6 @@ const stateOf = (engine: string) => {
   return state;
 };
 let legacyMoved = false;
-
-const engineProfiles = (s: Pick<BrowserState, "profiles">) =>
-  [...new Set(Object.keys(s.profiles).filter((id) => !isIncognitoProfile(id)).map((id) => engineProfile(s, id)))];
-const profilesUsing = (s: Pick<BrowserState, "profiles">, engine: string) =>
-  Object.keys(s.profiles).filter((id) => !isIncognitoProfile(id) && engineProfile(s, id) === engine);
 
 function adopt(engine: string, flat: Flat, { ready = legacyMoved } = {}) {
   useBrowser.setState((s) => {
@@ -203,54 +200,39 @@ function saveCache() {
   }
 }
 
-export async function migrateBookmarksFile({ keepMs = LEGACY_KEPT_MS } = {}): Promise<"none" | "moved" | "kept"> {
-  let file: { bookmarks?: Bookmarks } | null = null;
-  try {
-    const json = readDocument(LEGACY_FILE);
-    file = json ? JSON.parse(json) : null;
-  } catch (error) {
-    console.warn(`[bookmarks] ${LEGACY_FILE} is unreadable; leaving it`, error);
-    return "kept";
-  }
-  if (!file) return "none";
+export const migrateBookmarksFile = ({ keepMs = LEGACY_KEPT_MS } = {}) => migrateLegacyFile(LEGACY_FILE, "bookmarks", moveBookmarks, keepMs);
+
+async function moveBookmarks(file: { bookmarks?: Bookmarks }) {
   const b = file.bookmarks ?? { nodes: {}, roots: {} };
   const s = store();
   const done = new Set<string>();
-  try {
-    for (const [profileId, roots] of Object.entries(b.roots ?? {})) {
-      if (!s.profiles[profileId] || isIncognitoProfile(profileId)) continue;
-      const engine = engineProfile(s, profileId);
-      if (done.has(engine)) continue;
-      done.add(engine);
-      const ops: BookmarkOp[] = [];
-      const seen = new Set<string>();
-      const walk = (folderId: string, parent: string) => {
-        const folder = b.nodes[folderId];
-        if (folder?.kind !== "folder") return;
-        folder.children.forEach((childId, index) => {
-          const node: BookmarkNode | undefined = b.nodes[childId];
-          if (!node || seen.has(node.id)) return;
-          seen.add(node.id);
-          const id = bookmarkUuidFor(node.id);
-          const key = node.syncKey ?? (isBookmarkUuid(node.id) ? undefined : node.id);
-          const common = { op: "add" as const, id, t: node.title, a: node.addedAt, ...(key ? { key } : {}), parent, index, ifAbsent: true };
-          ops.push(node.kind === "url" ? { ...common, k: "u", u: node.url } : { ...common, k: "f" });
-          if (node.kind === "folder") walk(node.id, id);
-        });
-      };
-      walk(roots.bar, "bar");
-      walk(roots.other, "other");
-      if (!ops.length) continue;
-      const result = await applyBookmarkOps(engine, ops);
-      if (result.skipped) throw new Error(`${result.skipped} of ${ops.length} bookmarks couldn't be added`);
-    }
-  } catch (error) {
-    console.warn(`[bookmarks] moving ${LEGACY_FILE} into Chrome failed; trying again next launch`, error);
-    return "kept";
+  for (const [profileId, roots] of Object.entries(b.roots ?? {})) {
+    if (!s.profiles[profileId] || isIncognitoProfile(profileId)) continue;
+    const engine = engineProfile(s, profileId);
+    if (done.has(engine)) continue;
+    done.add(engine);
+    const ops: BookmarkOp[] = [];
+    const seen = new Set<string>();
+    const walk = (folderId: string, parent: string) => {
+      const folder = b.nodes[folderId];
+      if (folder?.kind !== "folder") return;
+      folder.children.forEach((childId, index) => {
+        const node: BookmarkNode | undefined = b.nodes[childId];
+        if (!node || seen.has(node.id)) return;
+        seen.add(node.id);
+        const id = bookmarkUuidFor(node.id);
+        const key = node.syncKey ?? (isBookmarkUuid(node.id) ? undefined : node.id);
+        const common = { op: "add" as const, id, t: node.title, a: node.addedAt, ...(key ? { key } : {}), parent, index, ifAbsent: true };
+        ops.push(node.kind === "url" ? { ...common, k: "u", u: node.url } : { ...common, k: "f" });
+        if (node.kind === "folder") walk(node.id, id);
+      });
+    };
+    walk(roots.bar, "bar");
+    walk(roots.other, "other");
+    if (!ops.length) continue;
+    const result = await applyBookmarkOps(engine, ops);
+    if (result.skipped) throw new Error(`${result.skipped} of ${ops.length} bookmarks couldn't be added`);
   }
-  if (keepMs) setTimeout(() => removeDocument(LEGACY_FILE), keepMs);
-  else removeDocument(LEGACY_FILE);
-  return "moved";
 }
 
 export function startBookmarks() {

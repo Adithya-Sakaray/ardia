@@ -1,11 +1,13 @@
 import { addHistoryVisits, onHistoryChanged, queryHistory, watchHistory, type EngineHistoryEntry, type HistoryChange } from "../../platform/history";
-import { readDocument, removeDocument } from "../../platform/documents";
+import { readDocument } from "../../platform/documents";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { afterFirstWindow } from "../../lib/afterFirstWindow";
 import { MAX_HISTORY, MAX_VISIT_TIMES } from "./history";
 import { engineProfile, isIncognitoProfile } from "../browser/model";
 import type { HistoryEntry } from "../browser/types";
 import { isWebPageUrl } from "../../lib/url";
+import { engineProfiles, profilesUsing } from "../profiles/engineProfiles";
+import { migrateLegacyFile } from "../app/legacyFiles";
 
 const LEGACY_FILE = "history.json";
 const LEGACY_TOLERANCE_MS = 60_000;
@@ -24,12 +26,6 @@ const toEntry = (e: EngineHistoryEntry): HistoryEntry => ({
   lastVisit: e.visitTimes.length ? e.visitTimes[e.visitTimes.length - 1]! : 0,
   visitTimes: e.visitTimes,
 });
-
-const engineProfiles = (s: Pick<BrowserState, "profiles">) =>
-  [...new Set(Object.keys(s.profiles).filter((id) => !isIncognitoProfile(id)).map((id) => engineProfile(s, id)))];
-
-const profilesUsing = (s: Pick<BrowserState, "profiles">, engine: string) =>
-  Object.keys(s.profiles).filter((id) => !isIncognitoProfile(id) && engineProfile(s, id) === engine);
 
 function viewOf(engine: string): HistoryEntry[] {
   const s = store();
@@ -175,16 +171,10 @@ function applyPending() {
 
 type LegacyFile = { history?: Record<string, HistoryEntry[]> };
 
-export async function migrateHistoryFile(now = Date.now(), { keepMs = LEGACY_KEPT_MS } = {}): Promise<"none" | "moved" | "kept"> {
-  let file: LegacyFile | null = null;
-  try {
-    const json = readDocument(LEGACY_FILE);
-    file = json ? (JSON.parse(json) as LegacyFile) : null;
-  } catch (error) {
-    console.warn(`[history] ${LEGACY_FILE} is unreadable; leaving it`, error);
-    return "kept";
-  }
-  if (!file) return "none";
+export const migrateHistoryFile = (now = Date.now(), { keepMs = LEGACY_KEPT_MS } = {}) =>
+  migrateLegacyFile<LegacyFile>(LEGACY_FILE, "history", (file) => moveHistory(file, now), keepMs);
+
+async function moveHistory(file: LegacyFile, now: number) {
   const s = store();
   const perEngine = new Map<string, HistoryEntry[]>();
   for (const [profileId, list] of Object.entries(file.history ?? {})) {
@@ -205,15 +195,9 @@ export async function migrateHistoryFile(now = Date.now(), { keepMs = LEGACY_KEP
         .filter((p) => p.visitTimes.length);
       for (let i = 0; i < pages.length; i += CHUNK) await addHistoryVisits(engine, pages.slice(i, i + CHUNK), LEGACY_TOLERANCE_MS);
     }
-  } catch (error) {
-    console.warn(`[history] moving ${LEGACY_FILE} into Chrome failed; trying again next launch`, error);
-    return "kept";
   } finally {
     migrating.clear();
   }
-  if (keepMs) setTimeout(() => removeDocument(LEGACY_FILE), keepMs);
-  else removeDocument(LEGACY_FILE);
-  return "moved";
 }
 
 export function startHistory() {
