@@ -41,7 +41,7 @@ every copy on Stable sees only stable items. A copy on Nightly allows `nightly` 
 
 - **Which channel a copy is on.** Settings › General › "Update channel" (Stable / Nightly), kept in the defaults key
   `ACUpdateChannel`. Until the user picks, it's the channel of the build that first ran: the `ACUpdateChannel` key in
-  `Info.plist`, which `release.sh --channel nightly` sets to `nightly` (the build setting `AC_UPDATE_CHANNEL`). It's
+  `Info.plist`, which `release.sh` sets to `nightly` for a `-nightly.<n>` version (the build setting `AC_UPDATE_CHANNEL`). It's
   written at the first launch, so a nightly copy stays on Nightly after it updates to a stable build. Switching to
   Stable never downgrades: Sparkle only offers a higher build number, so the copy waits for the next stable.
 - **Versions.** Sparkle compares `sparkle:version`, the build number (`CURRENT_PROJECT_VERSION`), which goes up by one
@@ -56,7 +56,7 @@ every copy on Stable sees only stable items. A copy on Nightly allows `nightly` 
   re-uploads the merged feed onto that same latest stable release (`gh release upload … --clobber`). Nothing moved:
   no new URL, no nginx change for the feed, and the copies from 0.2.13 and earlier that poll GitHub directly read the
   same file. Both flows build on the published feed (`release.sh` fetches it and refuses to go on without it), and
-  `appcast-merge.sh` puts the new item onto the feed as published at that moment, so a nightly that shipped while a
+  `appcast.py merge` puts the new item onto the feed as published at that moment, so a nightly that shipped while a
   stable was being tested isn't dropped. `generate_appcast` keeps 3 items per channel.
 - **Downloads.** Stable links one tag's DMG (`releases/download/v<version>/Ardia-<version>.dmg`, from
   `apps/site/src/data/release.json`), so the link never 404s while a newer release waits for the site. Nightly has one fixed link, `https://ardia.dev/nightly` (`infra/site/nginx.conf`),
@@ -118,8 +118,8 @@ stays up. That's GPL-3.0 §6(d) for the GPL parts (uBlock Origin today), and it'
    and check it on the site: `pnpm -C apps/site build && pnpm -C apps/site preview`, then
    `http://localhost:4321/release-notes#<version>`.
 3. Commit both ("Release <version>" or "Nightly <version>"), push, and dispatch the Release workflow ("CI releases"
-   below), which runs the rest. Or run it here: `scripts/release.sh <version>` (`--channel nightly` for a
-   nightly). It stops right away if the notes file is missing or lacks its `date` and
+   below), which runs the rest. Or run it here: `scripts/release.sh <version>` (a `-nightly.<n>`
+   version is a nightly). It stops right away if the notes file is missing or lacks its `date` and
    `headline`, if the tree under `apps/browser`, `packages`, `engine` or `scripts/dmg` has uncommitted changes, or if the engine
    framework is older than the tree's ArdiaCore sources or the Chromium tree differs from `engine/ardiacore`
    (`apply.sh --check`), if the version doesn't fit the channel or the notes' `channel`, if it can't read the published
@@ -175,7 +175,7 @@ stays up. That's GPL-3.0 §6(d) for the GPL parts (uBlock Origin today), and it'
    lists the uncommitted files it included).
 4. Tag and publish (the Release workflow does this itself): `git tag v<version> && git push origin main v<version>`,
    then `.claude/skills/release/scripts/publish.sh <version>` (`--dry-run` prints what it would do). It merges the
-   appcast onto the feed as published right now (`appcast-merge.sh`), creates the release (a stable one as latest, a
+   appcast onto the feed as published right now (`appcast.py merge`), creates the release (a stable one as latest, a
    nightly as a prerelease that's never latest) with the DMG, zip, appcast, CLI tarball and a local engine archive,
    and checks the feed lists the version on GitHub and on ardia.dev. A nightly also re-uploads the merged feed onto the
    latest stable release and `Ardia-Nightly.dmg` onto the `nightly` release. With an engine packed here, append
@@ -207,7 +207,7 @@ list one `…/release-notes#<version>` page; a second launch opens none.
 ## CI releases
 
 `.github/workflows/release.yml` is the release pipeline, run by hand only (Actions › Release › Run workflow, or
-`gh workflow run release.yml -f version=<version> -f channel=nightly|stable -f dry_run=false`). It
+`gh workflow run release.yml -f version=<version> -f dry_run=false`). It
 releases the commit it runs on, so first commit and push the version bump and the notes (steps 1 and 2), and publish
 the engine if `engine/` changed (below).
 
@@ -216,7 +216,7 @@ the engine if `engine/` changed (below).
 - **checks**: `pnpm typecheck`, `pnpm test`, `pnpm shaders:check`.
 - **build**, on the `xcode-27` runner (Xcode 27.1, the same build as here), with no secrets: fetches the engine for
   this exact `engine/` tree (`fetch-engine.sh`), installs (pnpm, Pods, uv), runs
-  `scripts/release.sh <version> --channel <channel> --phase build` (the archive, signed ad hoc, and the CLI tarball)
+  `scripts/release.sh <version> --phase build` (the archive, signed ad hoc, and the CLI tarball)
   and uploads them as one tar. Caches: pnpm, Pods with Hermes, uBO, the engine, the CLI's downloads and Xcode's
   compilation cache (per Xcode build and month).
 - **sign** installs nothing and restores no cache, so no dependency code runs next to the keys. It
@@ -299,7 +299,7 @@ must find and read all of it. Saved passwords are shown only after macOS re-auth
 grants only as the `ARDIA_TEST` `reauth=granted` fake, and that counts only in a test instance (a scratch
 `ARDIA_DATA_DIR`), so the new build reveals them in a second launch on the same folder named as `ARDIA_DATA_DIR`. Both run as test copies (bundle id `com.ardia.browser.carryover`, signed ad hoc) in
 a fake home (`HOME` and `CFFIXED_USER_HOME`), so the real app's data, defaults and keychain are never touched.
-`rollback.sh <previous app> <new app>` (not part of smoke.sh) checks going back on the same setup: the previous build,
+`carryover.sh <previous app> <new app> --back` (not part of smoke.sh) checks going back on the same setup: the previous build,
 then the new one adding a second session, then the previous one again must show both sessions' data without crashing
 or resetting the profile. 0.2.21 → 0.2.22 → 0.2.21 keeps everything but session cookies, which 0.2.21 drops at every
 launch anyway.
