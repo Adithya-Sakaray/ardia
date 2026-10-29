@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
+import { REPO } from "./lib/repo.mjs";
 import { clickhouse, hasTelemetryEnv } from "./telemetry-env.mjs";
 import {
   APP_LIBS, APP_SOURCES, AUTO_EVENTS, DAILY_LIB, HISTORY_SOURCE, PRODUCTION_HOSTS, SITE_EVENTS, SITE_LIBS, SITE_SOURCES, classifyNoise,
@@ -19,7 +20,6 @@ ending now, plus what changed since the last run. Writes the visual as an SVG an
   --json           print the data as JSON instead of the report
   --no-save        don't record this run as the last check`;
 
-const REPO = "mantrakp04/ardia";
 const STATE = join(homedir(), ".local/state/ardia/stats-last.json");
 const TRAFFIC_CACHE = join(homedir(), ".cache/ardia/github-traffic.json");
 const RELEASES_CACHE = join(homedir(), ".cache/ardia/github-older-releases.json");
@@ -152,7 +152,7 @@ const headline = () =>
                   LogAttributes['first'] = 'true' AS isFirst, LogAttributes['$app_version'] AS version
            FROM telemetry.otel_logs FINAL WHERE ${DAILY} AND Timestamp > now() - INTERVAL 40 DAY))`);
 
-const githubQuery = (releases, after) => `{ repository(owner: "mantrakp04", name: "ardia") { stargazerCount forkCount issues(states: OPEN) { totalCount }
+const githubQuery = (releases, after) => `{ repository(owner: "${REPO.split("/")[0]}", name: "${REPO.split("/")[1]}") { stargazerCount forkCount issues(states: OPEN) { totalCount }
   stargazers(last: 100) { edges { starredAt } }
   releases(first: ${releases}${after ? `, after: "${after}"` : ""}, orderBy: { field: CREATED_AT, direction: DESC }) { pageInfo { endCursor }
     nodes { tagName isDraft isPrerelease publishedAt releaseAssets(first: 20) { nodes { name downloadCount } } } } } }`;
