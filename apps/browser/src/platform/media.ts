@@ -1,3 +1,5 @@
+import { call } from "@ardia/ardiacore";
+
 export {
   CastMode,
   onCastDialog,
@@ -10,10 +12,6 @@ export {
   terminateCastRoute,
   changeCaptureSource,
   stopCapture,
-  getDisplayMediaSources,
-  setDisplayMediaPicker,
-  setAutoPictureInPicture,
-  setVideoUpscaling,
   type CastSink,
   type CastDialog,
   type CastRoute,
@@ -25,3 +23,8 @@ export {
   type ControlPress,
   type PictureInPictureState,
 } from "@ardia/ardiacore";
+
+export const getDisplayMediaSources = () => call("media.displayMediaSources");
+export const setDisplayMediaPicker = (enabled: boolean) => call("webView.setDisplayMediaPicker", { enabled });
+export const setAutoPictureInPicture = (enabled: boolean) => call("webView.setAutoPictureInPicture", { enabled });
+export const setVideoUpscaling = (enabled: boolean) => call("webView.setVideoUpscaling", { enabled });

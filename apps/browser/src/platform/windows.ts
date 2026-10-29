@@ -17,4 +17,7 @@ export {
   type WindowEvent,
   type OpenWindowOptions,
 } from "@ardia/shell";
-export { chromeWindows, devWindowAction } from "@ardia/ardiacore";
+import { call } from "@ardia/ardiacore";
+
+export const chromeWindows = () => call("windows.list");
+export const devWindowAction = (windowNumber: number, action: string) => call("windows.dev", { window: windowNumber, action });

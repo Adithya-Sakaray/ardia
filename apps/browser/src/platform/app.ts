@@ -30,4 +30,9 @@ export {
   type UpdateChannel,
   type AppIcon,
 } from "@ardia/shell";
-export { engineInfo, listComponents, WIDEVINE_COMPONENT_ID } from "@ardia/ardiacore";
+import { call } from "@ardia/ardiacore";
+
+export { WIDEVINE_COMPONENT_ID } from "@ardia/ardiacore";
+
+export const engineInfo = () => call("engine.info");
+export const listComponents = () => call("engine.components");

@@ -1,4 +1,4 @@
-import { call, on } from "./engine/call";
+import { call } from "./engine/call";
 import { nativeModule } from "./nativeModules";
 
 export type DownloadState = "downloading" | "finished" | "failed" | "cancelled";
@@ -67,7 +67,6 @@ export const WIDEVINE_COMPONENT_ID = "oimompecagnajdejgnnjijobebaeigek";
 
 const Tabs = nativeModule("ArdiaTabs");
 
-export const engineInfo = () => call("engine.info");
 
 export type ChromeWindowState = {
   profile: string;
@@ -89,8 +88,6 @@ export type ChromeWindowState = {
   hasRoot: boolean;
   translucent: boolean;
 };
-export const chromeWindows = () => call("windows.list");
-export const devWindowAction = (windowNumber: number, action: string) => call("windows.dev", { window: windowNumber, action });
 export const prepareTabTransfer = (tabId: string) => Tabs.prepareTransfer(tabId);
 export const releaseTabTransfer = (tabId: string) => Tabs.releaseTransfer(tabId);
 export const claimLaunchTab = (tabId: string, url: string, profile: string) => Tabs.claimLaunchTab(tabId, url, profile);
@@ -99,12 +96,6 @@ export const dropTabReveals = (tabId: string) => Tabs.dropTabReveals(tabId);
 export const revealOffered = (adoptId: string, overTabId: string) => Tabs.revealOffered(adoptId, overTabId);
 export type LinkRoute = { profile?: string; adoptIds?: (string | null)[]; dismissed?: number[] };
 export const routeLinkTabs = (urls: string[]): Promise<LinkRoute> => call("tabs.routeLinkTabs", { urls });
-export const listComponents = () => call("engine.components");
-
-export const beginTracing = () => call("engine.beginTracing");
-export const endTracing = (keep: boolean) => call("engine.endTracing", { keep });
-export const isTracing = () => call("engine.isTracing");
-export const listTasks = () => call("engine.tasks");
 
 export type SystemState = {
   onBattery: boolean;
@@ -113,18 +104,6 @@ export type SystemState = {
   memoryPressure: "normal" | "warning" | "critical";
   physicalMemory: number;
 };
-export const systemState = () => call("engine.systemState");
-export const onSystemState = (listener: (state: SystemState) => void) => on("engine.systemState", listener);
-
-export const setDisplayMediaPicker = (enabled: boolean) => call("webView.setDisplayMediaPicker", { enabled });
-export const setAutoPictureInPicture = (enabled: boolean) => call("webView.setAutoPictureInPicture", { enabled });
-export const setVideoUpscaling = (enabled: boolean) => call("webView.setVideoUpscaling", { enabled });
-export const setPeekModifier = (modifier: "alt" | "shift" | "off") => call("webView.setPeekModifier", { modifier });
-export const setSplitLinkModifier = (modifier: "alt" | "altShift") => call("webView.setSplitLinkModifier", { modifier });
-export const setPeekOtherSiteTabs = (tabIds: string[]) => call("webView.setPeekOtherSiteTabs", { tabIds });
-export const setSelectionPopover = (enabled: boolean) => call("webView.setSelectionPopover", { enabled });
-export const setSearchEngineName = (name: string) => call("search.setEngineName", { name });
-export const getDisplayMediaSources = () => call("media.displayMediaSources");
 
 export type DownloadSettings = { folder: string; askWhereToSave: boolean; managed: boolean };
 
