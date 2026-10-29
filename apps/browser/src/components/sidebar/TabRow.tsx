@@ -25,6 +25,7 @@ import { useSelectedTabGlow, useSidebarRowLook } from "./rowLook";
 import { withShortcut } from "../../state/commands/commandShortcuts";
 import { TabPressArea } from "./TabPressArea";
 import { entryKey } from "../../state/sidebar/entryKey";
+import type { RowSection } from "./dragModel";
 
 export const TabRowItem = memo(function TabRowItem({
   tabId,
@@ -33,7 +34,7 @@ export const TabRowItem = memo(function TabRowItem({
   motion = null,
 }: {
   tabId: string;
-  section: "list" | "pinnedRows" | "pinnedGroups";
+  section: RowSection;
   parentGroup?: string;
   motion?: EntryMotion | null;
 }) {
@@ -199,7 +200,7 @@ export const SplitRowItem = memo(function SplitRowItem({
   motion = null,
 }: {
   splitId: string;
-  section: "list" | "pinnedRows" | "pinnedGroups";
+  section: RowSection;
   parentGroup?: string;
   motion?: EntryMotion | null;
 }) {

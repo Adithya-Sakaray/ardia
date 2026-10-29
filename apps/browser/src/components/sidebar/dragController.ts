@@ -9,7 +9,7 @@ import { arrangeLive } from "../../state/sidebar/pinnedOrder";
 import { suppressHover } from "../../state/sidebar/hover";
 import { closeFolderPanel } from "../../state/sidebar/tileFolderUi";
 import { dragMarksOf, markDrag } from "../../state/sidebar/dragMarks";
-import { boxed, EDGE, measure, ROW_GAP, spring, type Drop, type Item } from "./dragModel";
+import { boxed, type Drop, EDGE, type Item, measure, ROW_GAP, spring, tabCell } from "./dragModel";
 import { DragTargeting } from "./dragTargeting";
 import { setDragEscapeCapture } from "../../state/drag/dragNative";
 import { entryKey } from "../../state/sidebar/entryKey";
@@ -26,18 +26,18 @@ export class DragController extends DragTargeting {
   async begin(key: string, x: number, y: number) {
     const item = this.items.get(key);
     if (!item || item.kind === "tail") return;
-    const lead = (item.kind === "row" || item.kind === "tile") && !item.folderId ? item.tabIds[0] : undefined;
+    const lead = tabCell(item) ? item.tabIds[0] : undefined;
     const moving = lead ? movingTabsFrom(lead) : [];
     this.sources =
       moving.length > 1
-        ? [...this.items.values()].filter((i) => (i.kind === "row" || i.kind === "tile") && !i.folderId && i.tabIds.some((id) => moving.includes(id)))
+        ? [...this.items.values()].filter((i) => tabCell(i) && i.tabIds.some((id) => moving.includes(id)))
         : [item];
     const token = (this.token = {});
     suppressHover(true);
     this.escapable = true;
     setDragEscapeCapture(true);
     let seq = 0;
-    if ((item.kind === "row" || item.kind === "tile") && !item.folderId) {
+    if (tabCell(item)) {
       const single = this.sources.length === 1 ? (item.tabIds[0] ?? null) : null;
       seq = beginTabDrag(single, [...new Set(this.sources.flatMap((i) => i.tabIds))]);
     }

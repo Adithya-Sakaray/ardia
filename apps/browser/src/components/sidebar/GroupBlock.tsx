@@ -28,6 +28,7 @@ import { groupSurface, TABULAR_NUMS, useSidebarTokens } from "./tokens";
 import { curve } from "../ui/motion";
 import { entryKey, parseEntry } from "../../state/sidebar/entryKey";
 import { LiveFolderBlock } from "./LiveFolderBlock";
+import { tailKey, type RowSection } from "./dragModel";
 
 const PAD = GROUP_PAD;
 const BOX_FADE = curve.fade;
@@ -90,7 +91,7 @@ export const GroupBlock = memo(function GroupBlock({
   const activeEntry = useKeptEntry(windowId, profileId, entries);
   const foldedHeight = () => foldedGroupHeight(windowId, profileId, groupId);
   const { wrapper, handle, headerRef } = useDragItem(entryKey("group", groupId), { kind: "group", tabIds: tabIds.split(",").filter(Boolean), section, groupId, collapsed: stored, foldedHeight, parentGroup }, own?.clip);
-  const tail = useDragItem(`tail:group:${groupId}`, { kind: "tail", tabIds: [], section, parentGroup: groupId });
+  const tail = useDragItem(tailKey({ group: groupId }), { kind: "tail", tabIds: [], section, parentGroup: groupId });
 
   const fold = useFold(collapsed);
   const scope = useContext(ListMotionContext);
@@ -152,7 +153,7 @@ export const SidebarEntry = memo(function SidebarEntry({
 }: {
   entry: string;
   section: "list" | "pinnedGroups";
-  rowSection?: "list" | "pinnedRows" | "pinnedGroups";
+  rowSection?: RowSection;
   parentGroup?: string;
   motion?: EntryMotion | null;
 }) {
