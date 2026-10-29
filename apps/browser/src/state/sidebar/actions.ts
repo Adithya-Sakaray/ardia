@@ -11,6 +11,7 @@ import type { ClickMods } from "../drag/drops";
 import { groupLabel, groupOf, selectedTabIds } from "../pins/organize";
 import type { Tab } from "../browser/types";
 import type { BookmarkFolderChoice } from "./menuParts";
+import { DEFAULT_SIDEBAR_WIDTH } from "../../lib/windowLayout";
 import { measureRow, setSidebarUi, sidebarUi, type Target } from "./sidebarUi";
 
 const store = () => useBrowser.getState();
@@ -18,6 +19,8 @@ const store = () => useBrowser.getState();
 export function clickTab(windowId: string, tabId: string, mods: ClickMods = {}) {
   store().clickTab(windowId, tabId, mods);
 }
+
+export const resetSidebarWidth = () => store().updateSettings({ sidebarWidth: DEFAULT_SIDEBAR_WIDTH });
 
 export function returnFocusToPage(windowId: string) {
   const s = store();

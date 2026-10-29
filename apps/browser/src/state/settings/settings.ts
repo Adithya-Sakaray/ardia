@@ -14,6 +14,7 @@ import {
 import type { StateCreator } from "zustand";
 import { fromLegacyUrl } from "../../lib/legacy";
 import type { BrowserState } from "../browser/store";
+import { DEFAULT_SIDEBAR_WIDTH } from "../../lib/windowLayout";
 
 export const DEFAULT_PROFILE_ID = "default";
 
@@ -74,7 +75,7 @@ export const SETTING_SPECS = {
   commandScrollZoom: flag(true, SYNCED),
   videoUpscaling: flag(true, SYNCED),
   sidebarMediaControls: flag(true, SYNCED),
-  sidebarWidth: width(190),
+  sidebarWidth: width(DEFAULT_SIDEBAR_WIDTH),
   showSidebarButton: flag(true, SYNCED),
   showClearButton: flag(true, SYNCED),
   balancedTopApps: flag(false, SYNCED),

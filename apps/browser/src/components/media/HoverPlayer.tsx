@@ -5,7 +5,7 @@ import { clickTab } from "../../state/sidebar/actions";
 import { cardHoverProps, dismissHover } from "../../state/sidebar/hover";
 import { hoverCardOrigin } from "../sidebar/hoverMotion";
 import { measureRow, setSidebarUi, type Anchor } from "../../state/sidebar/sidebarUi";
-import { useSidebarWidth } from "../sidebar/tokens";
+import { useSidebarWidth } from "../../state/sidebar/hooks";
 import { MINI_PLAYER_HEIGHT, MINI_PLAYER_WIDTH, MiniPlayer } from "./MiniPlayer";
 import { useMedia, usePinnedWithMediaControls } from "../../state/media/media";
 import { useMediaTokens } from "./tokens";

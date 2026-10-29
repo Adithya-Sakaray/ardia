@@ -13,7 +13,13 @@ import { groupEntries, keptEntry, sidebarEntries } from "./entries";
 import { groupTabIds } from "./groupPanelRows";
 import { capture, type Capture } from "./listCapture";
 import { pinnedCollapsed, pinnedKept } from "./pinnedFold";
-import type { Hover } from "./sidebarUi";
+import { useSidebarUi, type Hover } from "./sidebarUi";
+
+export function useSidebarWidth(windowId: string): number {
+  const saved = useBrowser((s) => s.settings.sidebarWidth);
+  const dragging = useSidebarUi((u) => u.dragWidth[windowId]);
+  return dragging ?? saved;
+}
 
 export const useIsInSplit = (tabId: string) => useBrowser((s) => !!splitOf(s, tabId));
 

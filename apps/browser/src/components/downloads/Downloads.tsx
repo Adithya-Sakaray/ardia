@@ -30,7 +30,7 @@ import { useAddressBarInSidebar, useTabLayout, useToolbarLightsCenter } from "..
 import { SIDEBAR_FOOTER_DOWNLOADS } from "../sidebar/geometry";
 import { PROFILE_DOTS_HEIGHT } from "../profiles/ProfileDots";
 import { openInternalPage } from "../../state/pages/urls";
-import { useSidebarWidth } from "../sidebar/tokens";
+import { useSidebarWidth } from "../../state/sidebar/hooks";
 import { hairline, shadow } from "../ui/tokens";
 import { DOWNLOADS_PANEL, type DownloadsPlacement } from "./downloadsPlacement";
 import { awaitsKeep, dangerWarning, downloadStatus } from "./downloadStatus";

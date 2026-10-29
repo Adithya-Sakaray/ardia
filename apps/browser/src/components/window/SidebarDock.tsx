@@ -114,8 +114,7 @@ export function DockedLayout({
 }) {
   const windowId = useWindowId();
   const [open, sidebarWidth, addressBar] = useSidebarDockState(windowId);
-  const savedWidth = sidebarWidth ?? layout.sidebarWidth;
-  const width = useSidebarUi((u) => u.dragWidth[windowId]) ?? savedWidth;
+  const width = useSidebarUi((u) => u.dragWidth[windowId]) ?? sidebarWidth;
   const arc = addressBar && !topTabs && switchOn("sidebarSlide");
   const toolbarLights = useToolbarLightsCenter();
   const lights = addressBar && !topTabs ? ARC_LIGHTS_CENTER : toolbarLights;

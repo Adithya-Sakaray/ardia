@@ -12,7 +12,7 @@ import { openAllItems } from "../../state/bookmarks/linkMenus";
 import { currentBookmarks } from "../../state/browser/current";
 import { openBarMenu } from "../../state/bookmarks/barMenus";
 import { modifiersOf } from "../../lib/keys";
-import { useSidebarWidth } from "../sidebar/tokens";
+import { useSidebarWidth } from "../../state/sidebar/hooks";
 import { ContextMenuArea, menuRowFill, MenuSeparator, MouseArea, opacity, PANEL, PopoverSurface, Symbol, Text, usePopoverMotion, usePopoverMotionStyle, useTheme } from "../ui";
 import { ChipIcon, useBookmarkDragResponder, type IconMetrics } from "./BarItem";
 import { measureRect, useEased, useSlide } from "./barMotion";
