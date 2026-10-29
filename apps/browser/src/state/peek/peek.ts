@@ -2,7 +2,7 @@ import type { StateCreator } from "zustand";
 import type { BrowserState } from "../browser/store";
 import { activeTabId, IDLE_LIVE, makeTab, navigationTo, without } from "../browser/model";
 import { forgetOpeners, insertionIndex } from "../tabs/openers";
-import { groupWithOpener } from "../pins/organize";
+import { groupWithOpener } from "../pins/tabGrouping";
 import { hasNavigatedPage } from "../tabs/pageSession";
 import { isSmall } from "../windows/small";
 import { activated, apply, removeTabs } from "../tabs/tabs";

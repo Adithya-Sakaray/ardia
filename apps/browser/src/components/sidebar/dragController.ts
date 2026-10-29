@@ -2,7 +2,7 @@ import { Animated, type View } from "react-native";
 import { NO_DROP } from "../../state/drag/drops";
 import { dropTabs } from "../../state/pins/actions";
 import { movingTabsFrom } from "../../state/sidebar/current";
-import type { TabPlacement } from "../../state/pins/organize";
+import type { TabPlacement } from "../../state/pins/placing";
 import { SLIDE } from "../tabstrip/stripReorder";
 import { beginTabDrag, cancelTabDrag, endTabDrag, setDragPicture, updateTabDrag } from "../../state/drag/tabDrag";
 import { arrangeLive } from "../../state/sidebar/pinnedOrder";

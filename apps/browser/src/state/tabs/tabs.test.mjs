@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
 const model = await import("../browser/model.ts");
-const organize = await import("../pins/organize.ts");
+const organize = await import("../pins/tabCleanup.ts");
 const { controllingSearchExtension, defaultSearchEngine, searchUrlPrefix } = await import("../settings/settings.ts");
 const media = await import("../media/media.ts");
 

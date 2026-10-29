@@ -2,7 +2,7 @@ import { SIDEBAR_GROUP, SIDEBAR_ROW } from "../../lib/sidebarMetrics";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { live } from "../live/store";
 import { ancestorIds } from "../groups/groups";
-import { groupOf } from "../pins/organize";
+import { groupOf } from "../pins/tabGrouping";
 import { splitOf } from "../splits/splits";
 import { groupEntries, holdsTab, keptEntry, sidebarEntries } from "./entries";
 import { shownPinnedEntries } from "./pinnedFold";

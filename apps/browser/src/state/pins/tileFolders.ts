@@ -1,7 +1,7 @@
 import type { BrowserState } from "../browser/store";
 import { changedIds } from "../browser/changes";
 import { newId, pinSection } from "../browser/model";
-import { placing } from "./organize";
+import { placing } from "./placing";
 import type { ParkedPins, Tab, TileFolder } from "../browser/types";
 
 export const FOLDER_CELL = "folder:";

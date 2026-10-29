@@ -5,7 +5,7 @@ import { FadeLabel, font, radius, Symbol, weight, withAlpha } from "../ui";
 import { layout, useTheme } from "../ui/theme";
 import type { BrowserState } from "../../state/browser/store";
 import type { GroupColor } from "../../state/browser/types";
-import { groupLabel } from "../../state/pins/organize";
+import { groupLabel } from "../../state/pins/tabGrouping";
 import { splitRowPanes } from "../../state/splits/splits";
 import { isSilenced } from "../../state/tabs/mute";
 import { groupEntries, keptEntry } from "../../state/sidebar/entries";

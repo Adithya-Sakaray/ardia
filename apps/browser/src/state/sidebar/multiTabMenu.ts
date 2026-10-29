@@ -2,7 +2,7 @@ import { chooseFromMenu, type ChoiceItem } from "../app/menuChoice";
 import { moveTabsToProfile, switchToTab } from "../browser/actions";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { inPinnedContainer, isIncognitoProfile, isPinnedRow, pinnedSectionTitle, pinSection, viewTabIds } from "../browser/model";
-import { groupOf } from "../pins/organize";
+import { groupOf } from "../pins/tabGrouping";
 import { bookmarkTabs, copyUrls, newGroupWithSelection } from "./actions";
 import { bookmarkFolderItems, groupItems, hintWhen, profileItems, sections, windowItems, withAlternate, type Destination } from "./menuParts";
 

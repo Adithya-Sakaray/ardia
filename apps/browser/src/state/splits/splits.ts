@@ -2,7 +2,7 @@ import type { StateCreator } from "zustand";
 import type { BrowserState } from "../browser/store";
 import { innermostGroupOf, leaveGroups, syncGroupOrder } from "../groups/groups";
 import { inPinnedContainer, isPinnedRow, newId, tabLayoutOf } from "../browser/model";
-import { placing } from "../pins/organize";
+import { placing } from "../pins/placing";
 import { choose } from "../settings/settings";
 import { activated, apply, removeTabs, withNewTab } from "../tabs/tabs";
 import type { BrowserWindow, SplitView, Tab } from "../browser/types";

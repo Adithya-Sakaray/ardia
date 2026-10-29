@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
 const model = await import("../browser/model.ts");
-const organize = await import("./organize.ts");
+const organize = await import("./tabGrouping.ts");
 const { sidebarEntries, numberedTabs } = await import("../sidebar/entries.ts");
 const { flushPersistence, loadSession, startPersistence } = await import("../session/persist.ts");
 const stub = await import("../../test-native/index.ts");

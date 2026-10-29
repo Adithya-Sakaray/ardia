@@ -4,7 +4,8 @@ import { closeTab, moveTabsToProfile, moveTabToWindow, openWindow, toggleMute, t
 import { muteState, muteSymbol, muteTitle, siteMuteTitle } from "../tabs/mute";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { activeTabId, inPinnedContainer, isIncognitoProfile, pinnedSectionTitle, pinSection, togglePinTitle, viewTabIds, tabLayoutOf } from "../browser/model";
-import { awayFromPin, groupOf, selectedTabIds } from "../pins/organize";
+import { awayFromPin, selectedTabIds } from "../pins/organize";
+import { groupOf } from "../pins/tabGrouping";
 import { splitOf, splitRowPanes } from "../splits/splits";
 import { openSplitPane } from "../splits/actions";
 import type { Tab } from "../browser/types";

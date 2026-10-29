@@ -1,6 +1,6 @@
 import { assignPositions, type Extraction } from "../../platform/sync";
 import { ancestorIds, depthOf } from "../groups/groups";
-import { groupChoiceKey, placeChoiceKey } from "../pins/organize";
+import { groupChoiceKey, placeChoiceKey } from "../pins/pinChoices";
 import type { Tab, TabGroup } from "../browser/types";
 import { PIN_TAB, PIN_GROUP, legacyColor, PIN_NEST, PIN_ROW, type NestGroupValue, type NestTabValue, type PinGroupValue, type PinValue } from "./pinRecords";
 import { homeWindow, settleChoices, store, windowsHomeFirst } from "./pinnedSyncState";

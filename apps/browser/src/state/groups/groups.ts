@@ -1,7 +1,7 @@
 import type { StateCreator } from "zustand";
 import type { BrowserState } from "../browser/store";
 import { newId } from "../browser/model";
-import { closingGroup } from "../pins/organize";
+import { closingGroup } from "../pins/closedTabs";
 import { withGroup } from "../pins/tabGrouping";
 import { withSplitRows } from "../splits/splits";
 import { withNewTab } from "../tabs/tabs";

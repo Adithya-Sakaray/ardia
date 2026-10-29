@@ -1,6 +1,6 @@
 import { useBrowser, type BrowserState } from "../browser/store";
 import { isIncognitoProfile } from "../browser/model";
-import { nextPinChoice, orderChoiceKey } from "./organize";
+import { nextPinChoice, orderChoiceKey } from "./pinChoices";
 import { anchorsOf, pinnedAreaKeys } from "./pinnedArea";
 import type { TabGroup } from "../browser/types";
 

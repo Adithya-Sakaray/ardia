@@ -14,7 +14,7 @@ import {
   viewTabIds,
   without,
 } from "../browser/model";
-import { restoringGroup } from "../pins/organize";
+import { restoringGroup } from "../pins/closedTabs";
 import { markPinned } from "../pins/pinChoices";
 import { hasLoadedPage } from "../tabs/pageSession";
 import { adoptParkedPins, parkWindowPins } from "../pins/parkedPins";

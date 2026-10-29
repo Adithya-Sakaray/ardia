@@ -4,7 +4,7 @@ import { activeTabId, tabLabel, viewTabIds } from "../browser/model";
 import { groupIndex, splitIndex, stableList } from "../browser/structure";
 import { movingTabIds, resolveDrop, slotDrop, type DragSource, type DropSpot, type Lane } from "../drag/drops";
 import { hiddenEmptyCard } from "../omnibox/newTabBarPolicy";
-import { groupLabel } from "../pins/organize";
+import { groupLabel } from "../pins/tabGrouping";
 import { folderCell, folderIn, folderLabel, folderMembers, tileFolderOf } from "../pins/tileFolders";
 import { clickTab } from "../sidebar/actions";
 import { groupEntries } from "../sidebar/entries";

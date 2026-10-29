@@ -1,7 +1,7 @@
 import { useBrowser, type BrowserState } from "../browser/store";
 import { isWindowClosing } from "../windows/closingWindows";
 import type { Frame } from "../browser/types";
-import type { TabPlacement } from "../pins/organize";
+import type { TabPlacement } from "../pins/placing";
 
 
 export function screenPoint(s: BrowserState, windowId: string, x: number, y: number, live?: Frame | null): [number, number] | null {

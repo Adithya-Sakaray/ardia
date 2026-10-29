@@ -4,7 +4,7 @@ import { menuShortcut } from "../commands/commandShortcuts";
 import { folderChildren, ROOT_TITLES } from "../bookmarks/bookmarks";
 import type { BrowserState } from "../browser/store";
 import { bookmarkProfileId, windowTitle } from "../browser/model";
-import { groupLabel } from "../pins/organize";
+import { groupLabel } from "../pins/tabGrouping";
 import { groupPath } from "../groups/groups";
 
 export { menuSections as sections } from "../app/menuSections";

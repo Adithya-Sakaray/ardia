@@ -2,7 +2,7 @@ import { confirm } from "../../platform/dialogs";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { changedIds } from "../browser/changes";
 import { activeTabId } from "../browser/model";
-import { groupOf } from "../pins/organize";
+import { groupOf } from "../pins/tabGrouping";
 import { everySlowly } from "../../platform/slowTimers";
 import { connectCalendar, useCalendar } from "./calendar";
 import { eventForCall, isCalendarUrl, meetingOf, relatedLinks, type CalendarEvent } from "./meetings";

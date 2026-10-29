@@ -1,7 +1,7 @@
 import type { BrowserState } from "../browser/store";
 import { ancestorIds } from "../groups/groups";
 import { inPinnedContainer } from "../browser/model";
-import { groupOf, pinnedChildGroup } from "../pins/organize";
+import { groupOf, pinnedChildGroup } from "../pins/tabGrouping";
 import { splitOf } from "../splits/splits";
 import type { BrowserWindow, Tab } from "../browser/types";
 

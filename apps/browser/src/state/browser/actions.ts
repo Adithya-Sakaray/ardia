@@ -9,7 +9,7 @@ import { storeAction, useBrowser } from "./store";
 import { rootOf } from "../groups/groups";
 import { closesWindow, engineProfile, isIncognitoProfile, plural, resolveWindowId } from "./model";
 import { leavesEmptyWindow } from "../omnibox/newTabBarPolicy";
-import { groupLabel } from "../pins/organize";
+import { groupLabel } from "../pins/tabGrouping";
 import { sharingProfiles } from "../profiles/profiles";
 import { closeWindowAnimated } from "../windows/closeAnimated";
 import { applyHeldReports } from "../../platform/nativeEvents";

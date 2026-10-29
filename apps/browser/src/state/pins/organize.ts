@@ -15,11 +15,6 @@ import { pinnedGroupMembers } from "../browser/structure";
 import { samePage } from "../../lib/url";
 import { pinHome } from "./pinHomes";
 
-export { groupChoiceKey, livePinTable, nextPinChoice, notePinChoices, orderChoiceKey, placeChoiceKey, type PinChoices, type PinSync, type PinSyncEntry } from "./pinChoices";
-export { canMoveGroup, groupLabel, groupOf, groupWithOpener, movingGroup, pinnedChildGroup, withGroup, withRowsGrouped, type GroupPlacement } from "./tabGrouping";
-export { groupingOnto, placing, type TabPlacement } from "./placing";
-export { cleanedTabsFor, closingGroup, keptCleanedTabs, keptDeletedGroups, nestedSnapshot, rebuildNested, restoreSnapshots, restoringGroup } from "./closedTabs";
-export { canUndoClear, cleanUpCandidates, clearedTabIds, isClosedPin, noteRemotePinDeletion, recentTabIds, unpinnedTabIds, type ClearedTabs } from "./tabCleanup";
 
 export type OrganizeSlice = {
   selection: Record<string, string[]>;

@@ -1,7 +1,7 @@
 import type { Adapter, Extraction } from "../../platform/sync";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { syncGroupOrder } from "../groups/groups";
-import { orderChoiceKey } from "../pins/organize";
+import { orderChoiceKey } from "../pins/pinChoices";
 import { arrangeParked, arrangePinnedArea, parkedAnchors, parkedAreaKeys, pinnedAnchors, pinnedAreaKeys } from "../pins/pinnedArea";
 import { fromSync } from "../pins/pinOrderChoices";
 import { PIN_TAB, PIN_GROUP, anchorIn, PIN_ORDER, PIN_ROW, ROW, type PinOrderValue, type PinValue } from "./pinRecords";

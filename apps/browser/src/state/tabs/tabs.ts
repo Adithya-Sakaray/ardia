@@ -10,7 +10,8 @@ import {
   without,
 } from "../browser/model";
 import { forgetOpeners, insertionIndex, openerSuccessor } from "./openers";
-import { isClosedPin, onUrlChange, pruneSelection } from "../pins/organize";
+import { onUrlChange, pruneSelection } from "../pins/organize";
+import { isClosedPin } from "../pins/tabCleanup";
 import { hasOwnOrSharedPage, hasPage, isLazy } from "./pageSession";
 import { isPeekTab, withoutPeek } from "../peek/peek";
 import { resolveTyped } from "../settings/settings";

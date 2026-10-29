@@ -45,7 +45,7 @@ import { openManageExtensions, openPinDialog, openWebStore } from "../extensions
 import { requestAutofill } from "../site/autofill";
 import { copyPageUrl, jumpToSelection } from "../site/selection";
 import { shareTab } from "../site/share";
-import { groupOf } from "../pins/organize";
+import { groupOf } from "../pins/tabGrouping";
 import { isSmall, mainWindowFor, originalProfile } from "../windows/small";
 import {
   closeLittleArdia,

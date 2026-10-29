@@ -1,7 +1,9 @@
 import type { BrowserState } from "../browser/store";
 import { ancestorIds, innermostGroupOf } from "../groups/groups";
 import { activeTabId, pinSection, viewTabIds } from "../browser/model";
-import { canMoveGroup, groupingOnto, movingGroup, placing, selectedTabIds, type GroupPlacement, type TabPlacement } from "../pins/organize";
+import { selectedTabIds } from "../pins/organize";
+import { canMoveGroup, movingGroup, type GroupPlacement } from "../pins/tabGrouping";
+import { groupingOnto, placing, type TabPlacement } from "../pins/placing";
 import { splitOf } from "../splits/splits";
 import { addToTileFolder } from "../pins/tileFolders";
 import { entryKey } from "../sidebar/entryKey";
