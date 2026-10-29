@@ -11,12 +11,10 @@ public class TabsModule: Module {
     }
 
     Function("prepareTransfer") { (key: String) in
-      ArdiaWebView.prepareTransfer(key)
-      WebKitHub.shared.prepareTransfer(key)
+      for engine in PageEngines.all { engine.prepareTransfer(key) }
     }
     Function("releaseTransfer") { (key: String) in
-      ArdiaWebView.releaseTransfer(key)
-      WebKitHub.shared.releaseTransfer(key)
+      for engine in PageEngines.all { engine.releaseTransfer(key) }
     }
     Function("claimLaunchTab") { (key: String, url: String, profile: String) in
       ArdiaWebView.claimLaunchTab(key, url: url, profile: profile)

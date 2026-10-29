@@ -79,7 +79,7 @@ export type EngineCalls = {
   "sites.setSetting": [Profile & { origin: string; type: SiteSettingType; value: SiteSettingValue; engine: PageEngine }, null];
   "sites.origins": [Profile, string[]];
   "sites.reset": [Profile & { origin: string }, null];
-  "sites.clearData": [Profile & { origin: string }, ClearSiteDataResult];
+  "sites.clearData": [Profile & { origin: string; engine: PageEngine }, ClearSiteDataResult];
   "sites.zoomLevels": [Profile, Record<string, number>];
   "sites.setZoom": [Profile & { host: string; zoom: number }, null];
 
@@ -178,7 +178,6 @@ export type EngineCalls = {
   "webKit.devStoreExists": [Profile, boolean];
   "webKit.devTouchStore": [Profile, boolean];
   "webKit.devHoldStore": [Profile, null];
-  "webKit.clearSiteData": [Profile & { origin: string }, ClearSiteDataResult];
   "webKit.passkeyAccess": [{}, PasskeyAccess];
   "webKit.requestPasskeyAccess": [{}, PasskeyAccess];
 };

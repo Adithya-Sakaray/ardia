@@ -9,6 +9,9 @@ protocol PageEngine {
   func removeExternalAppAllowance(profile: String, origin: String, scheme: String)
   func siteSettings(profile: String, origin: String, done: @escaping (Any?, String?) -> Void)
   func setSiteSetting(profile: String, origin: String, type: String, value: String)
+  func clearSiteData(profile: String, origin: String, done: @escaping (Any?, String?) -> Void)
+  func prepareTransfer(_ key: String)
+  func releaseTransfer(_ key: String)
   func clearBrowsingData(profile: String, types: [String], since: Double, done: @escaping () -> Void)
   func deleteProfileData(profile: String, done: @escaping ([String]) -> Void)
 }
@@ -41,6 +44,14 @@ struct ChromiumPageEngine: PageEngine {
   func setSiteSetting(profile: String, origin: String, type: String, value: String) {
     ArdiaServices.setSiteSetting(value, profile: profile, origin: origin, type: type)
   }
+
+  func clearSiteData(profile: String, origin: String, done: @escaping (Any?, String?) -> Void) {
+    ArdiaServices.clearSiteData(profile: profile, origin: origin, reply: done)
+  }
+
+  func prepareTransfer(_ key: String) { ArdiaWebView.prepareTransfer(key) }
+
+  func releaseTransfer(_ key: String) { ArdiaWebView.releaseTransfer(key) }
 
   func clearBrowsingData(profile: String, types: [String], since: Double, done: @escaping () -> Void) {
     ArdiaServices.clearBrowsingData(profile: profile, types: types, since: since, completion: done)
@@ -80,6 +91,15 @@ struct WebKitPageEngine: PageEngine {
   func setSiteSetting(profile: String, origin: String, type: String, value: String) {
     hub.setSitePermission(profile: profile, origin: origin, kind: type, value: value)
   }
+
+  func clearSiteData(profile: String, origin: String, done: @escaping (Any?, String?) -> Void) {
+    guard let host = URL(string: origin)?.host, !host.isEmpty else { return done(["cookies": false, "storage": false], nil) }
+    hub.clearSiteData(profile: profile, host: host) { done($0, nil) }
+  }
+
+  func prepareTransfer(_ key: String) { hub.prepareTransfer(key) }
+
+  func releaseTransfer(_ key: String) { hub.releaseTransfer(key) }
 
   func clearBrowsingData(profile: String, types: [String], since: Double, done: @escaping () -> Void) {
     hub.clearBrowsingData(profile: profile, types: types, since: since, completion: done)
