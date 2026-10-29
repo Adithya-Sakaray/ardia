@@ -1,6 +1,7 @@
 #import "ArdiaChromeWindowInternal.h"
 #import "ArdiaLaunchConfig.h"
 #import "ArdiaWebView.h"
+#import "ArdiaRuntime.h"
 
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
@@ -8,6 +9,7 @@
 #include <cmath>
 
 using namespace ardia_window;
+using namespace ardia_runtime;
 
 namespace {
 
@@ -230,12 +232,11 @@ NSString *FakeActiveClicks(NSWindow *, NSString *) {
     if (Class page = NSClassFromString(@"RenderWidgetHostViewCocoa")) [classes addObject:page];
     for (Class cls in classes) {
       SEL sel = @selector(acceptsFirstMouse:);
-      Method m = class_getInstanceMethod(cls, sel);
-      IMP original = method_getImplementation(m);
-      IMP takes = imp_implementationWithBlock(^BOOL(NSView *v, NSEvent *e) {
-        return v.window.isKeyWindow || ((BOOL(*)(id, SEL, NSEvent *))original)(v, sel, e);
+      ReplaceMethod(cls, sel, ^id(IMP original) {
+        return ^BOOL(NSView *v, NSEvent *e) {
+          return v.window.isKeyWindow || ((BOOL(*)(id, SEL, NSEvent *))original)(v, sel, e);
+        };
       });
-      if (!class_addMethod(cls, sel, takes, method_getTypeEncoding(m))) method_setImplementation(m, takes);
     }
   });
   return @"1";
