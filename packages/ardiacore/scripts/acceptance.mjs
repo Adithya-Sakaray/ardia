@@ -4933,6 +4933,8 @@ try {
     if (!w) throw new Error("no window to work in");
     await sleep(1000);
     const W = JSON.stringify(w);
+    const [centerX, centerY] = await evalApp(`return ac.windowLayout.openingLightsCenter(ac.store.getState(), ${W})`);
+    const dockedClose = `close=(${(centerX - 7).toFixed(1)},${(centerY - 7).toFixed(1)}) `;
     const logLength = () => (existsSync(lightsLog) ? readFileSync(lightsLog, "utf8").length : 0);
     const from = logLength();
     const run = async (body, settle = 500) => {
@@ -4959,17 +4961,19 @@ try {
     const linesOf = (a, b) => log.slice(a, b).split("\n").filter(Boolean);
     const sample = (line) => line.match(/ -> (.*?) \| /)?.[1] ?? line;
     const rest = (a, b) => linesOf(a, b).filter((line) => line.includes(" layout -> ")).slice(-1);
-    const docked = [...linesOf(from, hiding), ...rest(showing, shown), ...linesOf(shown)];
+    const window = (line) => line.match(/window=(\d+)/)?.[1];
+    const placed = new Set(linesOf(0, from).map(window));
+    const onceSettled = (line) => placed.has(window(line)) || (line.includes(" layout -> ") && !!placed.add(window(line)));
+    const docked = [...linesOf(from, hiding), ...rest(showing, shown), ...linesOf(shown)].filter(onceSettled);
     const away = [...rest(hiding, hidden), ...linesOf(hidden, showing)];
     if (!away.length || !rest(showing, shown).length) throw new Error(`no settled layout logged for the sidebar's slides`);
     const lines = [...docked, ...away];
     const healthy = (line) => sample(line).endsWith(" hidden=0 alpha=1.00") && !/ _NSTheme\w*Widget set/.test(line);
-    const bad = docked.filter((line) => !sample(line).startsWith("close=(18.0,20.0) ") || !healthy(line));
+    const bad = docked.filter((line) => !sample(line).startsWith(dockedClose) || !healthy(line));
     const out = (line) => {
       const xs = [...sample(line).matchAll(/=\((-?[\d.]+),(-?[\d.]+)\)/g)].map((m) => [Number(m[1]), Number(m[2])]);
-      return xs.length === 3 && xs.every(([x, y]) => x + 14 <= 0 && y === 20);
+      return xs.length === 3 && xs.every(([x, y]) => x + 14 <= 0 && y === centerY - 7);
     };
-    const window = (line) => line.match(/window=(\d+)/)?.[1];
     const badAway = away.filter((line) => window(line) === window(docked[0] ?? "") && (!out(line) || !healthy(line)));
     const moved = [];
     for (const [phase, set] of [["docked", docked], ["hidden", away]]) {

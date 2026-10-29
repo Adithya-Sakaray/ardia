@@ -73,6 +73,9 @@ export function startDevHarness() {
     get sidebarHover(): typeof import("../../state/sidebar/hover") & typeof import("../sidebar/hoverMotion") {
       return { ...require("../../state/sidebar/hover"), ...require("../sidebar/hoverMotion") };
     },
+    get windowLayout(): typeof import("../../state/windows/layout") {
+      return require("../../state/windows/layout");
+    },
     get toolbarAutoHide(): typeof import("../../state/windows/toolbarAutoHide") {
       return require("../../state/windows/toolbarAutoHide");
     },
