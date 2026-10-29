@@ -6,6 +6,7 @@ import { markPinned } from "./pinChoices";
 import { groupOf, withRowsGrouped } from "./tabGrouping";
 import type { BrowserWindow, TileFolder } from "../browser/types";
 import { pinnedGroupMembers } from "../browser/structure";
+import { pinHome } from "./pinHomes";
 
 export type TabPlacement = {
   pinned: boolean;
@@ -40,7 +41,7 @@ export function placing(s: BrowserState, ids: string[], p: TabPlacement): Browse
   const intoPinnedGroup = target?.pinned ? target.id : null;
   for (const id of moving) {
     const t = tabs[id]!;
-    if (t.pinned !== p.pinned) tabs[id] = { ...t, pinned: p.pinned, pinnedUrl: p.pinned || intoPinnedGroup ? t.pinnedUrl || t.url || null : null };
+    if (t.pinned !== p.pinned) tabs[id] = { ...t, pinned: p.pinned, pinnedUrl: pinHome(t, p.pinned || !!intoPinnedGroup) };
     const row = p.pinned && (paired.has(id) || (p.row ?? (t.pinned && !!t.pinnedAsRow)));
     const placed = t.pinned !== p.pinned || (!p.pinned && pinnedGroupOf(id) !== intoPinnedGroup);
     if (placed || !!t.pinnedAsRow !== row) {

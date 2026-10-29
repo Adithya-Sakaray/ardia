@@ -22,6 +22,7 @@ import { pendingRestore } from "./adoptIds";
 import type { BrowserWindow, ClosedTab, Tab, TabSnapshot } from "../browser/types";
 import { orderSections } from "../groups/groups";
 import { samePage } from "../../lib/url";
+import { pinHome } from "../pins/pinHomes";
 
 export type NewTabOptions = {
   url?: string;
@@ -263,7 +264,7 @@ export function withNewTab(s: BrowserState, windowId: string, o: NewTabOptions =
   const tab = makeTab(windowId, profileId, url, { ...o.snapshot, pinned: o.pinned ?? o.snapshot?.pinned ?? false });
   if (tab.navigation && !o.snapshot) tab.navigation = navigationTo(url, true);
   tab.openerId = o.openerId ?? null;
-  tab.pinnedUrl = tab.pinned ? tab.pinnedUrl || url || null : tab.pinnedUrl || null;
+  tab.pinnedUrl = tab.pinned ? pinHome({ pinnedUrl: tab.pinnedUrl, url }, true) : tab.pinnedUrl || null;
   if (o.adoptId) {
     tab.adoptId = o.adoptId;
     tab.navigation = null;

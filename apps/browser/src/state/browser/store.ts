@@ -7,7 +7,7 @@ import { createHistorySlice, type HistorySlice } from "../history/history";
 import { engineProfile, IDLE_LIVE, isIncognitoProfile } from "./model";
 import { createOrganizeSlice, forgetClosedPrivateWindows, keptCleanedTabs, keptDeletedGroups, livePinTable, notePinChoices, type OrganizeSlice } from "../pins/organize";
 import { createPeekSlice, settlePeeks, type PeekSlice } from "../peek/peek";
-import { settlePinHomes } from "../pins/pinHomes";
+import { pinHome, settlePinHomes } from "../pins/pinHomes";
 import { mirrorPins } from "../pins/pinMirror";
 import { settleSharedPins } from "../pins/pinShare";
 import { mirrorTabs, pagesIntoSplits, unshareTabs } from "../tabs/tabShare";
@@ -123,7 +123,7 @@ export const useBrowser = create<BrowserState>()(transactions.middleware(batched
         ...(pinnedAsRow && kept.pinned ? { pinnedAsRow } : {}),
         ...(tileFolder && kept.pinned && !pinnedAsRow ? { tileFolder } : {}),
         navigation: null,
-        pinnedUrl: kept.pinnedUrl ?? (kept.pinned ? kept.url || null : null),
+        pinnedUrl: kept.pinnedUrl ?? pinHome(kept, kept.pinned),
       };
     }
     const windows: Record<string, BrowserWindow> = {};

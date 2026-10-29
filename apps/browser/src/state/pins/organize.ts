@@ -13,6 +13,7 @@ import { closedEntries, closeQuietly, closingGroup, keptCleanedTabs, nestedSnaps
 import { abandonedNewTabs, canUndoClear, CLEAN_UP_AFTER_MS, cleanUpCandidates, clearedTabIds, isClosedPin, MAX_CLEANED, undoable, type ClearedTabs } from "./tabCleanup";
 import { pinnedGroupMembers } from "../browser/structure";
 import { samePage } from "../../lib/url";
+import { pinHome } from "./pinHomes";
 
 export { groupChoiceKey, livePinTable, nextPinChoice, notePinChoices, orderChoiceKey, placeChoiceKey, type PinChoices, type PinSync, type PinSyncEntry } from "./pinChoices";
 export { canMoveGroup, groupLabel, groupOf, groupWithOpener, movingGroup, pinnedChildGroup, withGroup, withRowsGrouped, type GroupPlacement } from "./tabGrouping";
@@ -67,9 +68,7 @@ export function selectedTabIds(s: BrowserState, windowId: string): string[] {
 export const awayFromPin = (t: Pick<Tab, "url" | "pinnedUrl">) => !!t.pinnedUrl && !!t.url && !samePage(t.url, t.pinnedUrl);
 
 export function onUrlChange(s: BrowserState, tab: Tab, url: string): Partial<Tab> {
-  const patch: Partial<Tab> = {};
-  if (!tab.pinnedUrl && url && inPinnedContainer(s, tab.id)) patch.pinnedUrl = url;
-  return patch;
+  return inPinnedContainer(s, tab.id) ? { pinnedUrl: pinHome({ ...tab, url }, true) } : {};
 }
 
 export function pruneSelection(selection: Record<string, string[]>, gone: Set<string>): Record<string, string[]> {
