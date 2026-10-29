@@ -1,6 +1,6 @@
 import type { MenuItem } from "../../platform/menus";
 import { useBrowser, type BrowserState } from "../browser/store";
-import { activeTabId } from "../browser/model";
+import { activeTabId, tabLayoutOf } from "../browser/model";
 import { live } from "../live/store";
 import { updateProfile } from "../profiles/actions";
 import { keptEntry } from "./entries";
@@ -50,7 +50,7 @@ useBrowser.subscribe(expandOnPin);
 
 export function pinnedFoldMenuItem(s: BrowserState, windowId: string): MenuItem[] {
   const w = s.windows[windowId];
-  if (!w || !s.profiles[w.profileId] || (w.tabLayout ?? s.settings.tabLayout) !== "sidebar") return [];
+  if (!w || !s.profiles[w.profileId] || tabLayoutOf(s, w.id) !== "sidebar") return [];
   const collapsed = pinnedCollapsed(s, w.profileId);
   const hasPinned = pinnedSequence(s, live().folders, live().folderOrder, windowId, w.profileId).length > 0;
   return [

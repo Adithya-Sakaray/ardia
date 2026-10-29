@@ -5,7 +5,6 @@ import { engineProfile } from "../browser/model";
 export const useWindowUiOf = <T>(windowId: string, select: (ui: BrowserState["windowUi"][string] | undefined) => T): T =>
   useBrowser((s) => select(s.windowUi[windowId]));
 
-export const useWindowTabLayout = (windowId: string) => useBrowser((s) => s.windows[windowId]?.tabLayout ?? s.settings.tabLayout);
 
 export const useNativeWindowProfile = (windowId: string) =>
   useBrowser(

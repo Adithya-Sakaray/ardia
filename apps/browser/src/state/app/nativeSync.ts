@@ -9,7 +9,7 @@ import { menuShortcuts, onCommand, setMenuStateParts, type MenuBookmark, type Me
 import { Appearance } from "react-native";
 import { folderChildren, isBookmarked } from "../bookmarks/bookmarks";
 import { useBrowser, type BrowserState } from "../browser/store";
-import { activeTab, bookmarkProfileId, IDLE_LIVE, isPinnedRow, tabLabel, togglePinTitle, windowTitle } from "../browser/model";
+import { activeTab, bookmarkProfileId, IDLE_LIVE, isPinnedRow, tabLabel, togglePinTitle, windowTitle, tabLayoutOf } from "../browser/model";
 import { canSwitchEngine, tabEngine } from "../engines/engines";
 import { setLastTabKeepsWindow } from "../omnibox/newTabBarPolicy";
 import { peekTabId } from "../peek/peek";
@@ -182,7 +182,7 @@ export function menuState(s: BrowserState): MenuState {
 
   const disabled: string[] = [];
   if (!tab || !splitOf(s, tab.id)) disabled.push("focusNextPane", "focusPreviousPane");
-  if (w && (w.tabLayout ?? s.settings.tabLayout) === "top") disabled.push("toggleAddressBar");
+  if (w && tabLayoutOf(s, w.id) === "top") disabled.push("toggleAddressBar");
   if (!w) disabled.push(...WINDOW_COMMANDS);
   else {
     if (!page?.url) disabled.push(...PAGE_COMMANDS);
@@ -202,7 +202,7 @@ export function menuState(s: BrowserState): MenuState {
   if (s.settings.allowJavaScriptFromAppleEvents) checked.push("toggleJavaScriptFromAppleEvents");
   if (s.settings.addressBar === "sidebar") checked.push("toggleAddressBar");
   checked.push(`setBookmarksBar:${s.settings.bookmarksBar}`);
-  if ((w?.tabLayout ?? s.settings.tabLayout) === "sidebar") checked.push("toggleTabLayout");
+  if (tabLayoutOf(s, windowId) === "sidebar") checked.push("toggleTabLayout");
   if (w && !w.sidebarOpen) checked.push("toggleSidebar");
 
   const titles: Record<string, string> = {};

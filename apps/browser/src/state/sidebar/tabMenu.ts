@@ -3,7 +3,7 @@ import { chooseFromMenu, type ChoiceItem } from "../app/menuChoice";
 import { closeTab, moveTabsToProfile, moveTabToWindow, openWindow, toggleMute, toggleSiteMute } from "../browser/actions";
 import { muteState, muteSymbol, muteTitle, siteMuteTitle } from "../tabs/mute";
 import { useBrowser, type BrowserState } from "../browser/store";
-import { activeTabId, inPinnedContainer, isIncognitoProfile, pinnedSectionTitle, pinSection, togglePinTitle, viewTabIds } from "../browser/model";
+import { activeTabId, inPinnedContainer, isIncognitoProfile, pinnedSectionTitle, pinSection, togglePinTitle, viewTabIds, tabLayoutOf } from "../browser/model";
 import { awayFromPin, groupOf, selectedTabIds } from "../pins/organize";
 import { splitOf, splitRowPanes } from "../splits/splits";
 import { openSplitPane } from "../splits/actions";
@@ -36,7 +36,7 @@ export function tabMenuFacts(s: BrowserState, windowId: string, tab: Tab) {
     split,
     splitRow: splitRowPanes(s, split).includes(tab.id),
     incognito: isIncognitoProfile(tab.profileId),
-    across: (s.windows[windowId]?.tabLayout ?? s.settings.tabLayout) === "top",
+    across: tabLayoutOf(s, windowId) === "top",
     active: activeTabId(s, windowId) === tab.id,
   };
 }

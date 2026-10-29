@@ -1,4 +1,5 @@
 import { showMenu, type MenuItem } from "../../platform/menus";
+import { tabLayoutOf } from "../browser/model";
 import { createProfile, switchProfile } from "../browser/actions";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { menuShortcut } from "../commands/commandShortcuts";
@@ -25,7 +26,7 @@ export function sidebarMenuItems(s: BrowserState, windowId: string): MenuItem[] 
     [{ id: "bookmarkAll", title: "Bookmark All Tabs…", symbol: "bookmark", ...menuShortcut("bookmarkAllTabs", s) }],
     [
       ...pinnedFoldMenuItem(s, windowId),
-      { id: "tabLayout", title: "Show Tabs in Sidebar", symbol: "sidebar.left", checked: (w?.tabLayout ?? s.settings.tabLayout) === "sidebar", ...menuShortcut("toggleTabLayout", s) },
+      { id: "tabLayout", title: "Show Tabs in Sidebar", symbol: "sidebar.left", checked: tabLayoutOf(s, windowId) === "sidebar", ...menuShortcut("toggleTabLayout", s) },
       { id: "autoHide", title: "Auto-Hide Tabs", checked: !!w && !w.sidebarOpen, ...menuShortcut("toggleSidebar", s) },
     ],
     [{ id: "closeAll", title: "Close All Tabs", symbol: "xmark", ...menuShortcut("closeAllTabs", s) }],
