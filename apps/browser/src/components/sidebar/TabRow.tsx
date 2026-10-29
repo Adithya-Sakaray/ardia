@@ -14,7 +14,7 @@ import { awayFromPin } from "../../state/pins/organize";
 import { commitRename, endRename, startRename } from "../../state/sidebar/actions";
 import { useDragItem, useDropOnto } from "./DragProvider";
 import { useShift, type EntryMotion } from "./EntryMotion";
-import { useRowHover } from "../../state/sidebar/hover";
+import { useRowHover } from "./hoverController";
 import { pressTabClose, useTabCloseControlWhile } from "../../state/sidebar/closeControl";
 import { ACTIVE, ICON_MARKS, LOADING, PLAYING, SELECTED, useRowState } from "../../state/sidebar/rowState";
 import { registerRow, useSidebarUi } from "../../state/sidebar/sidebarUi";

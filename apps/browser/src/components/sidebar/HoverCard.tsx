@@ -18,7 +18,8 @@ import { FadeLabel, font, Panel, radius, Symbol, useHover, weight } from "../ui"
 import { SIDEBAR_SHADOW, SIDEBAR_TYPE } from "./tokens";
 import { clickTab, toggleBookmarkInWindow } from "../../state/sidebar/actions";
 import { GroupPanel } from "./GroupPanel";
-import { cardHoverProps, dismissHover, setHoverSpace } from "../../state/sidebar/hover";
+import { dismissHover, setHoverSpace } from "../../state/sidebar/hover";
+import { cardHoverProps } from "./hoverController";
 import { hoverCardOrigin, useHoverCardMotion, useHoverCardPlacement } from "./hoverMotion";
 import { useSidebarUi, type Anchor, type Hover } from "../../state/sidebar/sidebarUi";
 import { TabIcon } from "./TabIcon";

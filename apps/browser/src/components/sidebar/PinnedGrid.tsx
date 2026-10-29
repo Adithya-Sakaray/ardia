@@ -12,7 +12,7 @@ import { returnShownTabToPinnedUrl } from "../../state/sidebar/actions";
 import { cellKey, PIN_SLOT, tailKey } from "./dragModel";
 import { useDragController, useDragging, useDragItem, useDropPins, useFolderTarget, usePinnedCount, usePinSlots } from "./DragProvider";
 import { FolderTile } from "./FolderTile";
-import { useRowHover } from "../../state/sidebar/hover";
+import { useRowHover } from "./hoverController";
 import { pinGrid, pinGridHeight, TILE_GAP } from "./pinZone";
 import { registerRow } from "../../state/sidebar/sidebarUi";
 import { FolderDropRing, TileFace, useSlotPosition } from "./TileFace";
