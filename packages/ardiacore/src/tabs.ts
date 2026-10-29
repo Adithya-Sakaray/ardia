@@ -55,3 +55,5 @@ export function sendTabStripCommand(command: TabStripCommand): number {
   void call("tabs.stripCommand", { id, command });
   return id;
 }
+
+export type LinkRoute = { profile?: string; adoptIds?: (string | null)[]; dismissed?: number[] };

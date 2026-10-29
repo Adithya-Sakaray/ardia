@@ -276,7 +276,7 @@ The app closes a tab by unmounting its WebView; ArdiaCore closes it at once with
 entry for it however it closes (`chromium-temporary-tab-restore-hook.patch`); `temporarySource` (the tab it was opened
 over, `-[ArdiaCoreTab setTemporarySource:]`) is the tab a closed window's entry selects when the temporary one was selected.
 
-## `ArdiaCEF` module (`packages/ardiacore/src/native.ts`, `module.ts`)
+## `ArdiaCEF` module (`packages/ardiacore/src/engine/call.ts` and one type file per call domain)
 
 | Function / event | Status | Note |
 |---|---|---|
@@ -314,7 +314,7 @@ over, `-[ArdiaCoreTab setTemporarySource:]`) is the tab a closed window's entry 
 | `onChanged` | partial | Fires on install/uninstall; not asserted on its own |
 | `onTabs` | partial | Only for a tab Chrome makes when no app window can take it; the usual path is `tab:<id>` (proven) |
 
-## `ArdiaChromeUI` (`packages/ardiacore/src/chromeUI.ts`)
+## Chrome UI: device choosers, Cast, side panels, capture and autofill suggestions (`media.*`, `extensions.*` and `autofill.*` calls, bound in `apps/browser/src/platform/{permissions,media,extensions,autofill}.ts`)
 
 | Function / event | Status | Note |
 |---|---|---|

@@ -143,7 +143,7 @@ listeners and subscriptions hear them together at the end, except a write that c
 ends its load, which is heard as it lands (a value that flips back within the flush stays visible to the listeners
 that act on it: translate's detection, the web store's script, a screen-share request going with its page).
 
-## Live tabs: Chrome's tab strips (state/tabs/chromeTabs.ts, state/tabs/liveTabs.ts, packages/ardiacore/src/tabStrip.ts)
+## Live tabs: Chrome's tab strips (state/tabs/chromeTabs.ts, state/tabs/liveTabs.ts, packages/ardiacore/src/tabs.ts)
 
 One writer per fact. The store owns the **workspace**: sidebar order, pins, groups, splits, Little Ardia, unloaded
 and parked tiles, and which tab each window shows per profile (`activeTabIds`). Chrome's `TabStripModel` owns

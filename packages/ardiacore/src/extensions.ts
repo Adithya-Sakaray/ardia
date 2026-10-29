@@ -156,3 +156,7 @@ export type ExtensionsSyncApply = {
 export type ExtensionsSyncApplied = {
   state: "invalid" | "kept" | "absent" | "cancelled" | "blocked" | "pending" | "refused" | "updating" | "installed";
 };
+
+export type SidePanelRequest = { tabId: string | null; extensionId: string; open: boolean };
+
+export type ActionPopupRequest = { tabId: string | null; extensionId: string };

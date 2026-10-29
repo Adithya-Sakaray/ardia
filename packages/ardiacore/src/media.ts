@@ -40,6 +40,3 @@ export type CastDialog = {
 };
 
 export type CastRoute = { id: string; sink: string; description: string; source: string };
-
-export type SidePanelRequest = { tabId: string | null; extensionId: string; open: boolean };
-export type ActionPopupRequest = { tabId: string | null; extensionId: string };
