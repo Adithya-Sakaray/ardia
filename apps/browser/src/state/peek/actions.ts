@@ -3,7 +3,7 @@ import { hapticTick } from "../../platform/haptics";
 import { webviews } from "../../platform/webviews";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { activeTabId } from "../browser/model";
-import type { PeekModifier, SplitLinkModifier } from "../settings/settings";
+import { splitLinkModifierOf, type PeekModifier, type SplitLinkModifier } from "../settings/settings";
 import { MAX_SPLIT_PANES, splitOf } from "../splits/splits";
 import { openSplitPane } from "../splits/actions";
 import { showToast } from "../app/toasts";
@@ -102,7 +102,7 @@ export function startPeeks() {
     const s = store();
     const modifier = s.settings.peekModifier;
     if (modifier !== sent) void setPeekModifier((sent = modifier));
-    const split = s.settings.splitLinkModifier;
+    const split = splitLinkModifierOf(s.settings);
     if (split !== sentSplit) void setSplitLinkModifier((sentSplit = split));
     const on = s.settings.peekLinksToOtherSites;
     if (read && read.tabs === s.tabs && read.groups === s.groups && read.on === on) return;
