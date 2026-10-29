@@ -25,9 +25,13 @@ export const settingsAdapter: Adapter = {
       return last === undefined || last.v === null || last.v === undefined;
     };
     const values = new Map<string, unknown>();
+    const fromNewerVersion = (name: SettingKey) => {
+      const last = base(recordKey(name)) as { v?: unknown } | undefined;
+      return last?.v !== undefined && last.v !== null && !validSettingValue(name, fromRecord(name, last.v));
+    };
     for (const name of SYNCED_SETTINGS) {
       const value = settings[name] as unknown;
-      if (!chosen.has(name) || filledIn(name, value)) continue;
+      if (!chosen.has(name) || filledIn(name, value) || fromNewerVersion(name)) continue;
       values.set(recordKey(name), { v: toRecord(name, value) });
     }
     return { values, ignore: (key) => !values.has(key) };

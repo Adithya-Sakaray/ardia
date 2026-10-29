@@ -272,6 +272,16 @@ test("settings: a setting from a newer version survives an older Mac's syncs (no
   assert.deepEqual(tombstones, [], "and never deletes it");
 });
 
+test("settings: a choice only a newer version knows isn't overwritten by an older Mac's own earlier pick", () => {
+  const a = new Device("A", new Folder());
+  a.with(() => S().updateSettings({ selectedTabGlow: "soft" }));
+  a.with(() => settingsAdapter.apply(new Map([["set:selectedTabGlow", { v: "medium" }]]), ["set:selectedTabGlow"]));
+  assert.equal(a.with(() => S().settings.selectedTabGlow), "soft", "this version can't show it, so it keeps its own");
+  const base = (key) => (key === "set:selectedTabGlow" ? { v: "medium" } : undefined);
+  const { values, ignore } = a.with(() => settingsAdapter.extract(base));
+  assert.ok(!values.has("set:selectedTabGlow") && ignore("set:selectedTabGlow"), "and doesn't publish over the newer Mac's choice");
+});
+
 test("bookmarks: a folder deleted on one Mac while the other adds to it keeps the new bookmark", async () => {
   const folder = new Folder();
   const a = new Device("devA", folder);

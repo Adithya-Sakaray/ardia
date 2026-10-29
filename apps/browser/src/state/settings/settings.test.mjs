@@ -33,12 +33,12 @@ test("a saved value of the wrong kind reads as the default, and the rest is kept
   assert.deepEqual(parseSettings(undefined), DEFAULT_SETTINGS);
 });
 
-test("Peek and split view never both get ⌥-click, from a saved file or from another Mac", () => {
+test("Peek and split view never both get ⌥-click from a saved file, and sync takes each record as it is", () => {
   const saved = parseSettings({ peekModifier: "alt", splitLinkModifier: "alt", chosen: [] });
   assert.deepEqual([saved.peekModifier, saved.splitLinkModifier], ["alt", "altShift"]);
   S().hydrate({ settings: { splitLinkModifier: "alt", chosen: ["splitLinkModifier"], inferred: [] } });
   settingsAdapter.apply(new Map([["set:peekModifier", { v: "alt" }]]), ["set:peekModifier"]);
-  assert.deepEqual([S().settings.peekModifier, S().settings.splitLinkModifier], ["alt", "altShift"]);
+  assert.deepEqual([S().settings.peekModifier, S().settings.splitLinkModifier], ["alt", "alt"], "moving one locally would make Macs that disagree flip it back and forth");
 });
 
 test("a synced value this version can't show is left out", () => {

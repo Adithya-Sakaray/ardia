@@ -234,10 +234,7 @@ const newEngineId = () => `engine-${Date.now().toString(36)}-${(++engineCounter)
 export const createSettingsSlice: StateCreator<BrowserState, [], [], SettingsSlice> = (set, get) => ({
   settings: DEFAULT_SETTINGS,
   updateSettings(patch, { fromSync = false } = {}) {
-    set((s) => {
-      const apart = withLinkKeysApart(s.settings, patch);
-      return { settings: fromSync ? { ...s.settings, ...apart } : choose(s.settings, apart) };
-    });
+    set((s) => ({ settings: fromSync ? { ...s.settings, ...patch } : choose(s.settings, withLinkKeysApart(s.settings, patch)) }));
   },
 
   setSearchEngine(id) {
