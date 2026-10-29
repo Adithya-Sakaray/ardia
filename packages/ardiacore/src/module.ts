@@ -1,6 +1,3 @@
-import { call } from "./engine/call";
-import { nativeModule } from "./nativeModules";
-
 export type DownloadState = "downloading" | "finished" | "failed" | "cancelled";
 
 export type Download = {
@@ -65,9 +62,6 @@ export type EngineTask = {
 
 export const WIDEVINE_COMPONENT_ID = "oimompecagnajdejgnnjijobebaeigek";
 
-const Tabs = nativeModule("ArdiaTabs");
-
-
 export type ChromeWindowState = {
   profile: string;
   window: number;
@@ -88,14 +82,7 @@ export type ChromeWindowState = {
   hasRoot: boolean;
   translucent: boolean;
 };
-export const prepareTabTransfer = (tabId: string) => Tabs.prepareTransfer(tabId);
-export const releaseTabTransfer = (tabId: string) => Tabs.releaseTransfer(tabId);
-export const claimLaunchTab = (tabId: string, url: string, profile: string) => Tabs.claimLaunchTab(tabId, url, profile);
-export const revealTab = (tabId: string) => Tabs.revealTab(tabId);
-export const dropTabReveals = (tabId: string) => Tabs.dropTabReveals(tabId);
-export const revealOffered = (adoptId: string, overTabId: string) => Tabs.revealOffered(adoptId, overTabId);
 export type LinkRoute = { profile?: string; adoptIds?: (string | null)[]; dismissed?: number[] };
-export const routeLinkTabs = (urls: string[]): Promise<LinkRoute> => call("tabs.routeLinkTabs", { urls });
 
 export type SystemState = {
   onBattery: boolean;

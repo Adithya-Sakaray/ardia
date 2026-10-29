@@ -9,7 +9,8 @@ const pinnedArea = await import("./pinned.ts");
 const { pinnedOrderAdapter } = await import("./pinnedOrderAdapter.ts");
 const { pinnedRowsAdapter } = await import("./pinnedRowsAdapter.ts");
 const stub = await import("../../test-native/index.ts");
-const ardiacore = await import("@ardia/ardiacore");
+const passwords = await import("../../platform/passwords.ts");
+const history = await import("../../platform/history.ts");
 
 const S = () => useBrowser.getState();
 
@@ -23,8 +24,8 @@ const sealedLogins = (read = stub.readLogins) => ({
   save: async (profile, origin, username, sealed, replacing) => {
     const [o, u, password] = JSON.parse(Buffer.from(sealed, "base64").toString());
     if (o !== origin || u !== username) return false;
-    if (replacing && !(await ardiacore.deletePassword(profile, origin, username))) return false;
-    return ardiacore.savePassword(profile, origin, username, password);
+    if (replacing && !(await passwords.deletePassword(profile, origin, username))) return false;
+    return passwords.savePassword(profile, origin, username, password);
   },
 });
 
@@ -1032,8 +1033,8 @@ test("passwords: saved on one Mac, changed or deleted on another; the newer edit
   const folder = new Folder();
   const a = new Device("devA", folder);
   const b = new Device("devB", folder);
-  const save = (d, origin, user, password) => d.with(() => ardiacore.savePassword("", origin, user, password));
-  const remove = (d, origin, user) => d.with(() => ardiacore.deletePassword("", origin, user));
+  const save = (d, origin, user, password) => d.with(() => passwords.savePassword("", origin, user, password));
+  const remove = (d, origin, user) => d.with(() => passwords.deletePassword("", origin, user));
   const list = (d) => [...stub.passwordStores.get(d.id).values()].map((l) => `${l.url} ${l.username}=${l.password}`).sort();
   await save(a, "https://bank.example", "alice", "hunter2");
   await save(a, "https://mail.example", "alice", "m41l");
@@ -1056,7 +1057,7 @@ test("history: two Macs settle on the union of their visits in Chrome, publish n
   for (const d of [a, b]) stub.historyDbs.delete(d.id);
   const readChrome = async (d) => {
     stub.current.device = d.id;
-    const entries = await ardiacore.queryHistory("");
+    const entries = await history.queryHistory("");
     d.with(() =>
       useBrowser.setState({
         history: { default: entries.map((e) => ({ ...e, favicon: null, lastVisit: e.visitTimes.at(-1) })) },
