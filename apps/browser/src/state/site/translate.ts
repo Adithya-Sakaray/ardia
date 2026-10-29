@@ -11,18 +11,21 @@ import { errorText } from "../../lib/errors";
 
 export { translation } from "../../platform/text";
 
-type TranslateState = {
-  source: string | null;
-  status: "idle" | "translating" | "translated";
-  target: string | null;
-  token: string | null;
-};
+type TranslateState = { status: "idle"; source: string | null } | { status: "translating" | "translated"; source: string; target: string; token: string };
 
-const IDLE: TranslateState = { source: null, status: "idle", target: null, token: null };
+const IDLE: TranslateState = { status: "idle", source: null };
 export const useTranslate = create<Record<string, TranslateState | undefined>>()(() => ({}));
 const stateOf = (tabId: string) => useTranslate.getState()[tabId] ?? IDLE;
-export const translateStateOf = stateOf;
-const patch = (tabId: string, p: Partial<TranslateState>) => useTranslate.setState((s) => ({ [tabId]: { ...(s[tabId] ?? IDLE), ...p } }));
+const set = (tabId: string, state: TranslateState) => useTranslate.setState({ [tabId]: state });
+const toIdle = (tabId: string) => set(tabId, { status: "idle", source: stateOf(tabId).source });
+function setSource(tabId: string, source: string | null) {
+  if (stateOf(tabId).status === "idle") set(tabId, { status: "idle", source });
+}
+export const isTranslated = (tabId: string) => stateOf(tabId).status !== "idle";
+export function translationTarget(tabId: string): string | null {
+  const state = stateOf(tabId);
+  return state.status === "idle" ? null : state.target;
+}
 export const useTranslateState = (tabId: string) => useTranslate((s) => s[tabId] ?? IDLE);
 
 const BATCH = 8;
@@ -64,7 +67,7 @@ export function setNeverTranslate(tabId: string, never: boolean) {
   s.updateSettings({ neverTranslateSites: { ...all, [tab.profileId]: never ? [...list, host] : list } });
   if (!never) return void detect(tabId);
   if (stateOf(tabId).status !== "idle") void revertPage(tabId, { quiet: true });
-  patch(tabId, { source: null });
+  setSource(tabId, null);
 }
 
 type Sample = { lang: string; text: string; active: boolean };
@@ -78,15 +81,15 @@ async function pageLanguage(tabId: string): Promise<{ language: string | null; a
 
 async function detect(tabId: string) {
   const tab = useBrowser.getState().tabs[tabId];
-  if (!translation || !tab || !translatableHost(tab.url)) return patch(tabId, { source: null, status: "idle", target: null, token: null });
+  if (!translation || !tab || !translatableHost(tab.url)) return set(tabId, IDLE);
   const page = await pageLanguage(tabId);
   if (!page) return;
-  if (!page.active && stateOf(tabId).status === "translated") patch(tabId, { status: "idle", target: null, token: null });
-  if (isNeverTranslated(tab.profileId, tab.url)) return patch(tabId, { source: null });
+  if (!page.active && stateOf(tabId).status === "translated") toIdle(tabId);
+  if (isNeverTranslated(tab.profileId, tab.url)) return setSource(tabId, null);
   const mine = new Set(languages().map(baseLanguage));
   const source = page.language && !mine.has(baseLanguage(page.language)) ? page.language : null;
-  if (source && (await translation.status(source, defaultTarget())) === "unsupported") return patch(tabId, { source: null });
-  if (stateOf(tabId).status === "idle") patch(tabId, { source });
+  if (source && (await translation.status(source, defaultTarget())) === "unsupported") return setSource(tabId, null);
+  setSource(tabId, source);
 }
 
 type Batch = { passages: Passage[]; more: boolean; gone: boolean; done: number; total: number };
@@ -114,8 +117,8 @@ async function drain(tabId: string, token: string, onProgress?: (done: number, t
   for (;;) {
     const current = stateOf(tabId);
     const web = webviews.get(tabId);
+    if (current.status === "idle" || current.token !== token || !web) return false;
     const { source, target } = current;
-    if (current.status === "idle" || current.token !== token || !web || !source || !target) return false;
     const batch = await web.evaluate<Batch>(translatorCall("next", token, BATCH, BATCH_CHARS));
     if (!batch || batch.gone || !Array.isArray(batch.passages)) return false;
     const passages = batch.passages
@@ -131,12 +134,17 @@ async function drain(tabId: string, token: string, onProgress?: (done: number, t
         await web.evaluate(translatorCall("apply", untranslated)).catch(() => {});
         throw error;
       }
-      if (stateOf(tabId).token !== token) return false;
+      if (!holds(tabId, token)) return false;
       await web.evaluate(translatorCall("apply", results));
     }
     onProgress?.(batch.done, batch.total);
     if (!batch.more) return true;
   }
+}
+
+function holds(tabId: string, token: string) {
+  const state = stateOf(tabId);
+  return state.status !== "idle" && state.token === token;
 }
 
 async function follow(tabId: string, token: string) {
@@ -147,9 +155,9 @@ async function follow(tabId: string, token: string) {
     try {
       if (await drain(tabId, token)) continue;
     } catch {}
-    if (stateOf(tabId).token !== token) return;
+    if (!holds(tabId, token)) return;
     if ((await pageLanguage(tabId).catch(() => null))?.active) continue;
-    if (stateOf(tabId).token === token) patch(tabId, { status: "idle", target: null, token: null });
+    if (holds(tabId, token)) toIdle(tabId);
     return;
   }
 }
@@ -174,7 +182,7 @@ export async function translatePage(tabId: string, target = defaultTarget()) {
     if (status === "unsupported") return toast(tabId, `Translation error (${languageName(source)} to ${languageName(target)} isn't available)`);
     if (status === "supported") await translation.prepare(source, target);
     const token = Math.random().toString(36).slice(2);
-    patch(tabId, { status: "translating", source, target, token });
+    set(tabId, { status: "translating", source, target, token });
     if (!(await webviews.get(tabId)?.evaluate<boolean>(translatorCall("start", token)))) throw new Error("the page isn't ready");
     const started = Date.now();
     const done = await drain(tabId, token, (n, total) => {
@@ -183,11 +191,11 @@ export async function translatePage(tabId: string, target = defaultTarget()) {
       toast(tabId, `Translating to ${languageName(target)}…`, `${Math.min(99, Math.round((n / total) * 100))}%`, true);
     });
     if (!done) {
-      if (stateOf(tabId).token === token) patch(tabId, { status: "idle", target: null, token: null });
+      if (holds(tabId, token)) toIdle(tabId);
       if (shown) hideKeyedToast(tab.windowId, PROGRESS_TOAST);
       return;
     }
-    patch(tabId, { status: "translated" });
+    if (holds(tabId, token)) set(tabId, { status: "translated", source, target, token });
     toast(tabId, `Translated to ${languageName(target)}`);
     void follow(tabId, token);
   } catch (error) {
@@ -199,7 +207,7 @@ export async function translatePage(tabId: string, target = defaultTarget()) {
 
 export async function revertPage(tabId: string, { quiet = false } = {}) {
   const { source, status } = stateOf(tabId);
-  patch(tabId, { status: "idle", target: null, token: null });
+  toIdle(tabId);
   await webviews.get(tabId)?.evaluate(translatorCall("revert"));
   if (!quiet && source && status !== "idle") toast(tabId, `Translated back to ${languageName(source)}`);
 }
