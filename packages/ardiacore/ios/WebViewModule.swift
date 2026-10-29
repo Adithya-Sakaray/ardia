@@ -3,11 +3,9 @@ import ExpoModulesCore
 
 public class WebViewModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaWebView")
+    Name(Self.calls.moduleName)
 
-    AsyncFunction("call") { (name: String, profile: String, args: String, promise: Promise) in
-      WebViewModule.calls.run(name, profile, args, promise)
-    }.runOnQueue(.main)
+    Self.calls.function
 
     View(ChromiumTabView.self) {
       Events(PageEvents.channel)

@@ -2,11 +2,9 @@ import ExpoModulesCore
 
 public class AutofillModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaAutofill")
+    Name(Self.calls.moduleName)
 
-    AsyncFunction("call") { (name: String, profile: String, args: String, promise: Promise) in
-      AutofillModule.calls.run(name, profile, args, promise)
-    }.runOnQueue(.main)
+    Self.calls.function
 
     AsyncFunction("saveCard") { (profile: String, card: [String: Any], number: String?, promise: Promise) in
       ArdiaServices.saveCard(card, number: number, profile: profile) { CallReply(promise: promise).service($0, $1) }

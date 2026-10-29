@@ -2,11 +2,9 @@ import ExpoModulesCore
 
 public class PasswordsModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPasswords")
+    Name(Self.calls.moduleName)
 
-    AsyncFunction("call") { (name: String, profile: String, args: String, promise: Promise) in
-      PasswordsModule.calls.run(name, profile, args, promise)
-    }.runOnQueue(.main)
+    Self.calls.function
 
     AsyncFunction("save") { (profile: String, origin: String, username: String, password: String, promise: Promise) in
       ArdiaServices.savePassword(profile: profile, origin: origin, username: username, password: password) {

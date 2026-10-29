@@ -4,11 +4,9 @@ import WebKit
 
 public class WebKitModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaWebKit")
+    Name(Self.calls.moduleName)
 
-    AsyncFunction("call") { (name: String, profile: String, args: String, promise: Promise) in
-      WebKitModule.calls.run(name, profile, args, promise)
-    }.runOnQueue(.main)
+    Self.calls.function
 
     View(WebKitTabView.self) {
       Events(PageEvents.channel)

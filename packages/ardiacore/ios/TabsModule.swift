@@ -2,11 +2,11 @@ import ExpoModulesCore
 
 public class TabsModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaTabs")
-    Events("tabs")
+    Name(Self.calls.moduleName)
+    Events(Self.calls.domain)
+    Self.calls.forwardEvents(to: self)
 
     OnCreate {
-      EngineCall.listen("tabs", self)
       ArdiaTabStrip.watchStrips()
     }
 
@@ -23,9 +23,7 @@ public class TabsModule: Module {
     Function("dropTabReveals") { (key: String) in ArdiaWebView.dropTabReveals(key) }
     Function("revealOffered") { (adoptId: String, key: String) in ArdiaWebView.revealOffered(adoptId, over: key) }
 
-    AsyncFunction("call") { (name: String, profile: String, args: String, promise: Promise) in
-      TabsModule.calls.run(name, profile, args, promise)
-    }.runOnQueue(.main)
+    Self.calls.function
   }
 
   static func browserId(_ args: CallArgs) throws -> Int32 { ArdiaWebView.browserId(ofTab: try args.text("tabId")) }
