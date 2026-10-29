@@ -1,7 +1,7 @@
 import type { ThemeBackdropProps, ThemeTexture } from "@ardia/core";
-import { requireNativeViewManager, requireOptionalNativeModule } from "expo-modules-core";
+import { requireNativeModule, requireNativeViewManager } from "expo-modules-core";
 import type { ComponentType } from "react";
-import { View, type ViewProps } from "react-native";
+import type { ViewProps } from "react-native";
 
 export const DIA_SPECTRUM = ["#0358F7", "#5092C7", "#E1E1FE", "#FFD400", "#FA3D1D", "#FD02F5"];
 
@@ -23,10 +23,10 @@ export type WindowBackdropProps = ViewProps &
 
 const NativeBackdrop = requireNativeViewManager<WindowBackdropProps>("ArdiaWindowBackdrop");
 
-const BackdropModule = requireOptionalNativeModule<{ holdKeyLook?: (on: boolean) => Promise<void> }>("ArdiaWindowBackdrop");
+const BackdropModule = requireNativeModule<{ holdKeyLook(on: boolean): Promise<void> }>("ArdiaWindowBackdrop");
 
 export function holdThemedWindowsKeyLook(on: boolean) {
-  void BackdropModule?.holdKeyLook?.(on);
+  void BackdropModule.holdKeyLook(on);
 }
 
 export function WindowBackdrop({ angle = 180, grainOpacity = 0.09, grainScale = 1, ...props }: WindowBackdropProps) {
@@ -67,11 +67,9 @@ export type ThemeSwatchProps = ViewProps & {
   angle?: number;
 };
 
-const hasThemeSwatch = !!(globalThis as { expo?: { getViewConfig?: (name: string) => unknown } }).expo?.getViewConfig?.("ArdiaThemeSwatch");
-const NativeThemeSwatch = hasThemeSwatch ? requireNativeViewManager<ThemeSwatchProps>("ArdiaThemeSwatch") : null;
+const NativeThemeSwatch = requireNativeViewManager<ThemeSwatchProps>("ArdiaThemeSwatch");
 
 export function ThemeSwatch({ grain = 0, padLightness = -1, angle = 135, style, ...props }: ThemeSwatchProps) {
-  if (!NativeThemeSwatch) return <View pointerEvents="none" style={[style, { backgroundColor: "#80808040" }]} />;
   return <NativeThemeSwatch pointerEvents="none" grain={grain} padLightness={padLightness} angle={angle} style={style} {...props} />;
 }
 

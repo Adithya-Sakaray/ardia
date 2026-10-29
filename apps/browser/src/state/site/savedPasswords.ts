@@ -46,11 +46,10 @@ export const usePasswordsUnlocked = (profile: string) => usePasswordUnlocks((s) 
 
 export const originOfLogin = (url: string) => /^([a-z][a-z0-9+.-]*:\/\/[^/?#]+)/i.exec(url)?.[1] ?? url;
 
-export type PasswordImport = { saved: number; skipped: number } | "cancelled" | "unavailable";
+export type PasswordImport = { saved: number; skipped: number } | "cancelled";
 
 export async function importPasswordsCsv(profile: string): Promise<PasswordImport> {
   const mod = importModule();
-  if (!mod) return "unavailable";
   const path = await mod.chooseImportFile("passwordsCSV");
   if (!path) return "cancelled";
   const credentials = await mod.importPasswordsCSV(path);

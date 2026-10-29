@@ -24,6 +24,7 @@ export type ShellNative = {
   addListener<K extends keyof ShellEvents>(name: K, listener: ShellEvents[K]): EventSubscription;
   showMenu(items: MenuItem[]): Promise<string | null>;
   copyText(text: string): void;
+  readText(): Promise<string>;
   setSwitcherCapture(active: boolean): Promise<void>;
   setDragEscapeCapture(active: boolean): Promise<void>;
   cancelFocusMove(generation: number, restoringSource: boolean): Promise<void>;

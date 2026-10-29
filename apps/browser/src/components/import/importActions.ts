@@ -14,7 +14,7 @@ import { NO_EXTENSIONS, type ImportState } from "./useImportState";
 
 export type ImportApi = NonNullable<ReturnType<typeof importModule>>;
 
-export function importActions(s: ImportState, api: ImportApi | null) {
+export function importActions(s: ImportState, api: ImportApi) {
   const { source, sourceProfiles, spaces, step, kinds, target } = s;
   const allSpaces: (SpaceSummary & { profileId: string })[] = (source?.profiles ?? []).flatMap((p) => (p.spaces ?? []).map((sp) => ({ ...sp, profileId: p.id })));
   const bySpaces = !!source?.sidebar;
@@ -35,7 +35,6 @@ export function importActions(s: ImportState, api: ImportApi | null) {
   };
 
   const recheckAccess = async () => {
-    if (!api) return;
     if (step === "safari") return s.setFullDiskAccess(api.safariHasFullDiskAccess());
     const list = await api.listBrowsers().catch(() => null);
     if (!list) return;
@@ -66,7 +65,7 @@ export function importActions(s: ImportState, api: ImportApi | null) {
   const finish = () => setTimeout(() => s.setStep("done"), importMotion.doneDelay);
 
   const run = async (wanted: Set<ImportKind>, withoutKey = false) => {
-    if (!api || !source) return;
+    if (!source) return;
     const selected = source.profiles.filter((p) => sourceProfiles.includes(p.id) || (bySpaces && p.spaces?.some((sp) => spaces.includes(sp.id))));
     const tabsLocked = (p: BrowserProfile) => withoutKey && !!p.tabsNeedKey;
     const requested: ImportKind[] = [...wanted].filter((k) => k !== "tabs" || !selected.every(tabsLocked));
@@ -166,7 +165,7 @@ export function importActions(s: ImportState, api: ImportApi | null) {
   };
 
   const unlock = async () => {
-    if (!api || !source) return;
+    if (!source) return;
     s.setUnlocking(true);
     try {
       await api.unlockBrowser(source.id);

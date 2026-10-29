@@ -3,7 +3,6 @@ import {
   onUserScriptsChange,
   readUserScripts,
   readUserScriptsStatus,
-  userScriptsAvailable,
   watchUserScripts,
   writeUserScriptsStatus,
   type UserScriptsFolder,
@@ -150,7 +149,7 @@ const schedule = singleFlight(async (flight) => {
 let started = false;
 
 export function startUserScripts() {
-  if (started || !userScriptsAvailable()) return;
+  if (started) return;
   started = true;
   onUserScriptsChange(schedule);
   let watching = false;

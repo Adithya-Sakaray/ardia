@@ -15,7 +15,7 @@ export function useImportFlow() {
   const { step, source, kinds, sourceProfiles, fullDiskAccess } = s;
 
   useEffect(() => {
-    if (!api || !((step === "safari" && !fullDiskAccess) || step === "access")) return;
+    if (!((step === "safari" && !fullDiskAccess) || step === "access")) return;
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "active") void core.recheckAccess();
     });
@@ -23,7 +23,6 @@ export function useImportFlow() {
   }, [step, fullDiskAccess, api, source?.id]);
 
   useEffect(() => {
-    if (!api) return s.setStep("choose");
     void api
       .listBrowsers()
       .then((list) => {
@@ -49,7 +48,7 @@ export function useImportFlow() {
       if (source.profiles.length > 1 || (core.bySpaces && core.allSpaces.length > 1)) return s.setStep("profiles");
     }
     const encryptedTabs = kinds.has("tabs") && source.profiles.some((p) => sourceProfiles.includes(p.id) && p.tabsNeedKey);
-    if ((step === "choose" || step === "profiles") && (encryptedTabs || ENCRYPTED.some((k) => kinds.has(k))) && source.needsKeychain && api && !api.isBrowserUnlocked(source.id)) {
+    if ((step === "choose" || step === "profiles") && (encryptedTabs || ENCRYPTED.some((k) => kinds.has(k))) && source.needsKeychain && !api.isBrowserUnlocked(source.id)) {
       return s.setStep("unlock");
     }
     void core.run(kinds);

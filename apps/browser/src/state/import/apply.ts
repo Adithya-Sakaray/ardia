@@ -112,8 +112,8 @@ export async function importNative(
   onFailed?: (kind: ImportKind) => void,
 ): Promise<Pick<ImportCounts, "cookies" | "addresses" | "cards">> {
   const none = { cookies: 0, addresses: 0, cards: 0 };
+  if (!token) return none;
   const api = importModule();
-  if (!api || !token) return none;
   if (!kinds.length || isIncognitoProfile(profileId) || useBrowser.getState().profiles[profileId] === undefined) {
     api.discardImported(token);
     return none;

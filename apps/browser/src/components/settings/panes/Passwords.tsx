@@ -56,7 +56,6 @@ export function PasswordsPane({ profileId: initial }: { profileId?: string | nul
     try {
       const result = await importPasswordsCsv(profile);
       if (result === "cancelled") return;
-      if (result === "unavailable") return setImportStatus("Importing isn't available in this build.");
       setImportStatus(`Imported ${plural(result.saved, "password")}.`);
       load();
     } catch (e) {
