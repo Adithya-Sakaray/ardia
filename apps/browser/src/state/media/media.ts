@@ -163,31 +163,22 @@ export function hasPlayer(m: Pick<Store, "sessions" | "dismissed">, tabId: strin
   return !!session && session.controllable && !m.dismissed[tabId] && !!session.playedAt && session.playbackState !== "none";
 }
 
-export const showsSidebarPlayer = (s: BrowserState, m: Store, tabId: string) =>
-  s.settings.sidebarMediaControls && !m.leftPaused[tabId] && hasPlayer(m, tabId);
-
-function hiddenPlayerTabIds(s: BrowserState, m: Store): Set<string> {
-  const ids = new Set<string>();
-  if (!s.settings.sidebarMediaControls) return ids;
-  for (const id of Object.keys(m.sessions)) {
-    const tab = s.tabs[id];
-    if (tab && s.windows[tab.windowId] && !isTabShown(s, id, tab.profileId)) ids.add(id);
-  }
-  return ids;
+function isHiddenPlayerTab(s: BrowserState, tabId: string): boolean {
+  const tab = s.tabs[tabId];
+  return !!tab && !!s.windows[tab.windowId] && s.settings.sidebarMediaControls && !isTabShown(s, tabId, tab.profileId);
 }
 
 let hiddenBefore = new Set<string>();
 
 function noteLeftPaused() {
   const m = useMedia.getState();
-  if (!hiddenBefore.size && !Object.keys(m.sessions).length) return;
-  const hidden = hiddenPlayerTabIds(useBrowser.getState(), m);
-  const left = { ...m.leftPaused };
-  for (const id of Object.keys(left)) if (!hidden.has(id) || isPlaying(m.sessions[id])) delete left[id];
-  for (const id of hidden) if (!hiddenBefore.has(id) && !isPlaying(m.sessions[id])) left[id] = true;
+  const sessionIds = Object.keys(m.sessions);
+  if (!hiddenBefore.size && !sessionIds.length) return;
+  const s = useBrowser.getState();
+  const hidden = new Set(sessionIds.filter((id) => isHiddenPlayerTab(s, id)));
+  const left = [...hidden].filter((id) => !isPlaying(m.sessions[id]) && (m.leftPaused[id] || !hiddenBefore.has(id)));
   hiddenBefore = hidden;
-  const keys = Object.keys(left);
-  if (keys.length !== Object.keys(m.leftPaused).length || keys.some((id) => !m.leftPaused[id])) useMedia.setState({ leftPaused: left });
+  if (left.length !== Object.keys(m.leftPaused).length || left.some((id) => !m.leftPaused[id])) useMedia.setState({ leftPaused: Object.fromEntries(left.map((id) => [id, true as const])) });
 }
 
 useBrowser.subscribe(noteLeftPaused);
@@ -283,8 +274,8 @@ export const useHiddenPlayerTabs = (windowId: string, profileId: string, session
   useBrowser(
     useShallow((s) => {
       const w = s.windows[windowId];
-      if (!sessions.length || !w || !s.settings.sidebarMediaControls) return NO_HIDDEN;
-      const ids = sessions.filter((id) => s.tabs[id]?.windowId === windowId && s.tabs[id]!.profileId === profileId && !isTabShown(s, id, profileId));
+      if (!sessions.length || !w) return NO_HIDDEN;
+      const ids = sessions.filter((id) => s.tabs[id]?.windowId === windowId && s.tabs[id]!.profileId === profileId && isHiddenPlayerTab(s, id));
       return ids.length > 1 ? ids.sort((a, b) => w.tabIds.indexOf(a) - w.tabIds.indexOf(b)) : ids;
     }),
   );
