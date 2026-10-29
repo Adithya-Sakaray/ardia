@@ -1,3 +1,4 @@
+import { ardiaError } from "@ardia/core";
 import { applySafari, emptyCounts, importBookmarks } from "../../state/import/apply";
 import type { ImportApi, ImportCore } from "./importActions";
 import type { ImportKind } from "./model";
@@ -21,7 +22,7 @@ export function fileImports(s: ImportState, api: ImportApi, core: ImportCore) {
       core.finish();
     } catch (e) {
       s.setStep("safari");
-      s.setError((e as { code?: string }).code === "unsupported" ? "Please select a folder or zip file." : "The selected file is invalid. Please try again.");
+      s.setError(ardiaError(e).code === "unsupported" ? "Please select a folder or zip file." : "The selected file is invalid. Please try again.");
     }
   };
 
@@ -40,10 +41,11 @@ export function fileImports(s: ImportState, api: ImportApi, core: ImportCore) {
       s.setFailures(failed.map((kind) => ({ kind, profiles: [] })));
       core.finish();
     } catch (e) {
-      if ((e as { code?: string }).code === "cancelled") return;
+      const { code } = ardiaError(e);
+      if (code === "cancelled") return;
       s.setStep("safari");
       s.setError(
-        (e as { code?: string }).code === "locked"
+        code === "locked"
           ? "Ardia still doesn't have Full Disk Access. Grant it above, or use the export file below."
           : "Couldn't read Safari's data. Try the export file below.",
       );

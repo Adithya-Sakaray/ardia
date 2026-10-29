@@ -1,3 +1,5 @@
+import { ardiaError } from "@ardia/core";
+import { orWarn } from "../../lib/fallback";
 import { closeWindow } from "../../state/windows/nativeWindow";
 import { confirm } from "../../state/app/system";
 import { MAX_DRAFT_LINKS } from "../../state/groups/draftGroups";
@@ -36,7 +38,7 @@ export function importActions(s: ImportState, api: ImportApi) {
 
   const recheckAccess = async () => {
     if (step === "safari") return s.setFullDiskAccess(api.safariHasFullDiskAccess());
-    const list = await api.listBrowsers().catch(() => null);
+    const list = await api.listBrowsers().catch(orWarn(null));
     if (!list) return;
     s.setBrowsers(list);
     const updated = list.find((b) => b.id === source?.id);
@@ -87,7 +89,7 @@ export function importActions(s: ImportState, api: ImportApi) {
     let extensionsProfile = "";
     const appTabs = fromApp.length ? readAppTabs(api) : null;
     if (source.family === "firefox" && requested.includes("passwords") && !api.isBrowserUnlocked(source.id)) {
-      await api.unlockBrowser(source.id).catch(() => {});
+      await api.unlockBrowser(source.id).catch(orWarn(undefined));
     }
 
     for (const profile of selected) {
@@ -103,7 +105,7 @@ export function importActions(s: ImportState, api: ImportApi) {
           },
         });
       } catch (e) {
-        if ((e as { code?: string }).code === "cancelled") return;
+        if (ardiaError(e).code === "cancelled") return;
         for (const k of profileKinds) failed.set(k, [...(failed.get(k) ?? []), profile.name]);
         if (appTabs) {
           const tabs = await appTabs;
@@ -145,7 +147,7 @@ export function importActions(s: ImportState, api: ImportApi) {
         extensionsProfile ||= dest;
       }
       if (source.family === "chromium" || source.family === "arc") {
-        for (const e of await api.listExtensions(source.id, profile.id).catch(() => [])) found.set(e.id, e);
+        for (const e of await api.listExtensions(source.id, profile.id).catch(orWarn([]))) found.set(e.id, e);
       }
     }
     const appTabsResult = appTabs && (await appTabs);

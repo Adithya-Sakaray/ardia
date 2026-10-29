@@ -1,3 +1,4 @@
+import { ardiaError } from "@ardia/core";
 import { importDiaProfile } from "../../state/import/apply";
 import { diaProfilesFor } from "../../state/import/diaTabs";
 import type { ImportApi } from "./importActions";
@@ -13,7 +14,7 @@ export function readAppTabs(api: ImportApi): Promise<AppTabs> {
   return api.readDiaTabs().then(
     (result): AppTabs => (result.windowCount ? { result } : { note: `${NOT_BROUGHT} Dia had no windows open.` }),
     (e: unknown): AppTabs => {
-      const code = (e as { code?: string }).code;
+      const { code } = ardiaError(e);
       if (code === "locked")
         return { note: `${NOT_BROUGHT} macOS didn't allow ${APP} to ask Dia for them. Allow it in System Settings › Privacy & Security › Automation, then import again.` };
       return { note: `${NOT_BROUGHT} ${code === "notRunning" ? "Dia didn't open." : "Dia didn't answer."}` };
