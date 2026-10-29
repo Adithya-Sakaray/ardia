@@ -20,17 +20,22 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
     let token: String
   }
 
+  private struct SiteKey: Hashable {
+    let store: String
+    let site: String
+    let kind: String
+  }
+
   private struct PendingPermission {
     let browserId: Int32
-    let keys: [String]
+    let keys: [SiteKey]
     let store: WKWebsiteDataStore
     let decide: (Bool) -> Void
   }
 
   private struct PendingExternal {
     let url: URL
-    let allowance: String?
-    let grant: ExternalGrant?
+    let rememberable: (key: SiteKey, grant: ExternalGrant)?
   }
 
   private struct ExternalGrant {
@@ -51,11 +56,11 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
   private var offered: [String: WKWebView] = [:]
   private var lastOffer = 0
   private var pendingPermissions: [String: PendingPermission] = [:]
-  private var rememberedPermissions: [String: Bool] = [:]
+  private var rememberedPermissions: [SiteKey: Bool] = [:]
   private var lastPermission = 0
-  private var zoomByHost: [String: Double] = [:]
+  private var zoomByHost: [SiteKey: Double] = [:]
   private var pendingExternal: [String: PendingExternal] = [:]
-  private var externalAllowances: [String: ExternalGrant] = [:]
+  private var externalAllowances: [SiteKey: ExternalGrant] = [:]
   private var lastExternal = 0
   private var resumeHosts: [String: WKWebView] = [:]
   private var deletedProfileStores: [String: WKWebsiteDataStore] = [:]
@@ -68,9 +73,7 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
 
   static func isPrivate(_ profile: String) -> Bool { ArdiaHost.isPrivateProfile(profile) }
 
-  static func privateSession(_ profile: String) -> String { ArdiaHost.baseProfile(of: profile) }
 
-  static func regularProfile(_ profile: String) -> String { ArdiaHost.baseProfile(of: profile) }
 
   private func session(_ name: String) -> PrivateSession {
     if let live = privateSessions[name] { return live }
@@ -81,7 +84,7 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
 
   func storeKey(_ profile: String) -> String {
     guard Self.isPrivate(profile) else { return profile }
-    let name = Self.privateSession(profile)
+    let name = ArdiaHost.baseProfile(of: profile)
     return "private@\(name)#\(session(name).token)"
   }
 
@@ -94,7 +97,7 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
   }
 
   func dataStore(for profile: String) -> WKWebsiteDataStore {
-    if Self.isPrivate(profile) { return session(Self.privateSession(profile)).store }
+    if Self.isPrivate(profile) { return session(ArdiaHost.baseProfile(of: profile)).store }
     if let store = persistentStores[profile] ?? deletedProfileStores[profile] { return store }
     let store = WKWebsiteDataStore(forIdentifier: Self.storeIdentifier(profile))
     persistentStores[profile] = store
@@ -103,17 +106,17 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
 
   func liveDataStore(for profile: String, storeKey key: String) -> WKWebsiteDataStore? {
     guard Self.isPrivate(profile) else { return key == profile ? dataStore(for: profile) : nil }
-    let name = Self.privateSession(profile)
+    let name = ArdiaHost.baseProfile(of: profile)
     guard let live = privateSessions[name], key == "private@\(name)#\(live.token)" else { return nil }
     return live.store
   }
 
   func endPrivateSession(_ name: String) {
     guard let ended = privateSessions.removeValue(forKey: name) else { return }
-    let prefix = "private@\(name)#\(ended.token)|"
-    rememberedPermissions = rememberedPermissions.filter { !$0.key.hasPrefix(prefix) }
-    zoomByHost = zoomByHost.filter { !$0.key.hasPrefix(prefix) }
-    externalAllowances = externalAllowances.filter { !$0.key.hasPrefix(prefix) }
+    let store = "private@\(name)#\(ended.token)"
+    rememberedPermissions = rememberedPermissions.filter { $0.key.store != store }
+    zoomByHost = zoomByHost.filter { $0.key.store != store }
+    externalAllowances = externalAllowances.filter { $0.key.store != store }
     closeViews(using: ended.store)
     ended.store.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast) {}
   }
@@ -295,16 +298,18 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
     return host
   }
 
-  func zoom(profile: String, host: String) -> Double { zoomByHost[storeKey(profile) + "|" + host] ?? 1 }
+  func zoom(profile: String, host: String) -> Double { zoomByHost[SiteKey(store: storeKey(profile), site: host, kind: "zoom")] ?? 1 }
 
   func setZoom(_ zoom: Double, profile: String, host: String) {
-    let key = storeKey(profile) + "|" + host
+    let key = SiteKey(store: storeKey(profile), site: host, kind: "zoom")
     if zoom == 1 { zoomByHost.removeValue(forKey: key) } else { zoomByHost[key] = zoom }
   }
 
   static let permissionKinds = ["camera", "microphone"]
 
-  private func permissionKey(_ profile: String, _ origin: String, _ kind: String) -> String { storeKey(profile) + "|" + origin + "|" + kind }
+  private func permissionKey(_ profile: String, _ origin: String, _ kind: String) -> SiteKey {
+    SiteKey(store: storeKey(profile), site: origin, kind: kind)
+  }
 
   func requestPermission(browserId: Int32, tabId: String?, profile: String, origin: String, kinds: [String], decide: @escaping (Bool) -> Void) {
     let keys = kinds.map { permissionKey(profile, origin, $0) }
@@ -377,9 +382,11 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
     let app = NSWorkspace.shared.urlForApplication(toOpen: url)
     let name = app.map { (FileManager.default.displayName(atPath: $0.path) as NSString).deletingPathExtension }
     let trusted = origin.map(Self.isTrustworthy) ?? false
-    let allowance = app != nil && trusted && !Self.isPrivate(profile) ? storeKey(profile) + "|" + origin! + "|" + scheme : nil
-    let grant = allowance != nil ? ExternalGrant(origin: origin!, scheme: scheme, app: name!, appPath: app!.path) : nil
-    if let allowance, externalAllowances[allowance] != nil {
+    var rememberable: (key: SiteKey, grant: ExternalGrant)?
+    if let app, let name, let origin, trusted, !Self.isPrivate(profile) {
+      rememberable = (SiteKey(store: storeKey(profile), site: origin, kind: scheme), ExternalGrant(origin: origin, scheme: scheme, app: name, appPath: app.path))
+    }
+    if let key = rememberable?.key, externalAllowances[key] != nil {
       open(url)
       return nil
     }
@@ -387,13 +394,13 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
     let id = "wk-external-\(lastExternal)"
     if app != nil {
       if pendingExternal.count >= 50 { pendingExternal.removeAll() }
-      pendingExternal[id] = PendingExternal(url: url, allowance: allowance, grant: grant)
+      pendingExternal[id] = PendingExternal(url: url, rememberable: rememberable)
     }
     let title = name.map { "Open “\($0)”?" } ?? "No application is set to open this link"
     let message = app == nil
       ? "Your Mac doesn’t have an app for “\(scheme):” links."
       : origin.map { "\($0) wants to open this application." } ?? "This page wants to open this application."
-    let remember = allowance != nil ? "Always allow \(origin!) to open links of this type in \(name!)" : nil
+    let remember = rememberable.map { "Always allow \($0.grant.origin) to open links of this type in \($0.grant.app)" }
     return [
       "id": id, "url": url.absoluteString, "scheme": scheme, "origin": origin ?? NSNull(), "app": name ?? NSNull(),
       "appPath": app?.path ?? NSNull(), "icon": app.flatMap(Self.iconURI) ?? NSNull(), "title": title,
@@ -403,7 +410,7 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
 
   func resolveExternalApp(_ id: String, open: Bool, remember: Bool) {
     guard let pending = pendingExternal.removeValue(forKey: id), open else { return }
-    if remember, let allowance = pending.allowance, let grant = pending.grant { externalAllowances[allowance] = grant }
+    if remember, let rememberable = pending.rememberable { externalAllowances[rememberable.key] = rememberable.grant }
     self.open(pending.url)
   }
 
@@ -415,14 +422,14 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
   }
 
   func externalAppAllowances(profile: String) -> [[String: Any]] {
-    let prefix = storeKey(profile) + "|"
-    return externalAllowances.filter { $0.key.hasPrefix(prefix) }.values.map { grant in
+    let store = storeKey(profile)
+    return externalAllowances.filter { $0.key.store == store }.values.map { grant in
       ["origin": grant.origin, "scheme": grant.scheme, "app": grant.app, "icon": Self.iconURI(URL(fileURLWithPath: grant.appPath)) ?? NSNull()]
     }
   }
 
   func removeExternalAppAllowance(profile: String, origin: String, scheme: String) {
-    externalAllowances.removeValue(forKey: storeKey(profile) + "|" + origin + "|" + scheme)
+    externalAllowances.removeValue(forKey: SiteKey(store: storeKey(profile), site: origin, kind: scheme))
   }
 
   private func open(_ url: URL) {
@@ -443,9 +450,9 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
     if types.contains("siteData") { kinds.formUnion(Self.siteDataTypes) }
     if types.contains("cache") { kinds.formUnion([WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache, WKWebsiteDataTypeFetchCache]) }
     if types.contains("siteData") {
-      let prefix = storeKey(profile) + "|"
-      rememberedPermissions = rememberedPermissions.filter { !$0.key.hasPrefix(prefix) }
-      externalAllowances = externalAllowances.filter { !$0.key.hasPrefix(prefix) }
+      let store = storeKey(profile)
+      rememberedPermissions = rememberedPermissions.filter { $0.key.store != store }
+      externalAllowances = externalAllowances.filter { $0.key.store != store }
     }
     guard !kinds.isEmpty else { return completion() }
     dataStore(for: profile).removeData(ofTypes: kinds, modifiedSince: Date(timeIntervalSince1970: since / 1000), completionHandler: completion)
