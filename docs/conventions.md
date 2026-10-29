@@ -37,8 +37,10 @@ lib/                    pure helpers: url, color, time, keys
 - Only `platform/` imports native packages (`@ardia/ardiacore`, `@ardia/shell`, `@ardia/shaders`, `@ardia/import`,
   `@ardia/sync`), `expo-modules-core` or `NativeModules`. `components/ui/` may import native *views* to wrap them.
 - `platform/<domain>.ts` holds one domain's native functions and types (`platform/downloads.ts`, `platform/menus.ts`,
-  `platform/windows.ts`, …), re-exported as the packages define them, so a call returns and throws exactly what the
-  native API does. A name lives in one platform module.
+  `platform/windows.ts`, …). It binds each one itself, against the typed `call()`/`on()` of `@ardia/ardiacore` or a
+  package's typed `nativeModule(…)`, so a call returns and throws exactly what the native API does; the packages keep
+  the types and only the wrappers that add something (a secret call, a mapping, a view). A name lives in one platform
+  module.
 - Components never call native functions; they call actions in `state/`. Where the action is the native call itself,
   the domain re-exports it: `state/app/system.ts` (menus, alerts, prompts, the clipboard, haptics, files, external
   URLs), `state/app/appSettings.ts`, `state/windows/nativeWindow.ts`, `state/downloads/actions.ts`, … Native views
