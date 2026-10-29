@@ -65,6 +65,16 @@ export function useImportFlow() {
       next,
       back: () => s.setStep("choose"),
       unlock: core.unlock,
+      skipEncrypted: () => {
+        const without = new Set(kinds);
+        without.delete("passwords");
+        without.delete("cookies");
+        s.setKinds(without);
+        void core.run(without, true);
+      },
+      importSafariDirect: files.importSafariDirect,
+      importSafari: files.importSafari,
+      close: core.close,
       kinds: [...kinds],
       setKinds: (list: ImportKind[]) => s.setKinds(new Set(list)),
       counts: s.counts,
@@ -72,8 +82,15 @@ export function useImportFlow() {
       extensions: s.extensions,
       notes: s.notes,
       step,
+      error: s.error,
       status: s.status,
+      preparing: s.preparing,
+      source: source?.id ?? null,
+      sourceProfiles,
+      spaces: s.spaces,
+      fullDiskAccess,
       setSourceProfiles: s.setSourceProfiles,
+      setSpaces: s.setSpaces,
     });
   });
 
