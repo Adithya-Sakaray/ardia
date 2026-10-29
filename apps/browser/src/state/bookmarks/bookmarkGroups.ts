@@ -1,14 +1,14 @@
 import { useBrowser, type BrowserState } from "../browser/store";
 import { bookmarkDraft, hasLinks, MAX_DRAFT_LINKS, withDraftGroups, type DraftGroups, type GroupDraft } from "../groups/draftGroups";
 import { bookmarkProfileId, plural } from "../browser/model";
-import { mainWindowFor } from "../windows/small";
+import { isRegularWindow, mainWindowFor } from "../windows/small";
 import { showToast } from "../app/toasts";
 
 export const ARC_HOLDER = " (Arc)";
 
 function sidebarWindow(s: BrowserState, profileId: string, near?: string | null): string | undefined {
   const w = near ? s.windows[near] : undefined;
-  if (w && !w.incognito && w.kind !== "small") return w.id;
+  if (isRegularWindow(w)) return w.id;
   return mainWindowFor(s, profileId);
 }
 

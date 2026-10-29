@@ -4,6 +4,7 @@ import { IDLE_LIVE, isIncognitoProfile, makeTab, newId, pinKeyOf, snapshotTab, w
 import { pendingRestore, restoreId } from "../tabs/adoptIds";
 import type { BrowserWindow, HistoryEntry, ParkedPins, Tab, TabGroup } from "../browser/types";
 import { samePage } from "../../lib/url";
+import { isRegularWindow } from "../windows/small";
 
 
 type PinSource = Pick<BrowserState, "tabs" | "groups" | "history"> & Partial<Pick<BrowserState, "windows" | "splits">>;
@@ -26,7 +27,7 @@ export function parkWindowPins(parked: Record<string, ParkedPins>, w: BrowserWin
   let next = parked;
   const profiles = new Set(w.tabIds.map((id) => s.tabs[id]?.profileId).filter((p): p is string => !!p));
   const shownElsewhere = (profileId: string) =>
-    Object.values(s.windows ?? {}).some((o) => o.id !== w.id && !o.incognito && o.kind !== "small" && o.tabIds.some((id) => s.tabs[id]?.profileId === profileId));
+    Object.values(s.windows ?? {}).some((o) => o.id !== w.id && isRegularWindow(o) && o.tabIds.some((id) => s.tabs[id]?.profileId === profileId));
   for (const profileId of profiles) {
     if (shownElsewhere(profileId)) continue;
     const own = w.tabIds.map((id) => s.tabs[id]).filter((t): t is Tab => !!t && t.profileId === profileId);

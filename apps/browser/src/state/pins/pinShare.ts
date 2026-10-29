@@ -2,14 +2,14 @@ import type { BrowserState } from "../browser/store";
 import { changedIds } from "../browser/changes";
 import { familyKeyOf, inPinnedContainer, isIncognitoProfile, pinKeyOf, wake } from "../browser/model";
 import { hasPage, needsPage } from "../tabs/pageSession";
-import { mirrored } from "./pinMirror";
 import { splitOf } from "../splits/splits";
 import { sharedListTab } from "../tabs/tabShare";
 import type { BrowserWindow, Tab, TabGroup, TabLive } from "../browser/types";
+import { isRegularWindow } from "../windows/small";
 
 
 function shares(s: BrowserState, t: Tab | undefined): t is Tab {
-  return !!t && !isIncognitoProfile(t.profileId) && mirrored(s.windows[t.windowId]) && (inPinnedContainer(s, t.id) || sharedListTab(s, t)) && !splitOf(s, t.id);
+  return !!t && !isIncognitoProfile(t.profileId) && isRegularWindow(s.windows[t.windowId]) && (inPinnedContainer(s, t.id) || sharedListTab(s, t)) && !splitOf(s, t.id);
 }
 
 function holds(s: BrowserState, holder: Tab | undefined, copy: Tab): holder is Tab {
@@ -238,7 +238,7 @@ export function settleSharedPins(next: BrowserState, prev: BrowserState): Browse
 
 export function returnSharedPages(s: BrowserState, windowId: string): BrowserState {
   const w = s.windows[windowId];
-  if (!mirrored(w) || !frozenIds(s).length) return s;
+  if (!isRegularWindow(w) || !frozenIds(s).length) return s;
   let next = s;
   for (const id of w.tabIds) {
     const t = next.tabs[id];

@@ -8,10 +8,12 @@ export const SMALL_LIGHTS_CENTER: [number, number] = [20, SMALL_BAR_HEIGHT / 2];
 
 export const isSmallWindow = (w: BrowserWindow | undefined): boolean => w?.kind === "small";
 
+export const isRegularWindow = (w: BrowserWindow | undefined): w is BrowserWindow => !!w && !w.incognito && w.kind !== "small";
+
 export const isSmall = (s: Pick<BrowserState, "windows">, windowId?: string | null): boolean =>
   !!windowId && s.windows[windowId]?.kind === "small";
 
-const isMain = (w: BrowserWindow | undefined): w is BrowserWindow => !!w && !w.incognito && w.kind !== "small" && !isWindowClosing(w.id);
+const isMain = (w: BrowserWindow | undefined): w is BrowserWindow => isRegularWindow(w) && !isWindowClosing(w.id);
 
 export function mainWindowFor(s: BrowserState, profileId?: string): string | undefined {
   const order = [...new Set([...s.ui.focusOrder, ...s.windowOrder])].filter((id) => isMain(s.windows[id]));

@@ -3,10 +3,11 @@ import { changedIds } from "../browser/changes";
 import { orderSections, syncGroupOrder, withParent } from "../groups/groups";
 import { familyKeyOf, IDLE_LIVE, inPinnedContainer, newId, pinKeyOf } from "../browser/model";
 import { hasOwnOrSharedPage, hasPage } from "./pageSession";
-import { chainOf, copyOf, hasDuplicates, keyField, mirrored, profilesOf, sectionOf, signature, treeOrder, union } from "../pins/pinMirror";
+import { chainOf, copyOf, hasDuplicates, keyField, profilesOf, sectionOf, signature, treeOrder, union } from "../pins/pinMirror";
 import { removeTabs, withNewTab } from "./tabs";
 import type { Tab, TabGroup } from "../browser/types";
 import { pinnedGroupMembers } from "../browser/structure";
+import { isRegularWindow } from "../windows/small";
 
 type Section = ReturnType<typeof sectionOf>;
 
@@ -16,7 +17,7 @@ export const sharesTabs = (s: Pick<BrowserState, "settings">) => !!s.settings?.s
 const listable = (t: Tab) => !t.pinned && !!t.url && !t.liveItem;
 
 export function sharedListTab(s: BrowserState, t: Tab): boolean {
-  return sharesTabs(s) && listable(t) && mirrored(s.windows[t.windowId]) && !inPinnedContainer(s, t.id) && s.peeks[t.windowId]?.tabId !== t.id;
+  return sharesTabs(s) && listable(t) && isRegularWindow(s.windows[t.windowId]) && !inPinnedContainer(s, t.id) && s.peeks[t.windowId]?.tabId !== t.id;
 }
 
 function listMember(s: BrowserState): (t: Tab) => boolean {
@@ -245,7 +246,7 @@ export function mirrorTabs(s: BrowserState, prev: BrowserState): BrowserState | 
   if (!sharesTabs(s)) return null;
   const turnedOn = !sharesTabs(prev);
   if (!turnedOn && !listMayDiffer(s, prev)) return null;
-  const order = [...new Set([...s.ui.focusOrder, ...s.windowOrder])].filter((id) => mirrored(s.windows[id]));
+  const order = [...new Set([...s.ui.focusOrder, ...s.windowOrder])].filter((id) => isRegularWindow(s.windows[id]));
   const byProfile = new Map<string, string[]>();
   for (const id of order) for (const p of profilesOf(s, s.windows[id]!)) byProfile.set(p, [...(byProfile.get(p) ?? []), id]);
   let next = s;
@@ -262,7 +263,7 @@ export function mirrorTabs(s: BrowserState, prev: BrowserState): BrowserState | 
     const sections = new Map(ids.map((id) => [id, listSection(next, id, profileId, member, groups)]));
     const sigs = new Map(ids.map((id) => [id, signature(sections.get(id)!)]));
     if (new Set(sigs.values()).size === 1) continue;
-    const before = turnedOn ? [] : ids.filter((id) => mirrored(prev.windows[id]) && profilesOf(prev, prev.windows[id]!).has(profileId));
+    const before = turnedOn ? [] : ids.filter((id) => isRegularWindow(prev.windows[id]) && profilesOf(prev, prev.windows[id]!).has(profileId));
     const prevMember = listMember(prev);
     const prevGroups = listGroupsOf(prev);
     const source = before.find((id) => signature(listSection(prev, id, profileId, prevMember, prevGroups)) !== sigs.get(id));
@@ -284,7 +285,7 @@ export function unshareTabs(s: BrowserState, prev: BrowserState): BrowserState |
   const rank = new Map([...new Set([...s.ui.focusOrder, ...s.windowOrder])].map((id, i) => [id, i]));
   const families = new Map<string, Tab[]>();
   for (const t of Object.values(s.tabs)) {
-    if (!mirrored(s.windows[t.windowId]) || !member(t)) continue;
+    if (!isRegularWindow(s.windows[t.windowId]) || !member(t)) continue;
     families.get(familyKeyOf(t))?.push(t) ?? families.set(familyKeyOf(t), [t]);
   }
   const gone: string[] = [];
@@ -310,7 +311,7 @@ export function unshareTabs(s: BrowserState, prev: BrowserState): BrowserState |
 export function sharedElsewhere(s: BrowserState, t: Tab): boolean {
   if (!sharedListTab(s, t)) return false;
   const key = pinKeyOf(t);
-  return Object.values(s.tabs).some((x) => x.id !== t.id && x.windowId !== t.windowId && x.profileId === t.profileId && pinKeyOf(x) === key && mirrored(s.windows[x.windowId]));
+  return Object.values(s.tabs).some((x) => x.id !== t.id && x.windowId !== t.windowId && x.profileId === t.profileId && pinKeyOf(x) === key && isRegularWindow(s.windows[x.windowId]));
 }
 
 export function sharedLastUsed(s: BrowserState): Map<string, number> | null {
@@ -318,7 +319,7 @@ export function sharedLastUsed(s: BrowserState): Map<string, number> | null {
   const member = listMember(s);
   const out = new Map<string, number>();
   for (const t of Object.values(s.tabs)) {
-    if (!mirrored(s.windows[t.windowId]) || !member(t)) continue;
+    if (!isRegularWindow(s.windows[t.windowId]) || !member(t)) continue;
     const key = familyKeyOf(t);
     out.set(key, Math.max(out.get(key) ?? 0, t.lastActiveAt));
   }

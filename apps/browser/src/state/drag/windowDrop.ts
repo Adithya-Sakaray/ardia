@@ -2,6 +2,7 @@ import { useBrowser, type BrowserState } from "../browser/store";
 import { isWindowClosing } from "../windows/closingWindows";
 import type { Frame } from "../browser/types";
 import type { TabPlacement } from "../pins/placing";
+import { isRegularWindow } from "../windows/small";
 
 
 export function screenPoint(s: BrowserState, windowId: string, x: number, y: number, live?: Frame | null): [number, number] | null {
@@ -20,7 +21,7 @@ export function windowUnder(s: BrowserState, source: string, x: number, y: numbe
   if (!point || !from || from.incognito) return { outside, overWindow: null };
   const overWindow = s.ui.focusOrder.find((id) => {
     const w = s.windows[id];
-    return !!w && id !== source && !w.incognito && w.kind !== "small" && !isWindowClosing(id) && !!w.frame && contains(w.frame, point);
+    return isRegularWindow(w) && id !== source && !isWindowClosing(id) && !!w.frame && contains(w.frame, point);
   });
   return { outside, overWindow: overWindow ?? null };
 }

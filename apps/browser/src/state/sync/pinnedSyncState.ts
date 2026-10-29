@@ -2,6 +2,7 @@ import { useBrowser, type BrowserState } from "../browser/store";
 import type { Tab } from "../browser/types";
 import { fromSync } from "../pins/pinOrderChoices";
 import { PIN_TAB } from "./pinRecords";
+import { isRegularWindow } from "../windows/small";
 
 export const store = () => useBrowser.getState();
 
@@ -9,9 +10,8 @@ export type Window = BrowserState["windows"][string];
 
 export const hasPage = (t: Tab) => !!t.navigation || !!t.adoptId;
 
-const isSyncedWindow = (w: Window | undefined): w is Window => !!w && !w.incognito && w.kind !== "small";
 
-export const openWindows = (s: BrowserState) => s.windowOrder.map((id) => s.windows[id]).filter(isSyncedWindow);
+export const openWindows = (s: BrowserState) => s.windowOrder.map((id) => s.windows[id]).filter(isRegularWindow);
 
 export const windowsHomeFirst = (s: BrowserState, home: Window | undefined) => (home ? [home, ...openWindows(s).filter((w) => w.id !== home.id)] : openWindows(s));
 
@@ -25,7 +25,7 @@ export function commitPinnedEdit(s: BrowserState, profileId: string, patch: Part
 }
 
 export function homeWindow(s: BrowserState, profileId: string): Window | undefined {
-  const order = [...s.ui.focusOrder, ...s.windowOrder].map((id) => s.windows[id]).filter(isSyncedWindow);
+  const order = [...s.ui.focusOrder, ...s.windowOrder].map((id) => s.windows[id]).filter(isRegularWindow);
   const shows = (w: Window) => w.tabIds.some((id) => s.tabs[id]?.profileId === profileId);
   return order.find((w) => w.profileId === profileId && shows(w)) ?? order.find(shows) ?? order.find((w) => w.profileId === profileId) ?? order[0];
 }

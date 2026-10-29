@@ -9,6 +9,7 @@ import { splitOf, splitRowPanes, withSplitRows } from "../splits/splits";
 import { activated, apply, removeTabs } from "../tabs/tabs";
 import type { ClosedTab, Tab, TabGroup } from "../browser/types";
 import { samePage } from "../../lib/url";
+import { isRegularWindow } from "../windows/small";
 
 export type TidyPlan = {
   closes: { tabId: string; keeperId: string }[];
@@ -51,7 +52,7 @@ function folderSites(s: Pick<BrowserState, "tabs" | "groups">, g: TabGroup): str
 
 export function tidyPlan(s: Pick<BrowserState, "tabs" | "groups" | "windows" | "splits">, windowId: string, profileId?: string): TidyPlan | null {
   const w = s.windows[windowId];
-  if (!w || w.incognito || w.kind === "small") return null;
+  if (!isRegularWindow(w)) return null;
   const profile = profileId ?? w.profileId;
   const order = w.tabIds.filter((id) => s.tabs[id]?.profileId === profile);
   const rows = order.filter((id) => isPinnedRow(s.tabs[id]));

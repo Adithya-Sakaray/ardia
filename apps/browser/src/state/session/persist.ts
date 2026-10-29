@@ -15,6 +15,7 @@ import { downloadSession } from "../downloads/downloadsSlice";
 import { parseSaved, versionedJson, unchanged, type Migrations, type SavedObject } from "../../lib/savedDocument";
 import { sessionWithCleanUpMinutes } from "../settings/cleanUpAfter";
 import { sessionWithOwnTabMutes } from "../tabs/mute";
+import { isRegularWindow } from "../windows/small";
 
 const SAVE_DELAY_MS = 800;
 const SESSION_VERSION = 4;
@@ -56,7 +57,7 @@ const persistedTab = ({ navigation: _n, adoptId: _a, wakeAdoptId, pageIn, ...tab
 };
 
 const savedWindows = (s: Pick<BrowserState, "windows">) =>
-  Object.values(s.windows).filter((w) => !w.incognito && w.kind !== "small").map(({ chromeWindow: _c, ...w }) => w);
+  Object.values(s.windows).filter(isRegularWindow).map(({ chromeWindow: _c, ...w }) => w);
 const savedWindowIds = (s: Pick<BrowserState, "windows">) => new Set(savedWindows(s).map((w) => w.id));
 const savedFocus = (s: Pick<BrowserState, "windows" | "ui">) => {
   const kept = savedWindowIds(s);

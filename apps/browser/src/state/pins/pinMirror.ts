@@ -8,9 +8,9 @@ import { sharedListTab, sharesTabs } from "../tabs/tabShare";
 import { removeTabs } from "../tabs/tabs";
 import type { BrowserWindow, SplitView, Tab, TabGroup } from "../browser/types";
 import { samePage } from "../../lib/url";
+import { isRegularWindow } from "../windows/small";
 
 const homeOf = (t: Pick<Tab, "url" | "pinnedUrl">) => t.pinnedUrl || t.url;
-export const mirrored = (w: BrowserWindow | undefined): w is BrowserWindow => !!w && !w.incognito && w.kind !== "small";
 
 type Item = { tab: Tab; group: string | null };
 type Section = { items: Item[]; groups: Map<string, { group: TabGroup; parent: string | null }>; own: TabGroup[]; duplicate?: boolean; splits?: PinnedSplit[] };
@@ -309,7 +309,7 @@ function conform(s: BrowserState, windowId: string, profileId: string, spec: Sec
 
 export function mirrorPins(s: BrowserState, prev: BrowserState): BrowserState | null {
   if (!pinsMayDiffer(s, prev)) return null;
-  const order = [...new Set([...s.ui.focusOrder, ...s.windowOrder])].filter((id) => mirrored(s.windows[id]));
+  const order = [...new Set([...s.ui.focusOrder, ...s.windowOrder])].filter((id) => isRegularWindow(s.windows[id]));
   const byProfile = new Map<string, string[]>();
   for (const id of order) for (const p of profilesOf(s, s.windows[id]!)) byProfile.set(p, [...(byProfile.get(p) ?? []), id]);
   let next = s;
@@ -326,7 +326,7 @@ export function mirrorPins(s: BrowserState, prev: BrowserState): BrowserState | 
     const sections = new Map(ids.map((id) => [id, withSplits(next, next.windows[id]!, sectionOf(next, next.windows[id]!, profileId, nowGroups))]));
     const sigs = new Map(ids.map((id) => [id, signature(sections.get(id)!)]));
     if (new Set(sigs.values()).size === 1) continue;
-    const before = ids.filter((id) => mirrored(prev.windows[id]) && profilesOf(prev, prev.windows[id]!).has(profileId));
+    const before = ids.filter((id) => isRegularWindow(prev.windows[id]) && profilesOf(prev, prev.windows[id]!).has(profileId));
     const source = before.find((id) => signature(withSplits(prev, prev.windows[id]!, sectionOf(prev, prev.windows[id]!, profileId, prevGroups))) !== sigs.get(id));
     const spec: Section = source
       ? sections.get(source)!
@@ -341,7 +341,7 @@ export function mirrorPins(s: BrowserState, prev: BrowserState): BrowserState | 
 }
 
 export function settleMovedPins(before: BrowserState, after: BrowserState, moved: string[], targetId: string): BrowserState {
-  if (!mirrored(after.windows[targetId])) return after;
+  if (!isRegularWindow(after.windows[targetId])) return after;
   const memberOf = innermostPinned(before, pinnedGroupsOf(before));
   const pins = moved
     .map((id) => before.tabs[id])
@@ -353,7 +353,7 @@ export function settleMovedPins(before: BrowserState, after: BrowserState, moved
   const groups = { ...after.groups };
   for (const sourceId of new Set(pins.map((t) => t.windowId))) {
     const src = windows[sourceId];
-    if (!mirrored(src) || !mirrored(before.windows[sourceId])) continue;
+    if (!isRegularWindow(src) || !isRegularWindow(before.windows[sourceId])) continue;
     const swap = new Map<string, string>();
     const shown = before.windows[sourceId]!.activeTabIds;
     let activeTabIds = src.activeTabIds;
