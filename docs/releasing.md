@@ -176,10 +176,10 @@ stays up. That's GPL-3.0 §6(d) for the GPL parts (uBlock Origin today), and it'
 4. Tag and publish (the Release workflow does this itself): `git tag v<version> && git push origin main v<version>`,
    then `.claude/skills/release/scripts/publish.sh <version>` (`--dry-run` prints what it would do). It merges the
    appcast onto the feed as published right now (`appcast.py merge`), creates the release (a stable one as latest, a
-   nightly as a prerelease that's never latest) with the DMG, zip, appcast, CLI tarball and a local engine archive,
+   nightly as a prerelease that's never latest) with the DMG, zip, appcast and CLI tarball,
    and checks the feed lists the version on GitHub and on ardia.dev. A nightly also re-uploads the merged feed onto the
-   latest stable release and `Ardia-Nightly.dmg` onto the `nightly` release. With an engine packed here, append
-   `dist/<version>/prebuilt-engine.tsv` to `packages/ardiacore/prebuilt-engines.tsv` and commit it. Last,
+   latest stable release and `Ardia-Nightly.dmg` onto the `nightly` release. A new engine tree is published before the release
+   by `scripts/publish-engine.sh` (`engine-<tree:12>`), never packed by release.sh. Last,
    `update-tap.sh <version>` points the Homebrew tap's `ardia` or `ardia@nightly` cask
    (https://github.com/mantrakp04/homebrew-tap) at the new DMG: it sets `version` and `sha256` from GitHub's
    digest of the published DMG and pushes the tap (`PUBLISH_TAP=0` skips it).

@@ -37,7 +37,6 @@ done
 item_channel="$(appcast channel "$feed" "$version")"
 [ "$item_channel" = "$channel" ] || die "$version's item in $feed is on the $item_channel channel, not $channel"
 [ -f "$dist/release-notes.md" ] || die "no $dist/release-notes.md"
-for archive in "$dist"/ArdiaCore-*.tar.xz; do [ -f "$archive" ] && assets+=("$archive"); done
 if ! git -C "$root" ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null 2>&1; then
   [ "$dry" = 1 ] && echo "note: v$version isn't on origin yet (git tag v$version && git push origin main v$version)" \
     || die "push the tag first: git tag v$version && git push origin main v$version"

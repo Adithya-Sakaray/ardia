@@ -293,18 +293,11 @@ mkdir -p dist/<version>-rc/export && ditto "$mnt/Ardia.app" dist/<version>-rc/ex
 
 The release itself is then a second run with `dry_run=false` on the same commit.
 
-When engine/ changed since the last prebuilt engine, release.sh also packed `ArdiaCore-<tree>.tar.xz` (the command
-above uploads it, with `ArdiaCore-<tree>-source.tar.xz` for a Helium engine) and wrote its table line. Every release's
-notes end with a Source section linking its tag, so never delete or move a published tag
-(`docs/releasing.md` › Source and licenses). Once the release is up, commit that line, so builds without a Chromium tree
-find it (`packages/ardiacore/scripts/fetch-engine.sh`):
-
-```bash
-if [ -f dist/<version>/prebuilt-engine.tsv ]; then
-  cat dist/<version>/prebuilt-engine.tsv >> packages/ardiacore/prebuilt-engines.tsv
-  git add packages/ardiacore/prebuilt-engines.tsv && git commit -m "Prebuilt engine: <version>'s" && git push origin main
-fi
-```
+The engine is never packed by a release: when engine/ changed since the last prebuilt engine, release.sh stops and
+asks for `scripts/publish-engine.sh` first, which publishes `engine-<tree:12>` (with the Helium source) and appends
+its line to `packages/ardiacore/prebuilt-engines.tsv`; commit that line before the release. Every release's notes end
+with a Source section linking its tag, so never delete or move a published tag (`docs/releasing.md` › Source and
+licenses).
 
 `appcast.py merge` puts this release's item onto the feed as it's published right now, so nightlies that shipped while
 this release was being tested stay listed (it rewrites `dist/<version>/appcast.xml`, keeping `appcast.built.xml`).

@@ -285,8 +285,6 @@ entitlements_dir="$ardiacore/scripts/signing"
 fw="$app/Contents/Frameworks/Chromium Framework.framework"
 fwv="$(cd "$fw/Versions/Current" && pwd -P)" || die "no Chromium Framework.framework in the export"
 "$ardiacore/scripts/strip-engine.sh" "$app" "$dist/symbols"
-unpruned_engine="$dist/engine-unpruned"
-rm -rf "$unpruned_engine" && mkdir -p "$unpruned_engine" && cp -cR "$fw" "$unpruned_engine/"
 "$ardiacore/scripts/prune-bundle.sh" "$app"
 for lib in "$fwv"/Libraries/*.dylib; do sign "$lib"; done
 for helper in "$fwv"/Helpers/*.app; do
@@ -350,33 +348,11 @@ done < <(find "$app" \( -name "*.app" -o -name "*.framework" -o -name "*.dylib" 
   -o -path "*/Helpers/*" -type f -perm -u+x -o -path "*/MacOS/*" -type f \) -print0)
 
 engine_tree="$(git -C "$root" rev-parse HEAD:engine)"
-engine_archive="$dist/ArdiaCore-${engine_tree:0:12}.tar.xz"
-engine_source="$dist/ArdiaCore-${engine_tree:0:12}-source.tar.xz"
 engine_release="$(awk -v t="$engine_tree" '$1 == t { print $2; exit }' "$ardiacore/prebuilt-engines.tsv")"
 helium_engine=""
 LC_ALL=C grep -q -a -F helium.services.enabled "$framework_src/Versions/Current/Chromium Framework" && helium_engine=1
-engine_pack=""
-if [ "$phase" = all ] && [ "$rc" = 0 ] && { [ -z "${ARDIACORE_FRAMEWORK:-}" ] || [ -n "$framework_engine" ]; } && [ -z "$engine_release" ]; then
-  engine_release="$version"
-  echo "==> Pack the engine (background)"
-  (
-    set -e
-    [ -z "$helium_engine" ] || "$root/scripts/engine-source.sh" "$version" "$engine_source"
-    if command -v xz >/dev/null; then
-      tar --no-mac-metadata -cf - -C "$unpruned_engine" "Chromium Framework.framework" | xz -T0 -9 >"$engine_archive"
-    else
-      tar --no-mac-metadata -cJf "$engine_archive" -C "$unpruned_engine" "Chromium Framework.framework"
-    fi
-    rm -rf "$unpruned_engine"
-    printf '%s\t%s\t%s\n' "$engine_tree" "$version" "$(shasum -a 256 "$engine_archive" | awk '{ print $1 }')" \
-      >"$dist/prebuilt-engine.tsv"
-  ) >"$dist/engine-pack.log" 2>&1 &
-  engine_pack=$!
-else
-  rm -rf "$unpruned_engine"
-fi
-[ -z "$helium_engine" ] || [ "$rc" = 1 ] || [ -n "$engine_release" ] \
-  || die "no published release carries this engine ($engine_tree) and its source: build it from the Chromium tree, without ARDIACORE_FRAMEWORK, or name the engine tree it was built from in ARDIACORE_FRAMEWORK_ENGINE"
+[ "$rc" = 1 ] || [ -n "$engine_release" ] \
+  || die "packages/ardiacore/prebuilt-engines.tsv lists no published engine for this engine tree (${engine_tree:0:12}): publish it with scripts/publish-engine.sh, commit the table line, then release"
 
 [ "$phase" = sign ] || launch_check
 
@@ -451,7 +427,7 @@ else
 fi
 case "$engine_release" in engine-*) engine_tag="$engine_release" ;; *) engine_tag="v$engine_release" ;; esac
 source_line="This build's source, with the engine's patches and build scripts: $REPO_URL/tree/v$version (LICENSE and NOTICE there cover the licenses)."
-[ -n "$helium_engine" ] && [ -n "$engine_release" ] && source_line="$source_line The engine's Helium and uBlock sources as built, and where Chromium's is: $REPO_URL/releases/download/$engine_tag/$(basename "$engine_source")"
+[ -n "$helium_engine" ] && [ -n "$engine_release" ] && source_line="$source_line The engine's Helium and uBlock sources as built, and where Chromium's is: $REPO_URL/releases/download/$engine_tag/ArdiaCore-${engine_tree:0:12}-source.tar.xz"
 {
   notes_body
   [ -n "${notes_video:-}" ] && printf '\n## Before and after\n\nThe fixes, filmed on the previous release and on this one: %s\n' "${notes_page%/release-notes}/release-videos/$notes_video.mp4"
@@ -493,19 +469,10 @@ mv "$updates/appcast.xml" "$dist/appcast.xml"
 appcast item "$dist/appcast.xml" "$version" >/dev/null || die "appcast.xml has no single item for $version"
 rm -rf "$updates"
 
-engine_files=()
-if [ -n "$engine_pack" ]; then
-  wait "$engine_pack" || { cat "$dist/engine-pack.log" >&2; die "packing the engine failed ($dist/engine-pack.log)"; }
-  rm -f "$dist/engine-pack.log"
-  engine_files=("$engine_archive" "$dist/prebuilt-engine.tsv")
-  [ -z "$helium_engine" ] || engine_files+=("$engine_source")
-fi
-
 echo
 [ "$notarize" = 1 ] && echo "Notarized and stapled." || echo "NOT notarized."
-[ -n "$engine_pack" ] && echo "New engine: publish $(basename "$engine_archive")${helium_engine:+ and $(basename "$engine_source")} with the release, then add prebuilt-engine.tsv's line to packages/ardiacore/prebuilt-engines.tsv."
 [ "$rc" = 1 ] && echo "Release candidate: never publish dist/$version-rc."
 [ "$channel" = nightly ] && [ "$rc" = 0 ] && echo "Nightly: publish it with .claude/skills/release/scripts/publish.sh $version (a prerelease; the feed and ardia.dev/nightly follow)."
 [ "$phase" = sign ] && echo "Not launched yet: remove the signing keys, then run the launch check (--phase check)."
 [ -n "$phased" ] && echo "Phased rollout: $phased s between steps (the appcast item has phasedRolloutInterval; the whole release takes $((phased * 7)) s)."
-du -sh "$app" "$dmg" "$zip" "$cli_tarball" "$dist/appcast.xml" "$dist/release-notes.md" ${engine_files[@]+"${engine_files[@]}"}
+du -sh "$app" "$dmg" "$zip" "$cli_tarball" "$dist/appcast.xml" "$dist/release-notes.md"
