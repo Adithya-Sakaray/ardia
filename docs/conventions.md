@@ -98,7 +98,7 @@ lib/                    pure helpers: url, time, keys
 | `<Text style={{ fontSize: 13, fontWeight: "600", color: theme.textSecondary }}>` | `<Text size="body" weight="semibold" tone="textSecondary">` |
 | a pressable square with an SF Symbol and a hover plate | `<Button variant="icon" icon="…">` (add `toolbar` for toolbar buttons: modifier clicks, long press, context menu, no window drag; `palette` for site-coloured toolbars) |
 | a hover-plated text link ("Replace", "Clear", "Skip Tour") | `<Button variant="text" title plate="toolbar" \| "hover" \| "none">` |
-| a filled rounded button with a title | `<Button variant="pill" tone="prompt" \| "chip" \| "control" primary>` |
+| a filled rounded button with a title | `<Button variant="pill" tone="prompt" \| "chip" primary>`; a bordered +/− control is `<Button variant="stepper" icon width height tooltip>` |
 | a dismiss ✕ | `<Button variant="close" look="panel" \| "hud" \| "art">` |
 | a macOS push button (settings, dialogs) | `<Button title kind="default" \| "primary" \| "destructive" \| "plain">` |
 | a menu-material panel with a scale-in | `Popover` (or `PopoverSurface` for the material alone); a panel placed by its own math uses `usePopoverMotion` + `usePopoverMotionStyle`; open/close state from `usePopoverPresence` |
