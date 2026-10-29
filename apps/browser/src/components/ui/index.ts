@@ -6,7 +6,7 @@ export { FIELD_GLASS_HOVER_OPACITY, FIELD_GLASS_OPACITY, GlassFill, liquidGlass 
 export { HoverSlot } from "./HoverSlot";
 export { MenuRow, menuRowFill, MenuSeparator } from "./Menu";
 export { Panel, type PanelProps } from "./Panel";
-export { curve, duration, spring, type SpringSpec } from "./motion";
+export { curve, duration, spring, usePresence, type Fade, type SpringSpec } from "./motion";
 export { reduceMotion, reduceMotionKnown } from "./reduceMotion";
 export { PANEL, PanelCloseButton, PanelHeader, Popover, POPOVER_MARGIN, POPOVER_MOTION, PopoverSurface, PopoverValue, usePopoverMotion, usePopoverMotionStyle, usePopoverPresence } from "./Popover";
 export { Radio } from "./Radio";
