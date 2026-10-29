@@ -91,14 +91,8 @@ export function importBookmarks(profileId: string, root: ImportedNode | undefine
   return linkCount([...toolbar, ...other]);
 }
 
-function importSafariBookmarks(profileId: string, root: ImportedNode | undefined): number {
-  return importBookmarks(profileId, root, "Safari");
-}
-
 export function importHistory(profileId: string, entries: { url: string; title: string; visits: number; lastVisit: number }[]): number {
-  const before = useBrowser.getState().history[profileId]?.length ?? 0;
-  useBrowser.getState().importHistory(profileId, entries);
-  return (useBrowser.getState().history[profileId]?.length ?? 0) - before;
+  return useBrowser.getState().importHistory(profileId, entries);
 }
 
 async function importPasswords(profileId: string, credentials: Credential[]): Promise<number> {
@@ -238,7 +232,7 @@ export async function applyResult(
 
 export async function applySafari(profileId: string, data: SafariExport, cookies = true, onFailed?: (kind: ImportKind) => void): Promise<ImportCounts> {
   const counts = emptyCounts();
-  counts.bookmarks = importSafariBookmarks(profileId, data.bookmarks);
+  counts.bookmarks = importBookmarks(profileId, data.bookmarks, "Safari");
   const history = data.profiles.find((p) => !p.name)?.history ?? data.profiles[0]?.history ?? [];
   counts.history = importHistory(profileId, history);
   Object.assign(counts, await importNative(profileId, data.vaultToken, cookies ? ["cookies", "autofill"] : ["autofill"], onFailed));

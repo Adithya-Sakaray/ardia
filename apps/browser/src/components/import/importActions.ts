@@ -5,7 +5,7 @@ import { plural } from "../../state/browser/model";
 import type { ProfileColor } from "../../state/browser/types";
 import { IMPORT_WINDOW_ID } from "../../state/settings/settingsWindows";
 import { applyResult, emptyCounts, importArcSpace, profileColorFor, profileNamed, type ImportCounts } from "../../state/import/apply";
-import { addProfile } from "../../state/profiles/actions";
+import { createProfile } from "../../state/profiles/actions";
 import type { importModule } from "../../state/import/importApi";
 import { KINDS, type BrowserProfile, type BrowserSource, type ImportedExtension, type ImportKind, type ImportResult, type SpaceSummary } from "./model";
 import { APP_TAB_KINDS, importAppTabs, readAppTabs } from "./diaActions";
@@ -60,7 +60,7 @@ export function importActions(s: ImportState, api: ImportApi | null) {
       });
       if (!confirmed) return clash;
     }
-    return addProfile({ name, color: profileColorFor(color) as ProfileColor | undefined, icon: emoji ?? null, shareWith });
+    return createProfile({ name, color: profileColorFor(color) as ProfileColor | undefined, icon: emoji ?? null, shareWith });
   };
 
   const finish = () => setTimeout(() => s.setStep("done"), importMotion.doneDelay);
