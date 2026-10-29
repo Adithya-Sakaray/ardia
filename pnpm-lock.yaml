@@ -185,6 +185,10 @@ importers:
         version: link:../core
 
   packages/shaders:
+    dependencies:
+      '@ardia/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       esbuild:
         specifier: 0.28.2

@@ -2,7 +2,8 @@ import type { TabGroupColor } from "@ardia/core";
 import type { PageEngine } from "../../platform/tabs";
 import type { ProfileColor, ProfileTheme } from "../../lib/profileLook";
 
-export type { ProfileColor, ProfileTheme, ThemeColor, ThemeLook, ThemeMode, ThemeStop, ThemeTexture } from "../../lib/profileLook";
+export type { ProfileColor, ProfileTheme, ThemeColor, ThemeLook, ThemeStop } from "../../lib/profileLook";
+export type { ThemeMode, ThemeTexture } from "@ardia/core";
 
 export type Frame = [number, number, number, number];
 

@@ -15,4 +15,5 @@ export * from "./suggest.ts";
 export * from "./suggestFetcher.ts";
 export * from "./tabGroups.ts";
 export * from "./textFragment.ts";
+export * from "./theme.ts";
 export * from "./webStore.ts";

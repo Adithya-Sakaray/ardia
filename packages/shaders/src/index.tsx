@@ -1,3 +1,4 @@
+import type { ThemeBackdropProps, ThemeTexture } from "@ardia/core";
 import { requireNativeViewManager, requireOptionalNativeModule } from "expo-modules-core";
 import type { ComponentType } from "react";
 import { View, type ViewProps } from "react-native";
@@ -8,23 +9,17 @@ export type Rect = { x: number; y: number; width: number; height: number };
 
 export type AreaLightPalette = "blue" | "red" | "pink" | "orange" | "yellow" | "green" | "purple";
 
-export type WindowBackdropProps = ViewProps & {
-  colors: [string, string];
-  vibrancy?: boolean;
-  tintColor?: string;
-  tintAlpha?: number;
-  tintLightness?: number;
-  angle?: number;
-  grainOpacity?: number;
-  grainScale?: number;
-  themeColors?: number[];
-  themeOpacity?: number;
-  themeBaseAlpha?: number;
-  themeGrain?: number;
-  themeTexture?: "grain" | "sand" | "denim" | "tweed";
-  themeAppearance?: "auto" | "light" | "dark";
-  themeAngle?: number;
-};
+export type WindowBackdropProps = ViewProps &
+  Partial<ThemeBackdropProps> & {
+    colors: [string, string];
+    vibrancy?: boolean;
+    tintColor?: string;
+    tintAlpha?: number;
+    tintLightness?: number;
+    angle?: number;
+    grainOpacity?: number;
+    grainScale?: number;
+  };
 
 const NativeBackdrop = requireNativeViewManager<WindowBackdropProps>("ArdiaWindowBackdrop");
 
@@ -67,7 +62,7 @@ export function PowerUp({ palette = "pink", halo = null, ...props }: PowerUpProp
 export type ThemeSwatchProps = ViewProps & {
   colors: number[];
   grain?: number;
-  texture?: "grain" | "sand" | "denim" | "tweed";
+  texture?: ThemeTexture;
   padLightness?: number;
   angle?: number;
 };

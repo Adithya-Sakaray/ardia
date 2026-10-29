@@ -1,4 +1,4 @@
-import { Shell } from "./shellNative";
+import { Shell, type AppearanceMode } from "./shellNative";
 
 export type AppEvent =
   | { type: "reopen" }
@@ -14,7 +14,7 @@ export type AppEvent =
   | { type: "switcherMouseUp" }
   | { type: "dragEscape" };
 
-export const setAppearance = (mode: "auto" | "light" | "dark") => Shell.setAppearance(mode);
+export const setAppearance = (mode: AppearanceMode) => Shell.setAppearance(mode);
 export const isDarkAppearance = () => Shell.isDarkAppearance();
 
 export const replyToTerminate = (ok: boolean) => Shell.replyToTerminate(ok);

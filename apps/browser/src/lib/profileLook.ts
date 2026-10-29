@@ -1,3 +1,4 @@
+import { THEME_TEXTURES, type ThemeBackdropProps, type ThemeMode, type ThemeTexture } from "@ardia/core";
 import { hslToRgb, parseColor, rgbToHsl, toHex } from "./color";
 
 export type ProfileColor = "plum" | "blue" | "purple" | "pink" | "red" | "orange" | "yellow" | "green" | "neutral";
@@ -5,10 +6,6 @@ export type ProfileColor = "plum" | "blue" | "purple" | "pink" | "red" | "orange
 export type ThemeColor = { r: number; g: number; b: number; a: number };
 
 export type ThemeStop = { color: ThemeColor; x: number; y: number };
-
-export type ThemeMode = "auto" | "light" | "dark";
-
-export type ThemeTexture = "grain" | "sand" | "denim" | "tweed";
 
 export type ThemeLook = {
   stops: ThemeStop[];
@@ -28,21 +25,10 @@ export type ProfileLookFields = { color: ProfileColor; theme?: ProfileTheme | nu
 
 export const MAX_THEME_STOPS = 3;
 export const PAD_LIGHTNESS = 0.6;
-export const THEME_TEXTURES: ThemeTexture[] = ["grain", "sand", "denim", "tweed"];
 
 const TEXTURE_STRENGTH: Record<ThemeTexture, number> = { grain: 0.8, sand: 0.15, denim: 0.6, tweed: 0.4 };
 const BASE_REACH = 0.75;
 export const DEFAULT_THEME_ANGLE = 135;
-
-export type ThemeBackdropProps = {
-  themeColors: number[];
-  themeOpacity: number;
-  themeBaseAlpha: number;
-  themeGrain: number;
-  themeTexture: ThemeTexture;
-  themeAppearance: ThemeMode;
-  themeAngle: number;
-};
 
 export const PRESET_BACKDROP: ThemeBackdropProps = {
   themeColors: [],
