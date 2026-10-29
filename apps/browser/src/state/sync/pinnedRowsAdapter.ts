@@ -1,11 +1,9 @@
 import type { Adapter, Extraction } from "../../platform/sync";
-import { useBrowser } from "../browser/store";
 import { orderSections } from "../groups/groups";
 import { arrangeParked, arrangePinnedArea } from "../pins/pinnedArea";
-import { fromSync } from "../pins/pinOrderChoices";
 import type { Tab } from "../browser/types";
 import { PIN_TAB, anchorIn, PIN_ORDER, PIN_ROW, ROW, TILE, type PinValue } from "./pinRecords";
-import { homeWindow, openWindows, settleChoices, store } from "./pinnedSyncState";
+import { commitPinnedEdit, homeWindow, openWindows, settleChoices, store, windowsHomeFirst } from "./pinnedSyncState";
 import { pinKeyOf } from "../browser/model";
 
 export function pinnedRowsAdapter(profileId: string): Adapter {
@@ -22,7 +20,7 @@ export function pinnedRowsAdapter(profileId: string): Adapter {
         if (row) values.set(`${PIN_ROW}${key}`, ROW);
         else if (key in chosen || base(`${PIN_ROW}${key}`) !== undefined) values.set(`${PIN_ROW}${key}`, TILE);
       };
-      const windows = home ? [home, ...openWindows(s).filter((w) => w.id !== home.id)] : openWindows(s);
+      const windows = windowsHomeFirst(s, home);
       for (const w of windows) {
         for (const id of w.tabIds) {
           const t = s.tabs[id];
@@ -77,13 +75,7 @@ export function pinnedRowsAdapter(profileId: string): Adapter {
       const parked = park && marked && arrangeParked({ ...park, tabs: marked }, (group) => anchorIn(base(`${PIN_ORDER}${group}`))).tabs;
       const parkEdited = !!park && parked!.some((p, i) => p !== park.tabs[i]);
       if (!edited && !parkEdited) return true;
-      fromSync(() =>
-        useBrowser.setState({
-          tabs,
-          windows,
-          ...(parkEdited ? { parkedPins: { ...s.parkedPins, [profileId]: { ...park!, tabs: parked! } } } : {}),
-        }),
-      );
+      commitPinnedEdit(s, profileId, { tabs, windows }, parkEdited ? { tabs: parked! } : null);
       return true;
     },
   };

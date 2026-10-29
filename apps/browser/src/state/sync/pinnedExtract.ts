@@ -3,7 +3,7 @@ import { ancestorIds, depthOf } from "../groups/groups";
 import { groupChoiceKey, placeChoiceKey } from "../pins/organize";
 import type { Tab, TabGroup } from "../browser/types";
 import { PIN_TAB, PIN_GROUP, legacyColor, PIN_NEST, PIN_ROW, type NestGroupValue, type NestTabValue, type PinGroupValue, type PinValue } from "./pinRecords";
-import { homeWindow, openWindows, settleChoices, store } from "./pinnedSyncState";
+import { homeWindow, settleChoices, store, windowsHomeFirst } from "./pinnedSyncState";
 import { pinKeyOf } from "../browser/model";
 
 export function extractPinned(profileId: string, base: (key: string) => unknown, queued: (key: string) => boolean, now: number): Extraction {
@@ -26,7 +26,7 @@ export function extractPinned(profileId: string, base: (key: string) => unknown,
   for (const g of pinned.map((g) => [g, depthOf(s.groups, g.id)] as const).sort((a, z) => a[1] - z[1]).map(([g]) => g)) g.tabIds.forEach((id) => pinnedGroupOf.set(id, g));
   const seen = new Set<string>();
   const home = homeWindow(s, profileId);
-  for (const w of home ? [home, ...openWindows(s).filter((w) => w.id !== home.id)] : openWindows(s)) {
+  for (const w of windowsHomeFirst(s, home)) {
     for (const id of w.tabIds) {
       const t = s.tabs[id];
       if (!t || t.profileId !== profileId || seen.has(pinKeyOf(t))) continue;

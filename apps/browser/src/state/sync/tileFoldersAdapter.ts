@@ -1,10 +1,8 @@
 import type { Adapter, Extraction } from "../../platform/sync";
-import { useBrowser } from "../browser/store";
-import { fromSync } from "../pins/pinOrderChoices";
 import { tileFolderOf, withTileFolder } from "../pins/tileFolders";
 import type { Tab, TileFolder } from "../browser/types";
 import { PIN_TAB, FOLDER_NAME, syncedFolderId, syncedName, TILE_FOLDER, type FolderNameValue, type TileFolderValue } from "./pinRecords";
-import { homeWindow, openWindows, store } from "./pinnedSyncState";
+import { commitPinnedEdit, homeWindow, openWindows, store, unpinnedRemotely, windowsHomeFirst } from "./pinnedSyncState";
 import { pinKeyOf } from "../browser/model";
 
 const localFolders = new Map<string, Set<string>>();
@@ -25,9 +23,9 @@ export function tileFoldersAdapter(profileId: string): Adapter {
         const was = local.get(folder.id);
         if (!was || (folder.renamedAt ?? -1) > (was.renamedAt ?? -1)) local.set(folder.id, folder);
       };
-      const unpinned = (key: string) => recorded(`${PIN_TAB}${key}`) && remote(`${PIN_TAB}${key}`) === null;
+      const unpinned = unpinnedRemotely(recorded, remote);
       const home = homeWindow(s, profileId);
-      for (const w of home ? [home, ...openWindows(s).filter((w) => w.id !== home.id)] : openWindows(s)) {
+      for (const w of windowsHomeFirst(s, home)) {
         for (const id of w.tabIds) {
           const t = s.tabs[id];
           if (t?.pinned && t.profileId === profileId && !known.has(pinKeyOf(t))) mark(pinKeyOf(t), tileFolderOf(t));
@@ -81,12 +79,7 @@ export function tileFoldersAdapter(profileId: string): Adapter {
       });
       const parkEdited = !!park && parked!.some((p, i) => p !== park.tabs[i]);
       if (!tabs && !parkEdited) return true;
-      fromSync(() =>
-        useBrowser.setState({
-          ...(tabs ? { tabs } : {}),
-          ...(parkEdited ? { parkedPins: { ...s.parkedPins, [profileId]: { ...park!, tabs: parked! } } } : {}),
-        }),
-      );
+      commitPinnedEdit(s, profileId, tabs ? { tabs } : {}, parkEdited ? { tabs: parked! } : null);
       return true;
     },
   };
