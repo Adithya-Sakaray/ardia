@@ -23,7 +23,7 @@ components/ui/          design system: pieces, tokens, motion, wrapped native vi
 components/<feature>/   sidebar, tabstrip, omnibox, downloads, settings, import, onboarding, …
 state/<domain>/         tabs, windows, profiles, bookmarks, history, downloads, settings, engines, extensions, sync, …
 platform/               the only code that calls native modules
-lib/                    pure helpers: url, time, keys
+lib/                    pure helpers: url, color, time, keys
 ```
 
 | From | May import |
@@ -80,8 +80,8 @@ lib/                    pure helpers: url, time, keys
   Popover, Dialog, Row, Field, Switch, Radio, Menu, with token props (`pad="m" fill="panel" radius="l"`). Native views
   (Surface, Symbol, the web view, …) are wrapped there too. Feature code passes `style` only for layout (flex,
   position, size) and animated values.
-- One copy of each piece. Before writing a button, panel, closing animation or `hostOf`, use the one in
-  `components/ui/` or `lib/`.
+- One copy of each piece. Before writing a button, panel, closing animation, colour maths or a URL helper, use the
+  one in `components/ui/`, `lib/` (`lib/url.ts`, `lib/color.ts`) or `@ardia/core` (`hostOf`).
 - Import pieces from the `components/ui` index (`import { Button, Popover } from "../ui"`). Inside `components/ui`,
   modules import each other directly.
 
@@ -104,7 +104,9 @@ lib/                    pure helpers: url, time, keys
 | a menu-material panel with a scale-in | `Popover` (or `PopoverSurface` for the material alone); a panel placed by its own math uses `usePopoverMotion` + `usePopoverMotionStyle`; open/close state from `usePopoverPresence` |
 | a row in a popover or menu | `MenuRow` and `MenuSeparator` |
 | a `Surface` with a fill, corner radius, hairline border and shadow (cards, ghosts, HUDs) | `<Panel fill radius border shadow={level}>`; the level is a `ShadowLevel` from `tokens.ts` or the feature's `tokens.ts` |
-| a centred modal over a scrim | `<Dialog width pad onDismiss>`; anchored to a spot with `place={{ top, right }}`; `Sheet` is the settings preset |
+| a centred modal over a scrim | `<Dialog width pad onDismiss>`; anchored to a spot with `place={{ top, right }}`; `Sheet` is the settings preset; `onSubmit` adds Escape/Enter keys, `restoreFocus` runs on close, `animated` fades it in |
+| a view kept mounted until its exit fade ends | `usePresence(value, { show, hide })` from `motion.ts` |
+| reduce motion | `reduceMotion()` and `reduceMotionKnown` from `components/ui` |
 | a settings row / grouped rows | `Row` and `Group`; inside settings, `Row`, `SectionHeader` and `Anchor` from `components/settings/Form` add the search anchor |
 | a text input / search box / pop-up menu / checkbox | `TextField`, `SearchField`, `PopUp`, `Checkbox` |
 | an on/off switch | `<Toggle>` (settings) or `<Toggle look="panel">` (popovers) |
