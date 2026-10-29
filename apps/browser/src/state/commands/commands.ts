@@ -59,6 +59,7 @@ import { runPeekCommand } from "../peek/actions";
 import { peekTabId } from "../peek/peek";
 import { expectFocus, findFocus } from "../focus/focusClaims";
 import { isWebPageUrl } from "../../lib/url";
+import { findStep, openFind } from "../find/actions";
 
 const newOrId = (arg: string) => (arg === "new" ? null : arg);
 
@@ -143,7 +144,6 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent) 
   const page = tab?.url ? tab : undefined;
   const web = tabId ? webviews.get(tabId) : undefined;
   const ui = s.windowUi[windowId];
-  const find = tabId ? s.find[tabId] : undefined;
   if (runSidebarCommand(command, arg, windowId)) return;
 
   switch (command) {
@@ -191,21 +191,19 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent) 
       return page ? copyText(markdownLink(page.customTitle || page.title, page.url)) : undefined;
     case "findInPage":
       if (page) expectFocus(windowId, findFocus(page.id));
-      return page ? s.setFind(page.id, { open: true, replace: false, focusRequest: Date.now() }) : undefined;
+      return page ? openFind(page.id, { replace: false }) : undefined;
     case "findAndReplace":
-      return page ? s.setFind(page.id, { open: true, replace: true, focusRequest: Date.now() }) : undefined;
+      return page ? openFind(page.id, { replace: true }) : undefined;
     case "jumpToSelection":
       return page ? void jumpToSelection(page.id) : undefined;
     case "useSelectionForFind":
       if (!page || !web) return;
       return void web.evaluate<string>("post('result', JSON.stringify(String(getSelection() || '').trim().slice(0, 500)))").then((query) => {
-        if (query) useBrowser.getState().setFind(page.id, { open: true, query, focusRequest: Date.now() });
+        if (query) openFind(page.id, { query });
       });
     case "findNext":
     case "findPrevious":
-      if (!page) return;
-      if (!find?.query) return s.setFind(page.id, { open: true });
-      return void web?.find(find.query, command === "findNext", true);
+      return page ? findStep(page.id, command === "findPrevious") : undefined;
     case "reload":
       return void (tabId && withLivePage(tabId, (page) => page.reload()));
     case "forceReload":

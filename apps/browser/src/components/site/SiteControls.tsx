@@ -17,7 +17,7 @@ import { webviews } from "../../state/tabs/webviewHandles";
 import { currentEngineProfile, currentLive, currentMuteState } from "../../state/browser/current";
 import { useMuteState } from "../../state/tabs/hooks";
 import { setSiteMuted } from "../../state/browser/actions";
-import { setFind } from "../../state/windows/actions";
+import { openFind } from "../../state/find/actions";
 import { updateSettings } from "../../state/settings/actions";
 import { useEngineRule, usePageEngine, useRecommendedEngine, useStreamingSite } from "../../state/engines/hooks";
 import { useSettings, useTab } from "../../state/browser/hooks";
@@ -208,7 +208,7 @@ function SiteControlsPanel({
         label="Find on Page"
         onPress={() => {
           close();
-          setFind(tabId, { open: true, replace: false, focusRequest: Date.now() });
+          openFind(tabId, { replace: false });
         }}
       />
     ) : null,

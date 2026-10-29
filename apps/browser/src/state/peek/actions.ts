@@ -8,6 +8,7 @@ import { MAX_SPLIT_PANES, splitOf } from "../splits/splits";
 import { openSplitPane } from "../splits/actions";
 import { showToast } from "../app/toasts";
 import { isPeekTab, otherSitePeekTabIds, shownPageId } from "./peek";
+import { closeFind } from "../find/actions";
 
 const store = () => useBrowser.getState();
 const closers = new Map<string, () => void>();
@@ -83,11 +84,8 @@ export function runPeekCommand(command: string, windowId: string): boolean {
     return true;
   }
   if (command !== "closeTab" || s.windowUi[windowId]?.panel.open) return false;
-  if (s.find[peek.tabId]?.open) {
-    s.setFind(peek.tabId, { open: false, count: null, active: 0 });
-    void webviews.get(peek.tabId)?.stopFinding(false);
-    void webviews.get(peek.tabId)?.focus();
-  } else dismissPeek(windowId);
+  if (s.find[peek.tabId]?.open) closeFind(peek.tabId);
+  else dismissPeek(windowId);
   return true;
 }
 
