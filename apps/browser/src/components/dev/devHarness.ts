@@ -79,8 +79,8 @@ export function startDevHarness() {
     get hoverShift(): typeof import("../ui/hoverShift") {
       return require("../ui/hoverShift");
     },
-    get settingsSearch(): typeof import("../../state/settings/searchState") & typeof import("../settings/SettingsSearch") {
-      return { ...require("../../state/settings/searchState"), ...require("../settings/SettingsSearch") };
+    get settingsSearch(): typeof import("../../state/settings/searchState") & typeof import("../settings/SettingsSearch") & typeof import("../settings/anchors") {
+      return { ...require("../../state/settings/searchState"), ...require("../settings/SettingsSearch"), ...require("../settings/anchors") };
     },
     get settingsNav(): typeof import("../../state/settings/settingsWindows").useSettingsNav {
       return require("../../state/settings/settingsWindows").useSettingsNav;
