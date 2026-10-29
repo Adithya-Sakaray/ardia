@@ -3,6 +3,7 @@ import { Clock, emptyScope, restoreJournal, SyncNative, writtenSeq, type LogFile
 import { parseSaved, unchanged, versionedJson, type Migrations, type SavedObject } from "../../lib/savedDocument";
 import { profileScope } from "./records";
 import { APP_SCOPE, DOC, DOC_MIGRATIONS, DOC_VERSION, JOURNAL, STATE, defaultTypes, emptyDoc, type SyncDoc } from "./syncDoc";
+import { isFields, numberOr, stringOr } from "../../lib/decode";
 
 type Journal = Record<string, LogFile[]>;
 type ScopeChange = { records: Record<string, SyncRecord | null>; base: Record<string, string | null>; rest: Partial<ScopeState> };
@@ -14,30 +15,28 @@ const CHECKPOINT_MIGRATIONS: Migrations = { 0: (doc) => (typeof doc.covers === "
 const PART_VERSION = 1;
 const PART_MIGRATIONS: Migrations = { 0: unchanged };
 
-const isObject = (v: unknown): v is SavedObject => typeof v === "object" && v !== null && !Array.isArray(v);
-
 function readScopes(v: unknown): SyncDoc["scopes"] {
   const scopes: SyncDoc["scopes"] = {};
-  if (!isObject(v)) return scopes;
+  if (!isFields(v)) return scopes;
   for (const [name, scope] of Object.entries(v)) {
-    if (isObject(scope) && isObject(scope.records) && isObject(scope.base)) scopes[name] = { ...emptyScope(), ...(scope as Partial<ScopeState>) };
+    if (isFields(scope) && isFields(scope.records) && isFields(scope.base)) scopes[name] = { ...emptyScope(), ...(scope as Partial<ScopeState>) };
   }
   return scopes;
 }
 
 function readCheckpoint(doc: SavedObject | null): Checkpoint {
   if (!doc || typeof doc.covers !== "number") return { covers: -1, scopes: {} };
-  return { covers: doc.covers, clock: typeof doc.clock === "string" ? doc.clock : undefined, scopes: readScopes(doc.scopes) };
+  return { covers: doc.covers, clock: stringOr(doc.clock, undefined), scopes: readScopes(doc.scopes) };
 }
 
 function readPart(doc: SavedObject | null): JournalPart {
   if (!doc) return { id: 0 };
   return {
-    id: typeof doc.id === "number" ? doc.id : 0,
-    journal: isObject(doc.journal) ? (doc.journal as Journal) : undefined,
-    device: typeof doc.device === "string" ? doc.device : null,
-    clock: typeof doc.clock === "string" ? doc.clock : undefined,
-    changes: isObject(doc.changes) ? (doc.changes as Record<string, ScopeChange>) : undefined,
+    id: numberOr(doc.id, 0),
+    journal: isFields(doc.journal) ? (doc.journal as Journal) : undefined,
+    device: stringOr(doc.device, null),
+    clock: stringOr(doc.clock, undefined),
+    changes: isFields(doc.changes) ? (doc.changes as Record<string, ScopeChange>) : undefined,
   };
 }
 

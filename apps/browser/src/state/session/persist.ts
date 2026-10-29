@@ -16,6 +16,7 @@ import { parseSaved, versionedJson, unchanged, type Migrations, type SavedObject
 import { sessionWithCleanUpMinutes } from "../settings/cleanUpAfter";
 import { sessionWithOwnTabMutes } from "../tabs/mute";
 import { isRegularWindow } from "../windows/small";
+import { isFields, isString, isStringList } from "../../lib/decode";
 
 const SAVE_DELAY_MS = 800;
 const SESSION_VERSION = 4;
@@ -100,22 +101,19 @@ const DOWNLOADS_FIELDS = {
 
 const DOCS: Doc[] = [doc("downloads.json", DOWNLOADS_VERSION, DOWNLOADS_FIELDS), doc(SESSION_DOCUMENT, SESSION_VERSION, SESSION_FIELDS)];
 
-const isObject = (v: unknown): v is SavedObject => typeof v === "object" && v !== null && !Array.isArray(v);
-const isString = (v: unknown): v is string => typeof v === "string";
 const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter(isString) : []);
-const stringsOk = (v: unknown) => Array.isArray(v) && v.every(isString);
 const has = (o: SavedObject, keys: readonly string[]) => keys.every((k) => isString(o[k]));
-const rows = <T,>(v: unknown, ok: (o: SavedObject) => boolean): T[] => (Array.isArray(v) ? v.filter((o): o is SavedObject => isObject(o) && ok(o)) : []) as T[];
+const rows = <T,>(v: unknown, ok: (o: SavedObject) => boolean): T[] => (Array.isArray(v) ? v.filter((o): o is SavedObject => isFields(o) && ok(o)) : []) as T[];
 const byProfile = <T,>(v: unknown, ok: (o: SavedObject) => boolean = () => true): Record<string, T> =>
-  (isObject(v) ? Object.fromEntries(Object.entries(v).filter(([, o]) => isObject(o) && ok(o))) : {}) as Record<string, T>;
+  (isFields(v) ? Object.fromEntries(Object.entries(v).filter(([, o]) => isFields(o) && ok(o))) : {}) as Record<string, T>;
 const byId = <T extends { id: string }>(list: T[]) => Object.fromEntries(list.map((x) => [x.id, x]));
 const nullableString = (v: unknown) => (isString(v) ? v : null);
 
-const windowOk = (o: SavedObject) => has(o, ["id", "profileId"]) && stringsOk(o.tabIds) && isObject(o.activeTabIds) && Object.values(o.activeTabIds).every(isString);
+const windowOk = (o: SavedObject) => has(o, ["id", "profileId"]) && isStringList(o.tabIds) && isFields(o.activeTabIds) && Object.values(o.activeTabIds).every(isString);
 const tabOk = (o: SavedObject) => has(o, ["id", "windowId", "profileId", "url"]);
-const groupOk = (o: SavedObject) => has(o, ["id", "windowId", "profileId"]) && stringsOk(o.tabIds);
-const splitOk = (o: SavedObject) => has(o, ["id", "windowId"]) && stringsOk(o.tabIds) && Array.isArray(o.sizes);
-const snapshotOk = (o: unknown) => isObject(o) && has(o, ["url", "profileId"]);
+const groupOk = (o: SavedObject) => has(o, ["id", "windowId", "profileId"]) && isStringList(o.tabIds);
+const splitOk = (o: SavedObject) => has(o, ["id", "windowId"]) && isStringList(o.tabIds) && Array.isArray(o.sizes);
+const snapshotOk = (o: unknown) => isFields(o) && has(o, ["url", "profileId"]);
 const closedTabOk = (o: SavedObject) => isString(o.id) && snapshotOk(o.tab);
 const tabListOk = (o: SavedObject) => isString(o.id) && Array.isArray(o.tabs) && o.tabs.every(snapshotOk);
 const profileOk = (o: SavedObject) => has(o, ["id", "name"]);
@@ -133,7 +131,7 @@ export function parseSession(json: string | null | undefined): SavedSession | nu
     profiles: byProfile(raw.profiles, profileOk),
     profileOrder: strings(raw.profileOrder),
     orphanedProfileData: strings(raw.orphanedProfileData),
-    settings: isObject(raw.settings) ? (raw.settings as HydrateData["settings"]) : undefined,
+    settings: isFields(raw.settings) ? (raw.settings as HydrateData["settings"]) : undefined,
     windows: byId(rows<BrowserWindow>(raw.windows, windowOk)),
     windowOrder: strings(raw.windowOrder),
     focusedWindowId: nullableString(raw.focusedWindowId),
@@ -196,7 +194,7 @@ function savedDownloads(saved: Pick<BrowserState, "profiles">): Download[] {
 
 function closedForLaunch(session: SavedSession): HydrateData {
   const now = Date.now();
-  const pinSource = { tabs: session.tabs, groups: session.groups ?? {}, splits: session.splits ?? {}, history: {} };
+  const pinSource = { tabs: session.tabs, groups: session.groups ?? {}, splits: session.splits ?? {}, history: {}, profiles: session.profiles ?? {} };
   let parkedPins = session.parkedPins ?? {};
   for (const w of Object.values(session.windows)) parkedPins = parkWindowPins(parkedPins, w, pinSource);
   const closedWindows = [

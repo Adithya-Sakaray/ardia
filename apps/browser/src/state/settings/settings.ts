@@ -15,6 +15,7 @@ import type { StateCreator } from "zustand";
 import { fromLegacyUrl } from "../../lib/legacy";
 import type { BrowserState } from "../browser/store";
 import { DEFAULT_SIDEBAR_WIDTH } from "../../lib/windowLayout";
+import { isFields, isString, isStringList } from "../../lib/decode";
 
 export const DEFAULT_PROFILE_ID = "default";
 
@@ -22,12 +23,9 @@ export type SettingSpec<T> = { default: T; valid: (value: unknown) => boolean; s
 
 const SYNCED = true;
 
-const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
-const isString = (v: unknown): v is string => typeof v === "string";
-const isStringList = (v: unknown): v is string[] => Array.isArray(v) && v.every(isString);
-const isRecordOf = (v: unknown, item: (x: unknown) => boolean) => isObject(v) && Object.values(v).every(item);
+const isRecordOf = (v: unknown, item: (x: unknown) => boolean) => isFields(v) && Object.values(v).every(item);
 const isWidth = (v: unknown) => typeof v === "number" && Number.isFinite(v) && v > 0;
-const hasStrings = (v: unknown, keys: readonly string[]) => isObject(v) && keys.every((k) => isString(v[k]));
+const hasStrings = (v: unknown, keys: readonly string[]) => isFields(v) && keys.every((k) => isString(v[k]));
 
 const flag = (d: boolean, synced = false): SettingSpec<boolean> => ({ default: d, valid: (v) => typeof v === "boolean", synced });
 const text = (d: string, synced = false): SettingSpec<string> => ({ default: d, valid: isString, synced });
@@ -138,9 +136,9 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 export function parseSettings(raw: unknown): Settings {
-  const saved = isObject(raw) ? raw : {};
+  const saved = isFields(raw) ? raw : {};
   const value = (key: SettingKey) => (SETTING_SPECS[key].valid(saved[key]) ? saved[key] : SETTING_SPECS[key].default);
-  const legacy = isObject(raw) && !raw.chosen ? Object.keys(raw) : null;
+  const legacy = isFields(raw) && !raw.chosen ? Object.keys(raw) : null;
   const settings = {
     ...(Object.fromEntries(SETTING_KEYS.map((key) => [key, value(key)])) as Omit<Settings, "chosen" | "inferred">),
     chosen: legacy ?? (isStringList(saved.chosen) ? saved.chosen : []),

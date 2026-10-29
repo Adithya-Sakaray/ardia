@@ -2,6 +2,7 @@ import type { BrowserState } from "../browser/store";
 import type { Tab } from "../browser/types";
 import { isIncognitoProfile } from "../browser/model";
 import { hostOf } from "@ardia/core";
+import { isString, listOf } from "../../lib/decode";
 
 export type MuteState = "site" | "tab" | null;
 
@@ -48,11 +49,9 @@ export const muteSymbol = (state: MuteState): string => (state ? "speaker.wave.2
 
 type SavedDoc = Record<string, unknown>;
 
-const listOf = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
-
 export function sessionWithOwnTabMutes(doc: SavedDoc): SavedDoc {
   const settings = doc.settings as { mutedSites?: unknown } | undefined;
-  const sites = new Set(listOf(settings?.mutedSites).filter((h): h is string => typeof h === "string"));
+  const sites = new Set(listOf(settings?.mutedSites).filter(isString));
   if (!sites.size) return doc;
   const own = <T>(t: T): T => {
     const tab = t as Partial<Tab> | null;

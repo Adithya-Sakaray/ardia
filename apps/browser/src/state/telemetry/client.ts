@@ -9,6 +9,7 @@ import { appInfo, mayPost, post } from "./transport";
 import { uuidv4, uuidv7 } from "./ids";
 import { parseSaved, versionedJson, unchanged, type Migrations, type SavedObject } from "../../lib/savedDocument";
 import { withDeadline } from "../../lib/deadline";
+import { isFields, isString, numberOr, stringOr } from "../../lib/decode";
 
 const STATE_DOC = "telemetry.json";
 const QUEUE_DOC = "telemetry-queue.json";
@@ -49,12 +50,9 @@ const DEFAULT: Saved = {
   lastBuild: null,
 };
 
-const numberOr = <T,>(v: unknown, fallback: T) => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
-const stringOr = <T,>(v: unknown, fallback: T) => (typeof v === "string" ? v : fallback);
-
 function readSaved(doc: SavedObject | null): Saved {
   if (!doc) return DEFAULT;
-  const sharing: Sharing = doc.sharing === true && typeof doc.installId === "string" && doc.installId ? { sharing: true, installId: doc.installId } : { sharing: false, installId: null };
+  const sharing: Sharing = doc.sharing === true && isString(doc.installId) && doc.installId ? { sharing: true, installId: doc.installId } : { sharing: false, installId: null };
   return {
     ...sharing,
     decidedAt: numberOr(doc.decidedAt, null),
@@ -115,10 +113,9 @@ let queue: Queue = { events: [], logs: [] };
 let queueLoaded = false;
 let generation = 0;
 
-const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const isEvent = (v: unknown): v is QueuedEvent =>
-  isObject(v) && typeof v.uuid === "string" && typeof v.event === "string" && typeof v.distinct_id === "string" && typeof v.timestamp === "string" && isObject(v.properties);
-const isLog = (v: unknown): v is OtlpLogRecord => isObject(v) && typeof v.timeUnixNano === "string" && isObject(v.body) && Array.isArray(v.attributes);
+  isFields(v) && isString(v.uuid) && isString(v.event) && isString(v.distinct_id) && isString(v.timestamp) && isFields(v.properties);
+const isLog = (v: unknown): v is OtlpLogRecord => isFields(v) && isString(v.timeUnixNano) && isFields(v.body) && Array.isArray(v.attributes);
 
 function storedQueue(): Queue {
   const doc = parseSaved(readDocument(QUEUE_DOC), QUEUE_VERSION);
