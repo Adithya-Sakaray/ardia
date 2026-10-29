@@ -7,7 +7,7 @@ import { isDarkAppearance, onAppEvent, onOpenURLs, replyToTerminate } from "../.
 import { startNativeSettings } from "../settings/nativeSettings";
 import { menuShortcuts, onCommand, setMenuStateParts, type MenuBookmark, type MenuState } from "../../platform/commands";
 import { Appearance } from "react-native";
-import { folderChildren, isBookmarked } from "../bookmarks/bookmarks";
+import { folderChildren, isBookmarked, isWithin, ROOT_TITLES } from "../bookmarks/bookmarks";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { activeTab, bookmarkProfileId, IDLE_LIVE, isPinnedRow, tabLabel, togglePinTitle, windowTitle, tabLayoutOf } from "../browser/model";
 import { canSwitchEngine, tabEngine } from "../engines/engines";
@@ -151,14 +151,14 @@ function bookmarkMenus(b: Bookmarks, profileId: string): BookmarkMenus {
   const menus: BookmarkMenus = roots
     ? {
         bookmarkFolders: [
-          { id: roots.bar, title: "Bookmarks Bar" },
-          { id: roots.other, title: "Other Bookmarks" },
+          { id: roots.bar, title: ROOT_TITLES.bar },
+          { id: roots.other, title: ROOT_TITLES.other },
           ...[...folderChildren(b, roots.bar), ...folderChildren(b, roots.other)]
             .filter((n) => n.kind === "folder")
             .map((n) => ({ id: n.id, title: n.title })),
         ],
         recentBookmarks: Object.values(b.nodes)
-          .filter((n): n is Extract<BookmarkNode, { kind: "url" }> => n.kind === "url" && isInTree(b, n.id, [roots.bar, roots.other]))
+          .filter((n): n is Extract<BookmarkNode, { kind: "url" }> => n.kind === "url" && isWithin(b, n.id, [roots.bar, roots.other]))
           .sort((x, y) => y.addedAt - x.addedAt)
           .slice(0, 5)
           .map((n) => ({ id: n.id, title: n.title || n.url, url: n.url })),
@@ -256,11 +256,3 @@ export function menuState(s: BrowserState): MenuState {
   };
 }
 
-function isInTree(b: Bookmarks, id: string, roots: string[]): boolean {
-  let node = b.nodes[id];
-  for (let i = 0; node && i < 64; i++) {
-    if (roots.includes(node.id)) return true;
-    node = node.parentId ? b.nodes[node.parentId] : undefined;
-  }
-  return false;
-}

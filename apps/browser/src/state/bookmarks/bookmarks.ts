@@ -60,6 +60,26 @@ export function bookmarkUuidFor(id: string): string {
 
 export const rootIdsFor = (engine: string) => ({ bar: `bar@${engine || "default"}`, other: `other@${engine || "default"}` });
 
+export const ROOT_TITLES = { bar: "Bookmarks Bar", other: "Other Bookmarks" } as const;
+
+const MAX_DEPTH = 64;
+
+export function isWithin(b: Bookmarks, id: string, ancestors: readonly string[]): boolean {
+  let node = b.nodes[id];
+  for (let i = 0; node && i < MAX_DEPTH; i++) {
+    if (ancestors.includes(node.id)) return true;
+    node = node.parentId ? b.nodes[node.parentId] : undefined;
+  }
+  return false;
+}
+
+export function ownerOfBookmark(b: Bookmarks, id: string): string | null {
+  let node = b.nodes[id];
+  for (let i = 0; node?.parentId && i < MAX_DEPTH; i++) node = b.nodes[node.parentId];
+  const root = node;
+  return root ? (Object.entries(b.roots).find(([, r]) => r.bar === root.id || r.other === root.id)?.[0] ?? null) : null;
+}
+
 export function bookmarkRoots(b: Bookmarks, profileId: string) {
   return b.roots[profileId];
 }
@@ -70,8 +90,8 @@ export function ensureRoots(s: Pick<BrowserState, "profiles" | "bookmarks">, pro
   if (existing) return [b, existing];
   const roots = rootIdsFor(engineProfile(s, profileId));
   const nodes = { ...b.nodes };
-  nodes[roots.bar] ??= { kind: "folder", id: roots.bar, parentId: null, title: "Bookmarks Bar", children: [], addedAt: 0 };
-  nodes[roots.other] ??= { kind: "folder", id: roots.other, parentId: null, title: "Other Bookmarks", children: [], addedAt: 0 };
+  nodes[roots.bar] ??= { kind: "folder", id: roots.bar, parentId: null, title: ROOT_TITLES.bar, children: [], addedAt: 0 };
+  nodes[roots.other] ??= { kind: "folder", id: roots.other, parentId: null, title: ROOT_TITLES.other, children: [], addedAt: 0 };
   return [{ nodes, roots: { ...b.roots, [profileId]: roots } }, roots];
 }
 
@@ -133,7 +153,7 @@ function insertChild(b: Bookmarks, node: BookmarkNode, parentId: string, index?:
 export function bookmarkAncestors(b: Bookmarks, id: string): BookmarkFolder[] {
   const out: BookmarkFolder[] = [];
   let node = b.nodes[id];
-  for (let i = 0; node?.parentId && i < 64; i++) {
+  for (let i = 0; node?.parentId && i < MAX_DEPTH; i++) {
     const parent = b.nodes[node.parentId];
     if (parent?.kind !== "folder") break;
     out.push(parent);

@@ -1,7 +1,7 @@
 import { applyBookmarkOps, bookmarkTree, onBookmarksChanged, watchBookmarks, type BookmarkOp, type EngineBookmark } from "../../platform/bookmarks";
 import { readDocument, removeDocument, writeDocument } from "../../platform/documents";
 import { versionedJson, upgraded, type Migrations } from "../../lib/savedDocument";
-import { bookmarkUuidFor, isBookmarkUuid, rootIdsFor } from "./bookmarks";
+import { bookmarkUuidFor, isBookmarkUuid, ROOT_TITLES, rootIdsFor } from "./bookmarks";
 import { applyOps, bookmarkOps, flatFromEngine, flatFromStore, type Flat } from "./flatBookmarks";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { engineProfile, isIncognitoProfile } from "../browser/model";
@@ -49,8 +49,8 @@ function adopt(engine: string, flat: Flat, { ready = legacyMoved } = {}) {
           ? { kind: "url", id, parentId: n.parent!, title: n.title, url: n.url ?? "", favicon: was?.kind === "url" ? was.favicon : null, addedAt: n.addedAt, ...key }
           : ({ kind: "folder", id, parentId: n.parent, title: n.title, children: flat.children.get(id) ?? [], addedAt: n.addedAt, ...key } satisfies BookmarkFolder);
     }
-    nodes[roots.bar] = { ...(nodes[roots.bar] as BookmarkFolder), title: "Bookmarks Bar" };
-    nodes[roots.other] = { ...(nodes[roots.other] as BookmarkFolder), title: "Other Bookmarks" };
+    nodes[roots.bar] = { ...(nodes[roots.bar] as BookmarkFolder), title: ROOT_TITLES.bar };
+    nodes[roots.other] = { ...(nodes[roots.other] as BookmarkFolder), title: ROOT_TITLES.other };
     const ids = profilesUsing(s, engine);
     return {
       bookmarks: { nodes, roots: { ...s.bookmarks.roots, ...Object.fromEntries(ids.map((id) => [id, roots])) } },

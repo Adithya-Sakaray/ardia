@@ -4,10 +4,11 @@ import { bookmarkProfileId } from "../browser/model";
 import { setBookmarksDrop, useTabDrag } from "../drag/tabDrag";
 import { addBookmark, moveBookmark } from "./actions";
 import { addFolderToSidebar } from "./bookmarkGroups";
-import { insertTarget, isInside, linkTitle, moveTarget, sameSpot, type DropSpot } from "./barDrop";
+import { insertTarget, linkTitle, moveTarget, sameSpot, type DropSpot } from "./barDrop";
 import { closeFolderMenus, closeSprungMenus, holdMenuPanel, panelKey, useFolderMenus } from "./folderMenus";
 import { onAppEvent, setDragEscapeCapture } from "../drag/dragNative";
 import { isWebPageUrl } from "../../lib/url";
+import { isWithin } from "./bookmarks";
 
 export type BarDragSource = { kind: "bookmark"; id: string; panel: string | null } | { kind: "tabs"; tabIds: string[] } | { kind: "links" };
 
@@ -61,7 +62,7 @@ function hitAt(windowId: string, x: number, y: number, draggedId: string | null)
   if (!spot || !draggedId) return best.hit;
   const b = useBrowser.getState().bookmarks;
   const parentId = "into" in spot ? spot.into : spot.parentId;
-  return isInside(b, draggedId, parentId) ? { spot: null } : best.hit;
+  return isWithin(b, parentId, [draggedId]) ? { spot: null } : best.hit;
 }
 
 function armSpring(hit: ZoneHit | null) {

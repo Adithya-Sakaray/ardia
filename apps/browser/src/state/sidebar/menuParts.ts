@@ -1,7 +1,7 @@
 import type { MenuItem } from "../../platform/menus";
 import type { ChoiceItem } from "../app/menuChoice";
 import { menuShortcut } from "../commands/commandShortcuts";
-import { folderChildren } from "../bookmarks/bookmarks";
+import { folderChildren, ROOT_TITLES } from "../bookmarks/bookmarks";
 import type { BrowserState } from "../browser/store";
 import { bookmarkProfileId, windowTitle } from "../browser/model";
 import { groupLabel } from "../pins/organize";
@@ -77,8 +77,8 @@ export function bookmarkFolderItems(s: BrowserState, windowId: string): Destinat
   const folders = roots ? [...folderChildren(s.bookmarks, roots.bar), ...folderChildren(s.bookmarks, roots.other)].filter((n) => n.kind === "folder") : [];
   const folder = (parentId: string | undefined, title: string): DestinationItem => ({ value: { kind: "folder", parentId }, title });
   return [
-    folder(undefined, "Bookmarks Bar"),
-    ...(roots ? [folder(roots.other, "Other Bookmarks")] : []),
+    folder(undefined, ROOT_TITLES.bar),
+    ...(roots ? [folder(roots.other, ROOT_TITLES.other)] : []),
     ...folders.map((f) => folder(f.id, f.title)),
     sep,
     { value: { kind: "newFolder" }, title: "New Folder…" },
