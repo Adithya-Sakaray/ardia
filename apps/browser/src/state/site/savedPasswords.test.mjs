@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 const { emitAppEvent } = await import("../../test-native/shell.ts");
-const { lockPasswords, unlockPasswordsFor, usePasswordUnlocks } = await import("./savedPasswords.ts");
+const { lockPasswords, revealPassword, unlockPasswordsFor, usePasswordUnlocks } = await import("./savedPasswords.ts");
 
 const unlocked = (profile) => !!usePasswordUnlocks.getState().unlocked[profile];
 
@@ -23,4 +23,19 @@ test("an unlock lasts five minutes", async (t) => {
   assert.ok(unlocked("work"));
   t.mock.timers.tick(1);
   assert.ok(!unlocked("work"));
+});
+
+test("a lock that lands while authentication is pending wins", async () => {
+  const pending = unlockPasswordsFor("work");
+  emitAppEvent({ type: "lockedOrAsleep" });
+  assert.equal(await pending, false);
+  assert.ok(!unlocked("work"));
+});
+
+test("a password revealed across a lock comes back empty", async () => {
+  await unlockPasswordsFor("work");
+  const pending = revealPassword("work", "https://example.com", "me");
+  lockPasswords();
+  assert.equal(await pending, null);
+  assert.equal(await revealPassword("work", "https://example.com", "me"), null);
 });
