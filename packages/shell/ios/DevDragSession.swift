@@ -58,7 +58,7 @@ enum DevDragSession {
       sequence += 1
     }
     guard let board = pasteboard else { return "no drag" }
-    let local = NSPoint(x: x, y: content.isFlipped ? y : content.bounds.height - y)
+    let local = SyntheticInput.contentPoint(x: x, top: y, in: content)
     let location = content.convert(local, to: nil)
     let info = DevDraggingInfo(window: window, location: location, pasteboard: board, sequence: sequence)
     let types = Set(board.types ?? [])

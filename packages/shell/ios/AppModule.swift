@@ -143,21 +143,13 @@ public class AppModule: Module {
     AsyncFunction("devPostKey") { (windowId: String, key: String, keyCode: Int, modifiers: [String]) -> Bool in
       #if DEBUG
       guard let window = WindowManager.shared.windows[windowId] else { return false }
-      let names: [String: NSEvent.ModifierFlags] = [
-        "command": .command, "shift": .shift, "option": .option, "control": .control, "function": .function,
-      ]
-      let mods = NSEvent.ModifierFlags(modifiers.compactMap { names[$0] })
-      if key.hasPrefix("menu:"), let event = NSEvent.keyEvent(
-        with: .keyDown, location: .zero, modifierFlags: mods, timestamp: ProcessInfo.processInfo.systemUptime,
-        windowNumber: window.windowNumber, context: nil, characters: String(key.dropFirst(5)),
-        charactersIgnoringModifiers: String(key.dropFirst(5)), isARepeat: false, keyCode: UInt16(keyCode)) {
+      let mods = ModifierName.flags(named: modifiers)
+      if key.hasPrefix("menu:"),
+        let event = SyntheticInput.key(.keyDown, in: window, characters: String(key.dropFirst(5)), modifiers: mods, keyCode: keyCode) {
         return NSApp.mainMenu?.performKeyEquivalent(with: event) ?? false
       }
       for type in [NSEvent.EventType.keyDown, .keyUp] {
-        guard let event = NSEvent.keyEvent(
-          with: type, location: .zero, modifierFlags: mods, timestamp: ProcessInfo.processInfo.systemUptime,
-          windowNumber: window.windowNumber, context: nil, characters: key, charactersIgnoringModifiers: key,
-          isARepeat: false, keyCode: UInt16(keyCode)) else { return false }
+        guard let event = SyntheticInput.key(type, in: window, characters: key, modifiers: mods, keyCode: keyCode) else { return false }
         NSApp.postEvent(event, atStart: false)
       }
       return true
@@ -169,9 +161,6 @@ public class AppModule: Module {
     AsyncFunction("devPostKeys") { (windowId: String, presses: [[String: Any]], promise: Promise) in
       #if DEBUG
       guard let window = WindowManager.shared.windows[windowId] else { return promise.resolve([]) }
-      let names: [String: NSEvent.ModifierFlags] = [
-        "command": .command, "shift": .shift, "option": .option, "control": .control, "function": .function,
-      ]
       var postedAt: [Double] = []
       func post(_ index: Int) {
         guard index < presses.count else { return promise.resolve(postedAt) }
@@ -179,14 +168,11 @@ public class AppModule: Module {
         let after = press["after"] as? Int ?? 0
         let send = {
           let key = press["key"] as? String ?? ""
-          let mods = NSEvent.ModifierFlags((press["modifiers"] as? [String] ?? []).compactMap { names[$0] })
+          let mods = ModifierName.flags(named: press["modifiers"] as? [String] ?? [])
           let phase = press["phase"] as? String
           let types: [NSEvent.EventType] = phase == "down" ? [.keyDown] : phase == "up" ? [.keyUp] : [.keyDown, .keyUp]
           for type in types {
-            if let event = NSEvent.keyEvent(
-              with: type, location: .zero, modifierFlags: mods, timestamp: ProcessInfo.processInfo.systemUptime,
-              windowNumber: window.windowNumber, context: nil, characters: key, charactersIgnoringModifiers: key,
-              isARepeat: false, keyCode: UInt16(press["keyCode"] as? Int ?? 0)) {
+            if let event = SyntheticInput.key(type, in: window, characters: key, modifiers: mods, keyCode: press["keyCode"] as? Int ?? 0) {
               NSApp.postEvent(event, atStart: false)
             }
           }
@@ -273,7 +259,7 @@ public class AppModule: Module {
         return true
       }
       guard let window = WindowManager.shared.windows[windowId], let content = window.contentView else { return false }
-      let local = NSPoint(x: x, y: content.isFlipped ? y : content.bounds.height - y)
+      let local = SyntheticInput.contentPoint(x: x, top: y, in: content)
       let screen = window.convertPoint(toScreen: content.convert(local, to: nil))
       _ = (view as AnyObject).perform(select, with: NSValue(point: screen))
       return true
@@ -344,10 +330,7 @@ public class AppModule: Module {
         let handled = now()
         let target = toKeyWindow ? NSApp.keyWindow ?? window : window
         for type in [NSEvent.EventType.keyDown, .keyUp] {
-          guard let event = NSEvent.keyEvent(
-            with: type, location: .zero, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
-            windowNumber: target.windowNumber, context: nil, characters: keys[i], charactersIgnoringModifiers: keys[i],
-            isARepeat: false, keyCode: 0) else { continue }
+          guard let event = SyntheticInput.key(type, in: target, characters: keys[i]) else { continue }
           if toKeyWindow { NSApp.sendEvent(event) }
           else if type == .keyDown { target.firstResponder?.keyDown(with: event) } else { target.firstResponder?.keyUp(with: event) }
         }
