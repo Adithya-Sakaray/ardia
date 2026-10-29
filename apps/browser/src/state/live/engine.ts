@@ -199,14 +199,6 @@ export function startLiveEngine() {
   });
 
   useBrowser.subscribe((s, prev) => {
-    if (s.tabs === prev.tabs) return;
-    for (const id in s.tabs) {
-      const t = s.tabs[id]!;
-      if (t.pinned && t.liveItem && !prev.tabs[id]?.pinned) useBrowser.getState().updateTab(id, { liveItem: undefined });
-    }
-  });
-
-  useBrowser.subscribe((s, prev) => {
     if (s.windows === prev.windows) return;
     for (const windowId of s.windowOrder) {
       const before = activeTabId(prev, windowId);

@@ -22,3 +22,16 @@ export function settlePinHomes(s: HomeSource, prev: HomeSource): Pick<BrowserSta
   }
   return tabs ? { tabs } : null;
 }
+
+export function pinnedTabsLeaveLive(s: Pick<BrowserState, "tabs">, prev: Pick<BrowserState, "tabs">): Pick<BrowserState, "tabs"> | null {
+  if (s.tabs === prev.tabs) return null;
+  let tabs: Record<string, Tab> | null = null;
+  for (const id of changedIds(s.tabs, prev.tabs)) {
+    const t = s.tabs[id];
+    if (!t?.pinned || !t.liveItem || prev.tabs[id]?.pinned) continue;
+    tabs ??= { ...s.tabs };
+    const { liveItem: _, ...rest } = t;
+    tabs[id] = rest;
+  }
+  return tabs ? { tabs } : null;
+}

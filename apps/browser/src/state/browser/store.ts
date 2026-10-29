@@ -2,23 +2,20 @@ import { create, type StateCreator } from "zustand";
 import { setHeldReportsTransaction } from "../../platform/nativeEvents";
 import { createBookmarksSlice, ensureRoots, type BookmarksSlice } from "../bookmarks/bookmarks";
 import { changedIds } from "./changes";
-import { createGroupsSlice, settleNesting, type GroupsSlice } from "../groups/groups";
+import { createGroupsSlice, type GroupsSlice } from "../groups/groups";
 import { createHistorySlice, type HistorySlice } from "../history/history";
 import { engineProfile, IDLE_LIVE, isIncognitoProfile } from "./model";
-import { createOrganizeSlice, forgetClosedPrivateWindows, type OrganizeSlice } from "../pins/organize";
+import { createOrganizeSlice, type OrganizeSlice } from "../pins/organize";
 import { keptCleanedTabs, keptDeletedGroups } from "../pins/closedTabs";
-import { livePinTable, notePinChoices } from "../pins/pinChoices";
-import { createPeekSlice, settlePeeks, type PeekSlice } from "../peek/peek";
-import { pinHome, settlePinHomes } from "../pins/pinHomes";
-import { mirrorPins } from "../pins/pinMirror";
-import { settleSharedPins } from "../pins/pinShare";
-import { mirrorTabs, pagesIntoSplits, unshareTabs } from "../tabs/tabShare";
-import { settleTileFolders } from "../pins/tileFolders";
+import { notePinChoices } from "../pins/pinChoices";
+import { createPeekSlice, type PeekSlice } from "../peek/peek";
+import { pinHome } from "../pins/pinHomes";
 import { createProfilesSlice, DEFAULT_PROFILE, type ProfilesSlice } from "../profiles/profiles";
 import { createSettingsSlice, migrateSavedSettings, parseSettings, type SettingsSlice } from "../settings/settings";
 import { createSplitsSlice, sanitizeSplits, type SplitsSlice } from "../splits/splits";
 import { activated, apply } from "../tabs/tabs";
 import { createTabsSlice, type TabsSlice } from "../tabs/tabsSlice";
+import { settle, SettleDidNotConverge } from "./settle";
 import { transactional } from "./transaction";
 import type { BrowserWindow, Tab } from "./types";
 import { createUiSlice, type UiSlice } from "../windows/ui";
@@ -86,7 +83,17 @@ const pageMoved = (s: BrowserState, prev: BrowserState) => {
   if (s.live !== prev.live) for (const id of changedIds(s.live, prev.live)) if (!!s.live[id]?.isLoading !== !!prev.live[id]?.isLoading) return true;
   return false;
 };
-const transactions = transactional<BrowserState>(pageMoved);
+const reportsUnsettled = !__DEV__ && !(globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.NODE_TEST_CONTEXT;
+const settled = (s: BrowserState, prev: BrowserState) => {
+  try {
+    return settle(s, prev);
+  } catch (error) {
+    if (!(error instanceof SettleDidNotConverge) || !reportsUnsettled) throw error;
+    console.error(error);
+    return error.settled;
+  }
+};
+const transactions = transactional<BrowserState>(pageMoved, settled);
 export const storeTransaction = transactions.transaction;
 setHeldReportsTransaction(storeTransaction);
 
@@ -197,49 +204,6 @@ export const useBrowser = create<BrowserState>()(transactions.middleware(batched
     set(next);
   },
 }))));
-
-useBrowser.subscribe((s, prev) => {
-  const patch = s.windows !== prev.windows && forgetClosedPrivateWindows(s);
-  if (patch) useBrowser.setState(patch);
-});
-
-useBrowser.subscribe((s, prev) => {
-  if (s.groups === prev.groups && Object.values(s.windows).every((w) => w.tabIds === prev.windows[w.id]?.tabIds)) return;
-  const settled = settleNesting(s);
-  if (settled) useBrowser.setState(settled);
-});
-
-useBrowser.subscribe((s, prev) => {
-  if (s.pinChoices === prev.pinChoices && s.pinSync === prev.pinSync && s.tabs === prev.tabs && s.groups === prev.groups && s.parkedPins === prev.parkedPins && s.profiles === prev.profiles) return;
-  const pinChoices = livePinTable(s.pinChoices, s);
-  const pinSync = livePinTable(s.pinSync, s);
-  if (pinChoices !== s.pinChoices || pinSync !== s.pinSync) useBrowser.setState({ pinChoices, pinSync });
-});
-
-useBrowser.subscribe((s, prev) => {
-  const next = settlePeeks(s, prev);
-  if (next) useBrowser.setState(next);
-});
-
-let mirroring = 0;
-useBrowser.subscribe((s, prev) => {
-  if (mirroring > 3) return;
-  const homes = settlePinHomes(s, prev);
-  const start = homes ? { ...s, ...homes } : s;
-  const unshared = unshareTabs(start, prev) ?? pagesIntoSplits(start, prev) ?? (homes ? start : null);
-  const base = unshared ?? start;
-  const shared = settleSharedPins(base, prev) ?? unshared;
-  const settled = settleTileFolders(shared ?? base, prev) ?? shared;
-  const pinned = mirrorPins(settled ?? base, prev) ?? settled;
-  const next = mirrorTabs(pinned ?? base, prev) ?? pinned;
-  if (!next) return;
-  mirroring++;
-  try {
-    useBrowser.setState(next);
-  } finally {
-    mirroring--;
-  }
-});
 
 export type { CreateWindowOptions } from "../windows/windows";
 

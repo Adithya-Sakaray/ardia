@@ -25,7 +25,7 @@ export function notePinChoices(choices: PinChoices) {
 export type PinSyncEntry = { g?: string; w?: number };
 export type PinSync = Record<string, Record<string, PinSyncEntry>>;
 
-export function livePinTable<T>(table: Record<string, Record<string, T>>, s: Pick<BrowserState, "profiles" | "tabs" | "groups" | "parkedPins">): Record<string, Record<string, T>> {
+function livePinTable<T>(table: Record<string, Record<string, T>>, s: Pick<BrowserState, "profiles" | "tabs" | "groups" | "parkedPins">): Record<string, Record<string, T>> {
   const profiles = Object.keys(table);
   if (!profiles.length) return table;
   const pinned = new Map<string, Set<string>>();
@@ -60,4 +60,11 @@ export function livePinTable<T>(table: Record<string, Record<string, T>>, s: Pic
     if (n) out[profileId] = n === Object.keys(mine).length ? mine : (kept as Record<string, T>);
   }
   return changed ? out : table;
+}
+
+export function livePinTables(s: BrowserState, prev: BrowserState): Pick<BrowserState, "pinChoices" | "pinSync"> | null {
+  if (s.pinChoices === prev.pinChoices && s.pinSync === prev.pinSync && s.tabs === prev.tabs && s.groups === prev.groups && s.parkedPins === prev.parkedPins && s.profiles === prev.profiles) return null;
+  const pinChoices = livePinTable(s.pinChoices, s);
+  const pinSync = livePinTable(s.pinSync, s);
+  return pinChoices !== s.pinChoices || pinSync !== s.pinSync ? { pinChoices, pinSync } : null;
 }
