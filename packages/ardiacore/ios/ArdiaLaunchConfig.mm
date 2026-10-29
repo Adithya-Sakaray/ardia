@@ -181,7 +181,6 @@ BOOL SignedForDistribution() {
   NSDictionary<NSString *, NSString *> *_requestedTest;
   BOOL (^_signedForDistribution)(void);
   NSNumber *_testInstance;
-  BOOL _isolated;
   NSDictionary<NSString *, NSString *> *_environmentForChildProcesses;
 }
 
@@ -200,7 +199,6 @@ BOOL SignedForDistribution() {
   if ((self = [super init])) {
     _dataDirectory = StandardizedDirectory(environment[kDataDirVariable]);
     _background = BackgroundValue(environment[kBackgroundVariable]);
-    _isolated = environment[kDataDirVariable] != nil || environment[kBackgroundVariable] != nil;
     const NSInteger port = Trimmed(environment[kRemoteDebuggingPortVariable] ?: @"").integerValue;
     _remoteDebuggingPort = port > 0 && port < 65536 ? @(port) : nil;
     _prewarm = Present(environment[kPrewarmVariable]) != nil;
@@ -222,7 +220,7 @@ BOOL SignedForDistribution() {
 }
 
 - (BOOL)isolated {
-  return _isolated;
+  return _dataDirectory != nil;
 }
 
 - (BOOL)testInstance {

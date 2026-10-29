@@ -1,4 +1,5 @@
 import AppKit
+import ArdiaCore
 
 extension WindowManager {
   func runtimeGone() {
@@ -46,7 +47,7 @@ extension WindowManager {
   private func saveIsLate() {
     saveWait = nil
     let message = "\(ProcessInfo.processInfo.processName) can't save your session right now."
-    if background {
+    if LaunchConfig.shared.background {
       NSLog("[shell] quit alert: \(message) (Wait / Quit Without Saving): Wait")
       return waitForSave()
     }

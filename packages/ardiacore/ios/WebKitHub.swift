@@ -6,8 +6,7 @@ import WebKit
 final class WebKitHub: NSObject, WKScriptMessageHandler {
   static let shared = WebKitHub()
   static let world = WKContentWorld.world(name: "ardia")
-  static let background = LaunchConfig.shared.background
-  static let silenced = background && !LaunchConfig.shared.instanceFlag("allowAudio")
+  static let silenced = LaunchConfig.shared.background && !LaunchConfig.shared.instanceFlag("allowAudio")
 
   let downloads = WebKitDownloads()
 
@@ -205,7 +204,7 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
     config.applicationNameForUserAgent = "Version/\(Self.safariVersion) Safari/605.1.15"
     config.mediaTypesRequiringUserActionForPlayback = []
     config.allowsAirPlayForMediaPlayback = true
-    config.preferences.isElementFullscreenEnabled = !Self.background
+    config.preferences.isElementFullscreenEnabled = !LaunchConfig.shared.background
     config.preferences.javaScriptCanOpenWindowsAutomatically = false
     config.preferences.isFraudulentWebsiteWarningEnabled = false
     config.defaultWebpagePreferences.preferredContentMode = .desktop
@@ -427,7 +426,7 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
   }
 
   private func open(_ url: URL) {
-    if Self.background { return NSLog("[webkit] external URL (background mode, not opened): %@", url.absoluteString) }
+    if LaunchConfig.shared.background { return NSLog("[webkit] external URL (background mode, not opened): %@", url.absoluteString) }
     NSWorkspace.shared.open(url)
   }
 

@@ -187,7 +187,7 @@ final class WebKitDownloads: NSObject, WKDownloadDelegate {
       completionHandler(file)
     }
     resolveDestination(for: item.profile) { folder, ask in
-      guard ask, !WebKitHub.background else { return accept(folder.appendingPathComponent(name), false) }
+      guard ask, !LaunchConfig.shared.background else { return accept(folder.appendingPathComponent(name), false) }
       let panel = NSSavePanel()
       panel.directoryURL = folder
       panel.nameFieldStringValue = name

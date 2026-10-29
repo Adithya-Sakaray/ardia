@@ -47,7 +47,7 @@ public class AppModule: Module {
       AppIcons.variants.map { ["id": $0.id, "name": $0.name, "preview": AppIcons.preview($0.id, size: size) as Any] }
     }.runOnQueue(.main)
     AsyncFunction("appIcon") { () -> String in AppIcons.current }.runOnQueue(.main)
-    AsyncFunction("setAppIcon") { (id: String) in AppIcons.set(id, announce: ArdiaIsolatedDataDirectory() == nil) }.runOnQueue(.main)
+    AsyncFunction("setAppIcon") { (id: String) in AppIcons.set(id, announce: !LaunchConfig.shared.isolated) }.runOnQueue(.main)
 
     AsyncFunction("notificationPermission") { (promise: Promise) in
       NotificationHub.shared.permission { promise.resolve($0) }

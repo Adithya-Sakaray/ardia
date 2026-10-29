@@ -125,7 +125,7 @@ public final class AppUpdater: NSObject {
   }
 
   private static var isOff: Bool {
-    ArdiaIsolatedDataDirectory() != nil && LaunchConfig.shared.instance("updateFeed") == nil
+    LaunchConfig.shared.isolated && LaunchConfig.shared.instance("updateFeed") == nil
   }
 
   private lazy var userDriver = ChannelUserDriver(standard: SPUStandardUserDriver(hostBundle: .main, delegate: self)) { [unowned self] item in

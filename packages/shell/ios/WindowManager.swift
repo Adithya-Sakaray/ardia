@@ -519,5 +519,4 @@ final class WindowManager: NSObject, NSWindowDelegate {
 
   var saveWait: Timer?
   var lateSaveAlert: NSAlert?
-  let background = LaunchConfig.shared.background
 }

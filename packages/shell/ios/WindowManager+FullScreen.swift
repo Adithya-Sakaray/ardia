@@ -1,4 +1,5 @@
 import AppKit
+import ArdiaCore
 
 extension WindowManager {
   func restoreFullScreen(ids: [String], focus: String?) {
@@ -51,7 +52,7 @@ extension WindowManager {
   private func endFullScreenRestore() {
     let focus = fullScreenFocus.flatMap { windows[$0] }
     fullScreenFocus = nil
-    guard fullScreenToggled, let focus, !background, NSApp.isActive else { return }
+    guard fullScreenToggled, let focus, !LaunchConfig.shared.background, NSApp.isActive else { return }
     fullScreenToggled = false
     focus.makeKeyAndOrderFront(nil)
   }

@@ -1,13 +1,14 @@
 import AppKit
+import ArdiaCore
 import ExpoModulesCore
-import UniformTypeIdentifiers
 import ServiceManagement
+import UniformTypeIdentifiers
 
 public class SystemModule: Module {
   public func definition() -> ModuleDefinition {
     Name("ArdiaSystem")
 
-    Constant("backgroundInstance") { () -> Bool in FileDropView.background }
+    Constant("backgroundInstance") { () -> Bool in LaunchConfig.shared.background }
 
     AsyncFunction("isDefaultBrowser") { () -> Bool in
       guard let probe = URL(string: "https://example.com"),
@@ -16,7 +17,7 @@ public class SystemModule: Module {
     }.runOnQueue(.main)
 
     AsyncFunction("setAsDefaultBrowser") { (promise: Promise) in
-      if FileDropView.background {
+      if LaunchConfig.shared.background {
         NSLog("ArdiaSystem: background instance, not setting the default browser")
         return promise.resolve(false)
       }
@@ -42,7 +43,7 @@ public class SystemModule: Module {
     }.runOnQueue(.main)
 
     AsyncFunction("setLaunchAtLogin") { (enabled: Bool) in
-      if FileDropView.background {
+      if LaunchConfig.shared.background {
         NSLog("ArdiaSystem: background instance, not changing launch at login")
         return
       }
@@ -57,7 +58,7 @@ public class SystemModule: Module {
 
     AsyncFunction("openFile") { (path: String) -> Bool in
       guard FileManager.default.fileExists(atPath: path) else { return false }
-      if FileDropView.background {
+      if LaunchConfig.shared.background {
         NSLog("ArdiaSystem: background instance, not opening %@", path)
         return true
       }
@@ -66,7 +67,7 @@ public class SystemModule: Module {
 
     AsyncFunction("revealFile") { (path: String) -> Bool in
       guard FileManager.default.fileExists(atPath: path) else { return false }
-      if FileDropView.background {
+      if LaunchConfig.shared.background {
         NSLog("ArdiaSystem: background instance, not revealing %@", path)
         return true
       }

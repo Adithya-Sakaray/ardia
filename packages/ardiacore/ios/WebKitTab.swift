@@ -321,7 +321,7 @@ final class WebKitTab: NSView, WKNavigationDelegate, WKUIDelegate {
 
   func print() {
     guard let view = webView, let window else { return }
-    if WebKitHub.background { return NSLog("[webkit] print panel (background mode, not shown)") }
+    if LaunchConfig.shared.background { return NSLog("[webkit] print panel (background mode, not shown)") }
     let operation = view.printOperation(with: NSPrintInfo.shared)
     operation.view?.frame = view.bounds
     operation.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
