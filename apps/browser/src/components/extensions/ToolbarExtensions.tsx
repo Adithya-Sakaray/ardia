@@ -10,7 +10,7 @@ import { usePages } from "../../state/tabs/pageState";
 import { ink, opacity, radius, weight } from "../ui/tokens";
 import { BADGE_FALLBACK_FILL, BADGE_TEXT } from "./tokens";
 import { isLight } from "../../lib/color";
-import { dropToolbarAnchor, setToolbarAnchor } from "../../state/extensions/bridge";
+import { dropToolbarAnchor, setToolbarAnchor } from "../../state/extensions/toolbarAnchors";
 import {
   activateExtension,
   EXTENSION_LIST_ITEMS,
