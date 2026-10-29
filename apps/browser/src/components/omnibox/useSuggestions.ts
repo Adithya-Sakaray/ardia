@@ -13,16 +13,15 @@ import { bookmarksByUrl } from "../../state/bookmarks/bookmarks";
 import { useMenuBarRevision } from "../../state/commands/commandShortcuts";
 import { useSettings } from "../../state/browser/hooks";
 import { useBookmarkEngine, useBookmarks } from "../../state/bookmarks/hooks";
-import { useHistory } from "../../state/history/hooks";
+import { useProfileHistory } from "../../state/history/hooks";
 import { useTabs } from "../../state/tabs/hooks";
 import { defaultSearchEngine, searchEngines } from "../../state/settings/settings";
-import type { Bookmarks, HistoryEntry } from "../../state/browser/types";
+import type { Bookmarks } from "../../state/browser/types";
 import { currentBarActions } from "../../state/omnibox/barActions";
 import { useBangs } from "../../state/omnibox/bangs";
 import { useBarExtensions } from "./extensions";
 import { historyHosts } from "../../state/omnibox/knownHosts";
 
-const NO_HISTORY: HistoryEntry[] = [];
 const NO_REMOTE: string[] = [];
 const EMPTY: SuggestionResult = { items: [], completion: "" };
 const WARM_SLICE_MS = 4;
@@ -69,7 +68,7 @@ export function useSuggestions({
   preventInline?: boolean;
 }): SuggestionResult {
   const allTabs = useTabs((tabs) => tabs);
-  const history = useHistory((h) => h[profileId] ?? NO_HISTORY);
+  const history = useProfileHistory(profileId);
   const bookmarks = useBookmarks((b) => b);
   const bookmarkEngine = useBookmarkEngine(windowId);
   const engines = useSettings((st) => searchEngines(st));

@@ -49,7 +49,7 @@ async function ev(name, body, timeout = 90_000) {
 async function inHistory(name, url) {
   const end = Date.now() + 30_000;
   while (Date.now() < end) {
-    if (await ev(name, `return (ac.store.getState().history.default || []).some((h) => h.url === ${JSON.stringify(url)})`)) return;
+    if (await ev(name, `return ac.history.historyOf(ac.store.getState(), "default").some((h) => h.url === ${JSON.stringify(url)})`)) return;
     await sleep(300);
   }
   throw new Error(`${name}: ${url} never reached Chrome's history`);
@@ -93,7 +93,7 @@ async function state(name) {
       .then(([pw, list]) => ({
       status: u.status, error: u.error, enabled: u.enabled, pending: u.pending,
       bookmarks: [walk(roots.bar), walk(roots.other)],
-      history: (s.history.default || []).map((h) => h.url).sort(),
+      history: ac.history.historyOf(s, "default").map((h) => h.url).sort(),
       settings: { appearance: s.settings.appearance, searchEngine: s.settings.searchEngine, showFullUrl: s.settings.showFullUrl, cleanUp: s.settings.cleanUpInactiveTabsAfterMinutes },
       pinned: Object.values(s.tabs).filter((t) => t.pinned).map((t) => t.pinnedUrl || t.url).sort(),
       rows: Object.values(s.tabs).filter((t) => t.pinned && t.pinnedAsRow).map((t) => t.pinnedUrl || t.url).sort(),

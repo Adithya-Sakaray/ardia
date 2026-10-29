@@ -46,24 +46,7 @@ export function sharingProfiles(s: Pick<BrowserState, "profiles" | "profileOrder
   return s.profileOrder.filter((other) => other !== id && s.profiles[other] && dataIdOf(s.profiles[other]!) === dataIdOf(p));
 }
 
-function syncSharedData(s: BrowserState, prev: BrowserState): Partial<BrowserState> | null {
-  if (s.profiles === prev.profiles && s.history === prev.history) return null;
-  let history = s.history;
-  for (const { profileIds } of dataGroups(s)) {
-    if (profileIds.length < 2) continue;
-    const changed = profileIds.find((id) => s.history[id] !== prev.history[id]);
-    const list = s.history[changed ?? profileIds.find((id) => s.history[id]) ?? ""];
-    if (list) for (const id of profileIds) if (history[id] !== list) history = { ...history, [id]: list };
-  }
-  return history === s.history ? null : { history };
-}
-
-export const createProfilesSlice: StateCreator<BrowserState, [], [], ProfilesSlice> = (set, get, api) => {
-  api.subscribe((s, prev) => {
-    const patch = syncSharedData(s, prev);
-    if (patch) set(patch);
-  });
-
+export const createProfilesSlice: StateCreator<BrowserState, [], [], ProfilesSlice> = (set, get) => {
   return {
     profiles: { [DEFAULT_PROFILE.id]: DEFAULT_PROFILE },
     profileOrder: [DEFAULT_PROFILE.id],
@@ -82,8 +65,7 @@ export const createProfilesSlice: StateCreator<BrowserState, [], [], ProfilesSli
       };
       const profiles = { ...s.profiles, [profile.id]: profile };
       const bookmarks = ensureRoots(s.bookmarks, engineProfile({ profiles }, profile.id))[0];
-      const history = source && s.history[source.id] ? { ...s.history, [profile.id]: s.history[source.id]! } : s.history;
-      set({ profiles, profileOrder: [...s.profileOrder, profile.id], bookmarks, history });
+      set({ profiles, profileOrder: [...s.profileOrder, profile.id], bookmarks });
       return profile.id;
     },
 
@@ -136,7 +118,7 @@ export const createProfilesSlice: StateCreator<BrowserState, [], [], ProfilesSli
         profileOrder,
         orphanedProfileData: orphaned,
         settings,
-        history: without(s.history, [id]),
+        history: engineLeft ? without(s.history, [engine]) : s.history,
         bookmarks: roots ? removeBookmarkTree(s.bookmarks, [roots.bar, roots.other]) : s.bookmarks,
         bookmarksReady: engineLeft ? without(s.bookmarksReady, [engine]) : s.bookmarksReady,
         groups: Object.fromEntries(Object.entries(s.groups).filter(([, g]) => g.profileId !== id)),

@@ -4,6 +4,7 @@ import { IDLE_LIVE, isIncognitoProfile, makeTab, newId, pinKeyOf, snapshotTab, w
 import { pendingRestore, restoreId } from "../tabs/adoptIds";
 import type { BrowserWindow, HistoryEntry, ParkedPins, Tab, TabGroup } from "../browser/types";
 import { samePage } from "../../lib/url";
+import { historyOf } from "../history/history";
 import { isRegularWindow } from "../windows/small";
 
 
@@ -49,7 +50,7 @@ export function parkWindowPins(parked: Record<string, ParkedPins>, w: BrowserWin
       if (ids.has(pinKeyOf(t))) continue;
       const g = t.pinned ? undefined : groupOf.get(t.id);
       if (t.pinned) {
-        const back = atPin(t, s.history[profileId] ?? []);
+        const back = atPin(t, historyOf(s, profileId));
         const tile = { ...snapshotTab(t), ...back, ...pending(t, !!back.url), id: pinKeyOf(t), groupId: null };
         if (!splitPanes.has(t.id) && homes.some((h) => samePage(h, homeOf(tile)))) {
           paneIds.delete(t.id);
@@ -64,7 +65,7 @@ export function parkWindowPins(parked: Record<string, ParkedPins>, w: BrowserWin
           const parent = chain[i - 1];
           groups.push({ id: pinKeyOf(x), name: x.name, icon: x.icon, color: x.color, collapsed: x.collapsed, ...(parent ? { parentId: pinKeyOf(parent) } : {}) });
         });
-        const back = atPin(t, s.history[profileId] ?? []);
+        const back = atPin(t, historyOf(s, profileId));
         rest.push({ ...snapshotTab(t), ...back, ...pending(t, !!back.url), id: pinKeyOf(t), groupId: pinKeyOf(g) });
       }
     }

@@ -6,7 +6,7 @@ import { MAX_HISTORY, MAX_VISIT_TIMES } from "./history";
 import { engineProfile, isIncognitoProfile } from "../browser/model";
 import type { HistoryEntry } from "../browser/types";
 import { isWebPageUrl } from "../../lib/url";
-import { engineProfiles, profilesUsing } from "../profiles/engineProfiles";
+import { engineProfiles } from "../profiles/engineProfiles";
 import { migrateLegacyFile } from "../app/legacyFiles";
 
 const LEGACY_FILE = "history.json";
@@ -27,30 +27,18 @@ const toEntry = (e: EngineHistoryEntry): HistoryEntry => ({
   visitTimes: e.visitTimes,
 });
 
-function viewOf(engine: string): HistoryEntry[] {
-  const s = store();
-  for (const id of profilesUsing(s, engine)) if (s.history[id]) return s.history[id]!;
-  return [];
-}
+const viewOf = (engine: string): HistoryEntry[] => store().history[engine]?.list ?? [];
 
 let legacyMoved = false;
 
 function setView(engine: string, list: HistoryEntry[], floor?: number) {
   useBrowser.setState((s) => {
-    const ids = profilesUsing(s, engine);
-    const was = ids.map((id) => s.historyFloor[id] ?? -Infinity).reduce((a, b) => Math.max(a, b), -Infinity);
+    if (!engineProfiles(s).includes(engine)) return {};
+    const was = s.history[engine];
     const full = list.length >= MAX_HISTORY ? list[list.length - 1]!.lastVisit : -Infinity;
-    const next = Math.max(floor ?? was, full);
-    const ready = legacyMoved;
-    const sameList = ids.every((id) => s.history[id] === list);
-    const sameFloor = ids.every((id) => (s.historyFloor[id] ?? -Infinity) === next);
-    const sameReady = !ready || ids.every((id) => s.historyReady[id]);
-    if (sameList && sameFloor && sameReady) return {};
-    return {
-      ...(sameList ? {} : { history: { ...s.history, ...Object.fromEntries(ids.map((id) => [id, list])) } }),
-      ...(sameFloor ? {} : { historyFloor: { ...s.historyFloor, ...Object.fromEntries(ids.map((id) => [id, next])) } }),
-      ...(sameReady ? {} : { historyReady: { ...s.historyReady, ...Object.fromEntries(ids.map((id) => [id, true as const])) } }),
-    };
+    const next = { list, floor: Math.max(floor ?? was?.floor ?? -Infinity, full), ready: legacyMoved || !!was?.ready };
+    if (was && was.list === next.list && was.floor === next.floor && was.ready === next.ready) return {};
+    return { history: { ...s.history, [engine]: next } };
   });
 }
 
@@ -222,13 +210,7 @@ export function startHistory() {
   if (moving) afterFirstWindow(migrate);
   else migrate();
   const stop = useBrowser.subscribe((s, prev) => {
-    if (s.profiles === prev.profiles) return;
-    if (!moving) loadAll(s);
-    for (const id of Object.keys(s.profiles)) {
-      if (prev.profiles[id] || isIncognitoProfile(id) || s.history[id]) continue;
-      const list = viewOf(engineProfile(s, id));
-      if (list.length) setView(engineProfile(s, id), list);
-    }
+    if (s.profiles !== prev.profiles && !moving) loadAll(s);
   });
   return () => {
     stopped = true;

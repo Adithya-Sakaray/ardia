@@ -57,7 +57,6 @@ export type HydrateData = Partial<
     | "closedGroups"
     | "deletedGroups"
     | "cleanedTabs"
-    | "history"
     | "bookmarks"
     | "downloads"
     | "settings"
@@ -186,8 +185,7 @@ export const useBrowser = create<BrowserState>()(transactions.middleware(batched
       privateSiteMutes: {},
       selection: {},
       selectionAnchors: {},
-      history: Object.fromEntries(Object.entries(data.history ?? {}).filter(([p]) => profiles[p])),
-      historyReady: Object.fromEntries(Object.keys(data.history ?? {}).filter((p) => profiles[p]).map((p) => [p, true as const])),
+      history: {},
       bookmarks,
       bookmarksReady: {},
       downloads: data.downloads ?? [],

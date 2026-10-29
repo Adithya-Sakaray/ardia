@@ -78,16 +78,16 @@ function seedSource() {
 }
 const historyHostsBefore = new WeakMap();
 function hostsFor(source) {
-  const state = (source.state ??= { tabs: Object.fromEntries(source.tabs.map((t) => [t.id, t])), history: { default: source.history } });
+  const state = (source.state ??= { tabs: Object.fromEntries(source.tabs.map((t) => [t.id, t])), profiles: {}, history: { "": { list: source.history, floor: -Infinity, ready: true } } });
   if (!BEFORE) return knownHosts(state, "default");
   let hosts = [];
   for (const t of Object.values(state.tabs)) if (t.profileId === "default" && t.url) hosts.push(core.hostOf(t.url));
-  let past = historyHostsBefore.get(state.history.default);
+  let past = historyHostsBefore.get(source.history);
   if (!past) {
     const seen = new Set();
-    for (const h of state.history.default) seen.add(core.hostOf(h.url));
+    for (const h of source.history) seen.add(core.hostOf(h.url));
     seen.delete("");
-    historyHostsBefore.set(state.history.default, (past = [...seen]));
+    historyHostsBefore.set(source.history, (past = [...seen]));
   }
   return hosts.concat(past);
 }

@@ -4791,7 +4791,7 @@ try {
     await sleep(1500);
     await until("the reloaded app", async () => {
       try {
-        return await evalApp(`const s = ac.store.getState(); return Object.keys(s.windows).length > 0 && !!s.historyReady.default && !!ac.webviews.get(${JSON.stringify(id)})`, 3000);
+        return await evalApp(`const s = ac.store.getState(); return Object.keys(s.windows).length > 0 && !!ac.history.historyViewOf(s, "default")?.ready && !!ac.webviews.get(${JSON.stringify(id)})`, 3000);
       } catch (e) {
         if (exited) throw e;
         return null;

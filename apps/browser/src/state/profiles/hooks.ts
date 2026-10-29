@@ -3,6 +3,7 @@ import { useBrowser } from "../browser/store";
 import { plural, profileFor } from "../browser/model";
 import type { Profile } from "../browser/types";
 import { bookmarkRoots } from "../bookmarks/bookmarks";
+import { historyOf } from "../history/history";
 import type { Settings } from "../settings/settings";
 import { useLookValue } from "../tabs/tabWatch";
 
@@ -41,5 +42,5 @@ export const useProfileDataStats = (profileId: string): string =>
       if (n?.kind === "folder") n.children.forEach(walk);
     };
     if (roots) [roots.bar, roots.other].forEach(walk);
-    return `${plural((s.history[profileId] ?? []).length, "page")} in history · ${plural(bookmarks, "bookmark")}`;
+    return `${plural(historyOf(s, profileId).length, "page")} in history · ${plural(bookmarks, "bookmark")}`;
   });

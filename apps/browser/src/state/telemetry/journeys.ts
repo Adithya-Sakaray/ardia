@@ -234,7 +234,7 @@ function sendLaunch(l: Launch, content: number | null, paints: number[]) {
   const tab = paint === null ? l.keys[0] : l.keys.find((k) => mark(k, "fcp", l.t0) === paint);
   const s = useBrowser.getState();
   let history = 0;
-  for (const list of Object.values(s.history)) history += list.length;
+  for (const view of Object.values(s.history)) history += view.list.length;
   const { bootTime, appBuild, updatePrewarm } = appInfo();
   const { lastLaunchAt, lastQuitAt, firstOfVersion } = previousLaunch;
   const prewarm = firstOfVersion && updatePrewarm?.build === appBuild ? updatePrewarm : null;

@@ -8,6 +8,7 @@ import { useTabLive } from "../browser/hooks";
 import type { TabLive } from "../browser/types";
 import { internalPageOf, tabDestination } from "../pages/urls";
 import { pageOf, patchPage, usePage } from "./pageState";
+import { historyOf } from "../history/history";
 
 const store = () => useBrowser.getState();
 
@@ -142,7 +143,7 @@ export const closeHistoryMenuOf = (tabId: string) => {
 
 export function historyFavicons(profileId: string, items: readonly { url: string }[]): Map<string, string | null> {
   const urls = new Set(items.map((i) => i.url));
-  return new Map((useBrowser.getState().history[profileId] ?? []).filter((h) => urls.has(h.url)).map((h) => [h.url, h.favicon]));
+  return new Map(historyOf(useBrowser.getState(), profileId).filter((h) => urls.has(h.url)).map((h) => [h.url, h.favicon]));
 }
 
 export function toggleHistoryMenu(tabId: string, direction: -1 | 1) {

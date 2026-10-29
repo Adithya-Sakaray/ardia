@@ -3,7 +3,7 @@ import { deletePassword } from "../../platform/passwords";
 import { orWarn } from "../../lib/fallback";
 import { assignPositions, SyncNative, type Adapter, type SealedLogin } from "../../platform/sync";
 import { bookmarkRoots, bookmarkUuidFor, ensureRoots, isBookmarkUuid } from "../bookmarks/bookmarks";
-import { MAX_HISTORY, MAX_VISIT_TIMES } from "../history/history";
+import { historyOf, historyViewOf, MAX_HISTORY, MAX_VISIT_TIMES, withHistoryList } from "../history/history";
 import { useBrowser } from "../browser/store";
 import { engineProfile } from "../browser/model";
 import { isPeekTab } from "../peek/peek";
@@ -172,7 +172,7 @@ export function historyExpired(key: string, value: unknown, now: number) {
 }
 
 export function historyAdapter(profileId: string): Adapter {
-  const ready = () => !!store().historyReady[profileId];
+  const ready = () => !!historyViewOf(store(), profileId)?.ready;
   return {
     prefix: HISTORY,
     extract: (base) => {
@@ -180,8 +180,7 @@ export function historyAdapter(profileId: string): Adapter {
       const since = Date.now() - HISTORY_WINDOW_MS;
       const values = new Map<string, unknown>();
       const older = new Set<string>();
-      const view = store().history[profileId] ?? [];
-      const floor = store().historyFloor[profileId] ?? -Infinity;
+      const { list: view, floor } = historyViewOf(store(), profileId)!;
       for (const e of view) {
         if (!isWebPageUrl(e.url)) continue;
         const key = `${HISTORY}${e.url}`;
@@ -208,7 +207,7 @@ export function historyAdapter(profileId: string): Adapter {
     apply: async (visible, changed) => {
       if (!ready()) return false;
       const since = Date.now() - HISTORY_WINDOW_MS;
-      const byUrl = new Map((store().history[profileId] ?? []).map((e) => [e.url, e]));
+      const byUrl = new Map(historyOf(store(), profileId).map((e) => [e.url, e]));
       const add: { url: string; title: string; visitTimes: number[] }[] = [];
       const remove: string[] = [];
       const updates = new Map<string, HistoryEntry | null>();
@@ -241,7 +240,7 @@ export function historyAdapter(profileId: string): Adapter {
       const engine = engineProfile(useBrowser.getState(), profileId);
       await Promise.all([addHistoryVisits(engine, add, SAME_VISIT_MS), deleteHistoryUrls(engine, remove)]);
       useBrowser.setState((s) => {
-        const current = new Map((s.history[profileId] ?? []).map((e) => [e.url, e]));
+        const current = new Map(historyOf(s, profileId).map((e) => [e.url, e]));
         for (const [url, update] of updates) {
           const now = current.get(url);
           if (!update) current.delete(url);
@@ -252,7 +251,7 @@ export function historyAdapter(profileId: string): Adapter {
           }
         }
         const list = [...current.values()].sort((a, z) => z.lastVisit - a.lastVisit).slice(0, MAX_HISTORY);
-        return { history: { ...s.history, [profileId]: list } };
+        return withHistoryList(s, engine, list);
       });
     },
   };

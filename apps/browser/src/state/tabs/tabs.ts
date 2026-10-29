@@ -23,6 +23,7 @@ import { pendingRestore } from "./adoptIds";
 import type { BrowserWindow, ClosedTab, Tab, TabSnapshot } from "../browser/types";
 import { orderSections } from "../groups/groups";
 import { samePage } from "../../lib/url";
+import { historyOf } from "../history/history";
 import { pinHome } from "../pins/pinHomes";
 
 export type NewTabOptions = {
@@ -235,7 +236,7 @@ export function unloadPinnedTabs(s: BrowserState, requested: string[]): BrowserS
 function backToPin(s: BrowserState, t: Tab): Partial<Tab> {
   const home = t.pinnedUrl;
   if (!home || !t.url || samePage(t.url, home)) return {};
-  const entry = s.history[t.profileId]?.find((h) => samePage(h.url, home));
+  const entry = historyOf(s, t.profileId).find((h) => samePage(h.url, home));
   return { ...onUrlChange(s, t, home), url: home, ...(entry ? { title: entry.title, favicon: entry.favicon ?? t.favicon } : {}) };
 }
 

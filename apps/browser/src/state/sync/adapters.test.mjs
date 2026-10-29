@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
 const { bookmarkRoots } = await import("../bookmarks/bookmarks.ts");
+const { historyOf } = await import("../history/history.ts");
 const model = await import("../browser/model.ts");
 const { Clock, emptyScope, syncScope } = await import("@ardia/sync");
 const adapters = await import("./adapters.ts");
@@ -59,7 +60,7 @@ class Device {
     this.legacy = legacy;
     this.settings = settings;
     S().hydrate({});
-    useBrowser.setState({ historyReady: { default: true }, bookmarksReady: { "": true } });
+    useBrowser.setState({ history: { "": { list: [], floor: -Infinity, ready: true } }, bookmarksReady: { "": true } });
     this.browser = S();
     this.scopes = { app: emptyScope(), p: emptyScope() };
     this.clock = new Clock(id);
@@ -143,7 +144,7 @@ const OLD_SESSION = (() => {
 const relaunch = (device, settings) =>
   device.with(() => {
     S().hydrate({ settings });
-    useBrowser.setState({ historyReady: { default: true }, bookmarksReady: { "": true } });
+    useBrowser.setState({ history: { "": { list: [], floor: -Infinity, ready: true } }, bookmarksReady: { "": true } });
   });
 
 test("settings: what a Mac only has by default isn't sent; nulls from another Mac are no say; Never and an explicit off apply", async () => {
@@ -791,7 +792,7 @@ const withWork = (d) =>
     useBrowser.setState((s) => ({
       profiles: { ...s.profiles, work: { id: "work", name: "Work", color: "blue", icon: null, createdAt: 1 } },
       profileOrder: [...s.profileOrder, "work"],
-      historyReady: { ...s.historyReady, work: true },
+      history: { ...s.history, work: { list: [], floor: -Infinity, ready: true } },
       bookmarksReady: { ...s.bookmarksReady, work: true },
     })),
   );
@@ -1061,8 +1062,7 @@ test("history: two Macs settle on the union of their visits in Chrome, publish n
     const entries = await history.queryHistory("");
     d.with(() =>
       useBrowser.setState({
-        history: { default: entries.map((e) => ({ ...e, favicon: null, lastVisit: e.visitTimes.at(-1) })) },
-        historyReady: { default: true },
+        history: { "": { list: entries.map((e) => ({ ...e, favicon: null, lastVisit: e.visitTimes.at(-1) })), floor: -Infinity, ready: true } },
       }),
     );
   };
@@ -2025,7 +2025,7 @@ class NightlyFourMac extends Device {
 }
 
 const nightlyFourHistory = (d) => d.with(() => S().history.default.map((h) => h.url).sort());
-const todaysHistory = (d) => d.with(() => (S().history.default ?? []).map((h) => h.url).sort());
+const todaysHistory = (d) => d.with(() => historyOf(S(), "default").map((h) => h.url).sort());
 
 test("bookmarks and history: a Mac on v0.2.43-nightly.4 and one on today's build trade adds, edits and deletes both ways", async () => {
   const folder = new Folder();

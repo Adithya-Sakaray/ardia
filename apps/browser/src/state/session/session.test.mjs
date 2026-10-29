@@ -4,6 +4,8 @@ const { useBrowser } = await import("../browser/store.ts");
 const { bookmarkRoots } = await import("../bookmarks/bookmarks.ts");
 const model = await import("../browser/model.ts");
 const { migrateHistoryFile, reloadHistory, startHistory } = await import("../history/engineSync.ts");
+const { historyOf } = await import("../history/history.ts");
+const { reloadBookmarks, startBookmarks } = await import("../bookmarks/engineSync.ts");
 const { flushPersistence, loadSession, startPersistence } = await import("./persist.ts");
 const { firstWindowCommitted } = await import("../../lib/afterFirstWindow.ts");
 const stub = await import("../../test-native/index.ts");
@@ -73,18 +75,31 @@ test("a reopened window's tabs wake with their back/forward list", () => {
   assert.equal(S().tabs[rb.id].wakeAdoptId, undefined);
 });
 
-test("profiles sharing data still share it after a save and reload", () => {
+test("profiles sharing data read one engine's history and bookmarks after the session is saved and loaded again", async () => {
   reset();
+  stub.docs.clear();
+  stub.historyDbs.clear();
+  const stopSaving = startPersistence();
   const a = S().createProfile({ name: "A" });
   const b = S().createProfile({ name: "B", shareWith: a });
-  S().importHistory(b, [{ url: "https://a.com/", title: "A", visits: 1, lastVisit: Date.now() }]);
-  const saved = JSON.parse(JSON.stringify({ profiles: S().profiles, profileOrder: S().profileOrder, history: S().history, bookmarks: S().bookmarks }));
+  stub.chromeVisit(a, "https://a.com/", "A");
+  stub.chromeBookmarkEdit(a, [{ op: "add", id: "0f0f0f0f-0000-4000-8000-0000000000b1", k: "u", t: "Shared", u: "https://shared.example/", a: 1, parent: "bar" }]);
+  flushPersistence();
+  stopSaving();
   reset();
+  useBrowser.setState({ bookmarks: { nodes: {} }, history: {} });
   assert.equal(model.engineProfile(S(), b), b, "registry follows the loaded profiles");
-  S().hydrate(saved);
+  S().hydrate(loadSession());
   assert.equal(model.engineProfile(S(), b), a);
-  assert.equal(S().history[a], S().history[b]);
+  const stops = [startHistory(), startBookmarks()];
+  await reloadHistory();
+  await reloadBookmarks();
+  const barOf = (profileId) => S().bookmarks.nodes[bookmarkRoots(S(), profileId).bar].children.map((id) => S().bookmarks.nodes[id].title);
+  assert.deepEqual(historyOf(S(), b).map((h) => h.url), ["https://a.com/"]);
+  assert.equal(historyOf(S(), a), historyOf(S(), b));
+  assert.deepEqual(barOf(b), ["Shared"]);
   assert.deepEqual(bookmarkRoots(S(), a), bookmarkRoots(S(), b));
+  stops.forEach((stop) => stop());
 });
 
 const flushEvents = () => new Promise((r) => setTimeout(r, 0));
@@ -139,10 +154,10 @@ test("history.json's move goes before watching Chrome's history; the view then h
   assert.ok(stub.docs.has("history.json"));
   assert.equal(stub.chromeHistory("").size, 0, "nothing moved before the first window");
   firstWindowCommitted();
-  for (let i = 0; i < 50 && !S().history.default?.length; i++) await new Promise((r) => setTimeout(r, 10));
+  for (let i = 0; i < 50 && !historyOf(S(), "default").length; i++) await new Promise((r) => setTimeout(r, 10));
   assert.deepEqual(stub.historyWatches, [""], "watched once it's in");
-  assert.equal(S().history.default?.[0]?.url, "https://moved.com/");
-  assert.equal(S().history.default[0].visits, 2);
+  assert.equal(historyOf(S(), "default")[0]?.url, "https://moved.com/");
+  assert.equal(historyOf(S(), "default")[0].visits, 2);
   stop();
 });
 
@@ -152,12 +167,12 @@ test("history is a view of Chrome's: visits, deletions and a relaunch all read b
   stub.historyDbs.clear();
   const stop = startHistory();
   await reloadHistory();
-  const urls = () => (S().history.default ?? []).map((h) => h.url);
+  const urls = () => historyOf(S(), "default").map((h) => h.url);
   stub.chromeVisit("", "https://a.com/", "A");
   stub.chromeVisit("", "https://b.com/", "B");
   await flushEvents();
   assert.deepEqual(urls(), ["https://b.com/", "https://a.com/"]);
-  assert.ok(S().historyReady.default);
+  assert.ok(S().history[""].ready);
 
   S().removeHistory("default", ["https://a.com/"]);
   assert.deepEqual(urls(), ["https://b.com/"], "gone from the view at once");
@@ -166,9 +181,9 @@ test("history is a view of Chrome's: visits, deletions and a relaunch all read b
   await reloadHistory();
   assert.deepEqual(urls(), ["https://b.com/"], "a relaunch doesn't bring it back");
 
-  const before = S().history.default;
+  const before = historyOf(S(), "default");
   await reloadHistory();
-  assert.deepEqual(S().history.default, before);
+  assert.deepEqual(historyOf(S(), "default"), before);
   stop();
 });
 

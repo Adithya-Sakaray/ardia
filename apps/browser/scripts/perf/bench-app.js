@@ -312,10 +312,10 @@ const scenarios = {
     };
     const tabs = Object.values(s.tabs);
     return {
-      history: time({ version: 2, history: s.history }),
+      history: time({ version: 2, history: Object.fromEntries(Object.entries(s.history).map(([engine, view]) => [engine, view.list])) }),
       bookmarks: time({ version: 2, bookmarks: s.bookmarks }),
       session: time({ version: 2, profiles: s.profiles, settings: s.settings, windows: Object.values(s.windows), tabs, groups: Object.values(s.groups), closedTabs: s.closedTabs, closedWindows: s.closedWindows }),
-      counts: { tabs: tabs.length, history: Object.values(s.history).reduce((n, h) => n + h.length, 0), bookmarks: Object.keys(s.bookmarks.nodes).length },
+      counts: { tabs: tabs.length, history: Object.values(s.history).reduce((n, view) => n + view.list.length, 0), bookmarks: Object.keys(s.bookmarks.nodes).length },
     };
   },
 };

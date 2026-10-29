@@ -6,6 +6,7 @@ const { cleanedTabsFor } = await import("../pins/closedTabs.ts");
 const { flushPersistence, loadSession, startPersistence } = await import("../session/persist.ts");
 const { startFavicons } = await import("../favicons/favicons.ts");
 const { startHistory } = await import("../history/engineSync.ts");
+const { historyOf } = await import("../history/history.ts");
 const { startBookmarks } = await import("../bookmarks/engineSync.ts");
 const { startProfileDataCleanup } = await import("../profiles/profileData.ts");
 const { startPrivateSessions } = await import("../windows/privateSessions.ts");
@@ -38,7 +39,7 @@ test("incognito window: own profile, closing records nothing, history ignored", 
   stub.historyDbs.clear();
   assert.equal(S().importHistory(tab.profileId, [{ url: "https://secret.com/", title: "S", visits: 1, lastVisit: Date.now() }]), 0);
   S().removeHistory(tab.profileId, ["https://secret.com/"]);
-  assert.equal(S().history[tab.profileId], undefined);
+  assert.equal(S().history[model.engineProfile(S(), tab.profileId)], undefined);
   assert.equal(stub.historyDbs.size, 0, "nothing reaches Chrome's history, not even the default profile's");
   S().newTab(w, { url: "x.com" });
   S().closeTab(model.viewTabIds(S(), w)[1]);
@@ -244,11 +245,11 @@ test("clearing a time range removes visits, not pages", () => {
   S().hydrate({});
   const t0 = 1_700_000_000_000;
   const entry = (url, times) => ({ url, title: url, favicon: null, visits: times.length, lastVisit: times.at(-1), visitTimes: times });
-  S().hydrate({ history: { default: [entry("https://b.com/", [t0 - 5 * 60_000]), entry("https://a.com/", [t0 - 5 * HOUR, t0 - 10 * 60_000])] } });
-  assert.deepEqual(S().history.default.map((h) => [h.url, h.visits]), [["https://b.com/", 1], ["https://a.com/", 2]]);
+  useBrowser.setState({ history: { "": { list: [entry("https://b.com/", [t0 - 5 * 60_000]), entry("https://a.com/", [t0 - 5 * HOUR, t0 - 10 * 60_000])], floor: -Infinity, ready: true } } });
+  assert.deepEqual(historyOf(S(), "default").map((h) => [h.url, h.visits]), [["https://b.com/", 1], ["https://a.com/", 2]]);
 
   S().clearHistory("default", t0 - HOUR);
-  const [a, ...rest] = S().history.default;
+  const [a, ...rest] = historyOf(S(), "default");
   assert.equal(rest.length, 0, "b.com was only visited in the last hour");
   assert.equal(a.url, "https://a.com/");
   assert.equal(a.visits, 1);
@@ -256,7 +257,7 @@ test("clearing a time range removes visits, not pages", () => {
   assert.deepEqual(a.visitTimes, [t0 - 5 * HOUR]);
 
   S().clearHistory("default");
-  assert.deepEqual(S().history.default, []);
+  assert.deepEqual(historyOf(S(), "default"), []);
 });
 
 test("deleting the original profile queues Chrome's default profile for deletion", () => {
@@ -317,9 +318,9 @@ test("deleting a profile keeps the data others share", () => {
   assert.equal(S().profiles[a], undefined);
   assert.equal(model.engineProfile(S(), b), a, "still on A's engine context");
   assert.ok(S().bookmarks.nodes[bookmark], "shared bookmarks stay");
-  assert.deepEqual(S().history[b].map((h) => h.url), ["https://a.com/"]);
+  assert.deepEqual(historyOf(S(), b).map((h) => h.url), ["https://a.com/"]);
   S().importHistory(b, [{ url: "https://c.com/", title: "C", visits: 1, lastVisit: 3 }]);
-  assert.equal(S().history[b].length, 2);
+  assert.equal(historyOf(S(), b).length, 2);
   S().deleteProfile(b);
   assert.equal(S().bookmarks.nodes[bookmark], undefined);
 });
