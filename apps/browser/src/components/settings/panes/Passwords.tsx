@@ -12,17 +12,16 @@ import {
 } from "../../../state/site/passwords";
 import { orWarn } from "../../../lib/fallback";
 import { confirm, copyText, systemInfo } from "../../../state/app/system";
-import { Symbol, Button, font, PopUp, SearchField, Sheet, TextField, Toggle, weight } from "../../ui";
+import { Symbol, Button, font, SearchField, Sheet, TextField, Toggle, weight } from "../../ui";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { useTheme } from "../../ui/theme";
-import { currentEngineProfile, currentSettings } from "../../../state/browser/current";
-import { useProfiles } from "../../../state/browser/hooks";
+import { currentEngineProfile } from "../../../state/browser/current";
 import { plural } from "../../../state/browser/model";
 import { importPasswordsCsv, unlockPasswordsFor, usePasswordsUnlocked } from "../../../state/site/savedPasswords";
 import { hostLabel, matchesQuery } from "../../pages/PageLayout";
 import { Favicon } from "../../favicon/Favicon";
-import { Group, Row, SectionHeader } from "../Form";
+import { Group, ProfilePicker, Row, SectionHeader, useSettingsProfile } from "../Form";
 import { passwordAutofill } from "../../../state/settings/paneData";
 import { store, useResource } from "../../../state/settings/resources";
 import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/sheet";
@@ -36,8 +35,7 @@ function passwordManagerAppsNote() {
 
 export function PasswordsPane({ profileId: initial }: { profileId?: string | null }) {
   const theme = useTheme();
-  const profiles = useProfiles();
-  const [profileId, setProfileId] = useState(() => initial ?? currentSettings().defaultProfileId);
+  const [profileId, setProfileId] = useSettingsProfile(initial);
   const [list, setList] = useState<SavedPassword[] | null>(null);
   const [never, setNever] = useState<string[]>([]);
   const [query, setQuery] = useState("");
@@ -83,11 +81,7 @@ export function PasswordsPane({ profileId: initial }: { profileId?: string | nul
       <SectionHeader
         title="Passwords"
         description="Saved on this Mac, separately for each profile, and encrypted with a key in your Keychain."
-        action={
-          profiles.length > 1 ? (
-            <PopUp value={profileId} options={profiles.map((p) => ({ value: p.id, title: p.name }))} onChange={setProfileId} />
-          ) : undefined
-        }
+        action={<ProfilePicker value={profileId} onChange={setProfileId} />}
       />
       <Group>
         <Row anchor="passwords.offerToSave">

@@ -26,7 +26,7 @@ import { ShortcutsPane } from "./panes/Shortcuts";
 import { SyncPane } from "./panes/Sync";
 import { TabsPane } from "./panes/Tabs";
 import { useSettingsSheet } from "../../state/settings/sheet";
-import { goToSettingsPane, settingsBack, settingsForward, useSettingsNav, type SettingsPlace } from "../../state/settings/settingsWindows";
+import { goToSettingsPane, settingsBack, settingsForward, useSettingsNav, type SettingsPane, type SettingsPlace } from "../../state/settings/settingsWindows";
 import { settingsProfileFor } from "../../state/extensions/store";
 import { useSettingsColors } from "./useSettingsColors";
 
@@ -161,39 +161,26 @@ export function SettingsWindow() {
   );
 }
 
-function Pane({ pane, profileId, detail }: SettingsPlace): ReactNode {
-  switch (pane) {
-    case "general":
-      return <GeneralPane />;
-    case "profiles":
-      return profileId ? <ProfileDetailsPane profileId={profileId} /> : <ProfilesPane />;
-    case "sync":
-      return <SyncPane />;
-    case "tabs":
-      return <TabsPane />;
-    case "appearance":
-      return <AppearancePane />;
-    case "privacy":
-      return <PrivacyPane />;
-    case "passwords":
-      return <PasswordsPane profileId={profileId} />;
-    case "autofill":
-      return <AutofillPane profileId={profileId} />;
-    case "extensions":
-      return <ExtensionsPane profileId={profileId} detail={detail} />;
-    case "search":
-      return <SearchPane />;
-    case "engines":
-      return <EnginesPane />;
-    case "shortcuts":
-      return <ShortcutsPane />;
-    case "liveFolders":
-      return <LiveFoldersPane />;
-    case "calendar":
-      return <CalendarPane />;
-    case "advanced":
-      return <AdvancedPane />;
-  }
+const PANE_VIEWS: Record<SettingsPane, (place: SettingsPlace) => ReactNode> = {
+  general: () => <GeneralPane />,
+  profiles: ({ profileId }) => (profileId ? <ProfileDetailsPane profileId={profileId} /> : <ProfilesPane />),
+  sync: () => <SyncPane />,
+  tabs: () => <TabsPane />,
+  appearance: () => <AppearancePane />,
+  privacy: () => <PrivacyPane />,
+  passwords: ({ profileId }) => <PasswordsPane profileId={profileId} />,
+  autofill: ({ profileId }) => <AutofillPane profileId={profileId} />,
+  extensions: ({ profileId, detail }) => <ExtensionsPane profileId={profileId} detail={detail} />,
+  search: () => <SearchPane />,
+  engines: () => <EnginesPane />,
+  shortcuts: () => <ShortcutsPane />,
+  liveFolders: () => <LiveFoldersPane />,
+  calendar: () => <CalendarPane />,
+  advanced: () => <AdvancedPane />,
+};
+
+function Pane(place: SettingsPlace): ReactNode {
+  return PANE_VIEWS[place.pane](place);
 }
 
 function SidebarItem({ title, icon, selected, onPress }: { title: string; icon: string; selected: boolean; onPress: () => void }) {

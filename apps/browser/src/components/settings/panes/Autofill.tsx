@@ -15,9 +15,8 @@ import { Symbol, Button, font, type Option, PopUp, Sheet, TextField, Toggle, wei
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { useTheme } from "../../ui/theme";
-import { currentEngineProfile, currentSettings } from "../../../state/browser/current";
-import { useProfiles } from "../../../state/browser/hooks";
-import { Group, Row, SectionHeader } from "../Form";
+import { currentEngineProfile } from "../../../state/browser/current";
+import { Group, ProfilePicker, Row, SectionHeader, useSettingsProfile } from "../Form";
 import { NetworkBadge } from "../../site/Autofill";
 import { addresses as addressList, autofillEnabled, cards as cardList } from "../../../state/settings/paneData";
 import { store, useResource } from "../../../state/settings/resources";
@@ -25,8 +24,7 @@ import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/s
 
 export function AutofillPane({ profileId: initial }: { profileId?: string | null }) {
   const theme = useTheme();
-  const profiles = useProfiles();
-  const [profileId, setProfileId] = useState(() => initial ?? currentSettings().defaultProfileId);
+  const [profileId, setProfileId] = useSettingsProfile(initial);
   const profile = currentEngineProfile(profileId);
   const [addresses, reloadAddresses] = useResource(addressList, profile);
   const [cards, reloadCards] = useResource(cardList, profile);
@@ -44,11 +42,7 @@ export function AutofillPane({ profileId: initial }: { profileId?: string | null
       <SectionHeader
         title="Autofill"
         description="Addresses and cards you save are offered when you fill in a form, separately for each profile. Card numbers are kept in your macOS Keychain."
-        action={
-          profiles.length > 1 ? (
-            <PopUp value={profileId} options={profiles.map((p) => ({ value: p.id, title: p.name }))} onChange={setProfileId} />
-          ) : undefined
-        }
+        action={<ProfilePicker value={profileId} onChange={setProfileId} />}
       />
       <Group>
         <Row anchor="autofill.addresses">

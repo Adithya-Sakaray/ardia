@@ -1,28 +1,30 @@
 import { prepare, type Searchable } from "./searchMatch";
-import type { SettingsPane } from "../../state/settings/settingsWindows";
+import { SETTINGS_PANES, type SettingsPane } from "../../state/settings/settingsWindows";
 import type { Settings } from "../../state/settings/settings";
 import { generalRows } from "./rows/generalRows";
 import { privacyRows } from "./rows/privacyRows";
 import { toolRows } from "./rows/toolRows";
 import type { SettingSection, SettingsEnv } from "./rows/types";
 
-export const PANES: { id: SettingsPane; title: string; icon: string }[] = [
-  { id: "general", title: "General", icon: "gearshape" },
-  { id: "profiles", title: "Profiles", icon: "person.2" },
-  { id: "sync", title: "Sync", icon: "arrow.triangle.2.circlepath" },
-  { id: "tabs", title: "Tabs", icon: "square.on.square" },
-  { id: "appearance", title: "Appearance", icon: "circle.lefthalf.filled" },
-  { id: "privacy", title: "Privacy & Security", icon: "hand.raised" },
-  { id: "passwords", title: "Passwords", icon: "key" },
-  { id: "autofill", title: "Autofill", icon: "creditcard" },
-  { id: "extensions", title: "Extensions", icon: "puzzlepiece.extension" },
-  { id: "search", title: "Search Engine", icon: "magnifyingglass" },
-  { id: "engines", title: "Engines", icon: "safari" },
-  { id: "shortcuts", title: "Keyboard Shortcuts", icon: "keyboard" },
-  { id: "liveFolders", title: "Live Folders", icon: "dot.radiowaves.left.and.right" },
-  { id: "calendar", title: "Calendar", icon: "calendar" },
-  { id: "advanced", title: "Advanced", icon: "slider.horizontal.3" },
-];
+const PANE_LOOKS: Record<SettingsPane, { title: string; icon: string }> = {
+  general: { title: "General", icon: "gearshape" },
+  profiles: { title: "Profiles", icon: "person.2" },
+  sync: { title: "Sync", icon: "arrow.triangle.2.circlepath" },
+  tabs: { title: "Tabs", icon: "square.on.square" },
+  appearance: { title: "Appearance", icon: "circle.lefthalf.filled" },
+  privacy: { title: "Privacy & Security", icon: "hand.raised" },
+  passwords: { title: "Passwords", icon: "key" },
+  autofill: { title: "Autofill", icon: "creditcard" },
+  extensions: { title: "Extensions", icon: "puzzlepiece.extension" },
+  search: { title: "Search Engine", icon: "magnifyingglass" },
+  engines: { title: "Engines", icon: "safari" },
+  shortcuts: { title: "Keyboard Shortcuts", icon: "keyboard" },
+  liveFolders: { title: "Live Folders", icon: "dot.radiowaves.left.and.right" },
+  calendar: { title: "Calendar", icon: "calendar" },
+  advanced: { title: "Advanced", icon: "slider.horizontal.3" },
+};
+
+export const PANES: { id: SettingsPane; title: string; icon: string }[] = SETTINGS_PANES.map((id) => ({ id, ...PANE_LOOKS[id] }));
 
 const ROWS = { ...generalRows, ...privacyRows, ...toolRows };
 
@@ -31,7 +33,7 @@ export type SettingId = { [P in SettingsPane]: `${P}.${RowKeysOf<P>}` }[Settings
 
 export type SettingEntry = Searchable & { id: SettingId; pane: SettingsPane; section: string; advanced: boolean; shown?: (settings: Settings, env: SettingsEnv) => boolean };
 
-const paneTitle = (pane: SettingsPane) => PANES.find((p) => p.id === pane)!.title;
+const paneTitle = (pane: SettingsPane) => PANE_LOOKS[pane].title;
 
 export const SETTINGS: SettingEntry[] = PANES.flatMap(({ id: pane }) =>
   (ROWS[pane] as SettingSection[]).flatMap(({ section, rows }) =>

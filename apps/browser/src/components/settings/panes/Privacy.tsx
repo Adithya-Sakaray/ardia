@@ -18,11 +18,11 @@ import { confirm } from "../../../state/app/system";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, Text, View } from "react-native";
 import { useTheme } from "../../ui/theme";
-import { currentEngineProfile, currentSettings } from "../../../state/browser/current";
-import { useProfiles, useSettings } from "../../../state/browser/hooks";
+import { currentEngineProfile } from "../../../state/browser/current";
+import { useSettings } from "../../../state/browser/hooks";
 import { Button, Checkbox, font, PopUp, Sheet, Toggle, weight } from "../../ui";
 import { Favicon } from "../../favicon/Favicon";
-import { Group, Row, SectionHeader } from "../Form";
+import { Group, ProfilePicker, Row, SectionHeader, useSettingsProfile } from "../Form";
 import { setting, type SettingId } from "../settingsIndex";
 import { appLinks, contentBlocker, siteOrigins, zoomLevels } from "../../../state/settings/paneData";
 import { useResource } from "../../../state/settings/resources";
@@ -170,9 +170,7 @@ function FilterListsSheet() {
 }
 
 function ZoomLevels() {
-  const profileId = useSettings((s) => s.defaultProfileId);
-  const profiles = useProfiles();
-  const [selected, setSelected] = useState(profileId);
+  const [selected, setSelected] = useSettingsProfile();
   const [loaded, reload] = useResource(zoomLevels, currentEngineProfile(selected));
   const levels = loaded ?? {};
   const load = () => void reload();
@@ -182,9 +180,7 @@ function ZoomLevels() {
     <>
       <SectionHeader
         title="Zoom levels"
-        action={
-          profiles.length > 1 ? <PopUp value={selected} options={profiles.map((p) => ({ value: p.id, title: p.name }))} onChange={setSelected} /> : undefined
-        }
+        action={<ProfilePicker value={selected} onChange={setSelected} />}
       />
       <Group>
         {hosts.map((host) => (
@@ -225,8 +221,7 @@ const VALUE_OPTIONS: { value: SiteSettingValue; title: string }[] = [
 ];
 
 function SitePermissions() {
-  const profiles = useProfiles();
-  const [profileId, setProfileId] = useState(() => currentSettings().defaultProfileId);
+  const [profileId, setProfileId] = useSettingsProfile();
   const [loaded, reload] = useResource(siteOrigins, currentEngineProfile(profileId));
   const origins = loaded ?? null;
   const refresh = () => void reload();
@@ -235,11 +230,7 @@ function SitePermissions() {
     <>
       <SectionHeader
         anchor="privacy.sitePermissions"
-        action={
-          profiles.length > 1 ? (
-            <PopUp value={profileId} options={profiles.map((p) => ({ value: p.id, title: p.name }))} onChange={setProfileId} />
-          ) : undefined
-        }
+        action={<ProfilePicker value={profileId} onChange={setProfileId} />}
       />
       <Group>
         {origins === null ? (
@@ -262,8 +253,7 @@ function SitePermissions() {
 }
 
 function AppLinks() {
-  const profiles = useProfiles();
-  const [profileId, setProfileId] = useState(() => currentSettings().defaultProfileId);
+  const [profileId, setProfileId] = useSettingsProfile();
   const [loaded, reload] = useResource(appLinks, currentEngineProfile(profileId));
   const allowed = loaded ?? null;
   const refresh = () => void reload();
@@ -272,11 +262,7 @@ function AppLinks() {
     <>
       <SectionHeader
         anchor="privacy.appLinks"
-        action={
-          profiles.length > 1 ? (
-            <PopUp value={profileId} options={profiles.map((p) => ({ value: p.id, title: p.name }))} onChange={setProfileId} />
-          ) : undefined
-        }
+        action={<ProfilePicker value={profileId} onChange={setProfileId} />}
       />
       <Group of="privacy.appLinks">
         {allowed === null ? (

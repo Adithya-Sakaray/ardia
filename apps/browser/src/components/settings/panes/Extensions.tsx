@@ -18,10 +18,9 @@ import { Image, Text, View } from "react-native";
 import { useTheme } from "../../ui/theme";
 import { currentEngineProfile, resolvedWindowId } from "../../../state/browser/current";
 import { newTab } from "../../../state/tabs/actions";
-import { useProfiles } from "../../../state/browser/hooks";
 import { InstallDialogHost } from "../../extensions/ExtensionOverlays";
 import { Button, font, PopUp, TextField, Toggle, weight } from "../../ui";
-import { Group, Row, SectionHeader } from "../Form";
+import { Group, ProfilePicker, Row, SectionHeader } from "../Form";
 import { extensionList } from "../../../state/settings/paneData";
 import { useResource } from "../../../state/settings/resources";
 import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/sheet";
@@ -39,7 +38,6 @@ const siteAccessOf = (ext: InstalledExtension): SiteAccess =>
 
 export function ExtensionsPane({ profileId: chosen, detail }: { profileId: string | null; detail: string | null }) {
   const theme = useTheme();
-  const profiles = useProfiles();
   const [profileId] = useState(() => extensionsProfileId(chosen));
   const profile = currentEngineProfile(profileId);
   const list = useExtensionList(profile);
@@ -66,11 +64,7 @@ export function ExtensionsPane({ profileId: chosen, detail }: { profileId: strin
     <View>
       <SectionHeader
         anchor="extensions.installed"
-        action={
-          profiles.length > 1 ? (
-            <PopUp value={profileId} options={profiles.map((p) => ({ value: p.id, title: p.name }))} onChange={(id) => replaceSettingsPlace(id)} />
-          ) : undefined
-        }
+        action={<ProfilePicker value={profileId} onChange={(id) => replaceSettingsPlace(id)} />}
       />
       {list.length ? (
         <Group>

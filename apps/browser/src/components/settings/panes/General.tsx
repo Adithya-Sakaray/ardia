@@ -10,14 +10,14 @@ import {
 } from "../../../state/app/appSettings";
 import { pickFolder } from "../../../state/app/system";
 import { Symbol, Button, font, PopUp, Toggle } from "../../ui";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { AppState, Text, View } from "react-native";
 import { useTheme } from "../../ui/theme";
 import { updateSettings } from "../../../state/settings/actions";
-import { currentEngineProfile, currentSettings } from "../../../state/browser/current";
+import { currentEngineProfile } from "../../../state/browser/current";
 import { useProfiles, useSettings } from "../../../state/browser/hooks";
 import { SHARING_COPY } from "../../../state/telemetry/copy";
-import { Anchor, Group, Row, SectionHeader, SettingToggle } from "../Form";
+import { Anchor, Group, ProfilePicker, Row, SectionHeader, SettingToggle, useSettingsProfile } from "../Form";
 import { defaultBrowser, downloadSettings, loginItem, updater } from "../../../state/settings/paneData";
 import { store, useResource } from "../../../state/settings/resources";
 import { openImport } from "../../../state/settings/settingsWindows";
@@ -120,7 +120,7 @@ const homeRelative = (path: string) => path.replace(/^\/Users\/[^/]+(?=\/|$)/, "
 
 function DownloadsSection() {
   const profiles = useProfiles();
-  const [profileId, setProfileId] = useState(() => currentSettings().defaultProfileId);
+  const [profileId, setProfileId] = useSettingsProfile();
   const profile = currentEngineProfile(profileId);
   const [current] = useResource(downloadSettings, profile);
   const others = [...new Set(profiles.map((p) => currentEngineProfile(p.id)))].filter((p) => p !== profile);
@@ -137,11 +137,7 @@ function DownloadsSection() {
       <SectionHeader
         title="Downloads"
         description={profiles.length > 1 ? "Each profile saves to its own folder." : undefined}
-        action={
-          profiles.length > 1 ? (
-            <PopUp value={profileId} options={profiles.map((p) => ({ value: p.id, title: p.name }))} onChange={setProfileId} />
-          ) : undefined
-        }
+        action={<ProfilePicker value={profileId} onChange={setProfileId} />}
       />
       <Group>
         <Row

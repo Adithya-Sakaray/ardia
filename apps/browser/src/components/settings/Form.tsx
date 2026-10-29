@@ -1,7 +1,8 @@
-import { Children, createContext, isValidElement, useContext, useEffect, useMemo, useRef, type ReactNode } from "react";
+import { Children, createContext, isValidElement, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Animated, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { registerAnchor, settingsSectionKey, useSettingsSearch } from "../../state/settings/searchState";
-import { useSettings, useTabLayout } from "../../state/browser/hooks";
+import { useProfiles, useSettings, useTabLayout } from "../../state/browser/hooks";
+import { currentSettings } from "../../state/browser/current";
 import type { SettingsPane } from "../../state/settings/settingsWindows";
 import { curve } from "../ui/motion";
 import { Group as PlainGroup, Row as PlainRow } from "../ui/Row";
@@ -10,6 +11,7 @@ import { font, space, weight } from "../ui/tokens";
 import { liquidGlass } from "../ui/Glass";
 import { findSetting, sectionEntries, setting, unshownSettings, type SettingEntry, type SettingId } from "./settingsIndex";
 import { Toggle } from "../ui/Switch";
+import { PopUp } from "../ui/Field";
 import { updateSettings } from "../../state/settings/actions";
 import type { Settings } from "../../state/settings/settings";
 import { settingsMotion } from "./tokens";
@@ -135,4 +137,12 @@ export function SettingToggle({ anchor, description }: { anchor: SettingId & `${
       <Toggle value={value} onChange={(on) => updateSettings({ [key]: on })} />
     </Row>
   );
+}
+
+export const useSettingsProfile = (initial?: string | null) => useState(() => initial ?? currentSettings().defaultProfileId);
+
+export function ProfilePicker({ value, onChange }: { value: string; onChange: (profileId: string) => void }) {
+  const profiles = useProfiles();
+  if (profiles.length < 2) return null;
+  return <PopUp value={value} options={profiles.map((p) => ({ value: p.id, title: p.name }))} onChange={onChange} />;
 }

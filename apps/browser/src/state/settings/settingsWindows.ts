@@ -8,22 +8,25 @@ export const IMPORT_WINDOW_ID = "import";
 export const isUtilityWindowId = (id: string | null | undefined) =>
   id === SETTINGS_WINDOW_ID || id === IMPORT_WINDOW_ID;
 
-export type SettingsPane =
-  | "general"
-  | "profiles"
-  | "sync"
-  | "tabs"
-  | "appearance"
-  | "privacy"
-  | "passwords"
-  | "autofill"
-  | "extensions"
-  | "search"
-  | "engines"
-  | "shortcuts"
-  | "liveFolders"
-  | "calendar"
-  | "advanced";
+export const SETTINGS_PANES = [
+  "general",
+  "profiles",
+  "sync",
+  "tabs",
+  "appearance",
+  "privacy",
+  "passwords",
+  "autofill",
+  "extensions",
+  "search",
+  "engines",
+  "shortcuts",
+  "liveFolders",
+  "calendar",
+  "advanced",
+] as const;
+
+export type SettingsPane = (typeof SETTINGS_PANES)[number];
 
 export type SettingsPlace = { pane: SettingsPane; profileId: string | null; detail: string | null };
 
