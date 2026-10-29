@@ -122,14 +122,7 @@ const shell: Modules["ArdiaShell"] = {
   prompt: () => Promise.resolve(null),
 };
 
-const appEvents = nativeEvents();
 const app: Modules["ArdiaApp"] = {
-  addListener: appEvents.addListener,
-  updaterState: () => Promise.resolve({ available: false }),
-  checkForUpdates: () => Promise.resolve(),
-  setAutomaticUpdateChecks: () => Promise.resolve(),
-  setAutomaticUpdateDownloads: () => Promise.resolve(),
-  setUpdateChannel: () => Promise.resolve(),
   setWindowActivity: () => Promise.resolve(),
   share: () => Promise.resolve(),
   shareVia: () => Promise.resolve(),
@@ -138,33 +131,54 @@ const app: Modules["ArdiaApp"] = {
   appIcons: () => Promise.resolve([]),
   appIcon: () => Promise.resolve("default"),
   setAppIcon: () => Promise.resolve(),
-  notificationPermission: () => Promise.resolve("notDetermined"),
-  requestNotificationPermission: () => Promise.resolve(false),
-  postNotification: () => Promise.resolve(null),
-  removeNotifications: () => Promise.resolve(),
-  openNotificationSettings: () => Promise.resolve(),
-  setScriptState: () => Promise.resolve(),
-  replyToScript: () => Promise.resolve(),
   systemInfo: () => ({ ...appInfo }) as SystemInfo,
   openExternalURL: () => Promise.resolve(false),
   launchConfig: () => structuredClone(launch),
   playIntroMusic: () => Promise.resolve(),
   setIntroMusicMuted: () => Promise.resolve(),
   stopIntroMusic: () => Promise.resolve(),
+  crashReports: () => Promise.resolve([]),
+};
+
+const updater: Modules["ArdiaUpdater"] = {
+  updaterState: () => Promise.resolve({ available: false }),
+  checkForUpdates: () => Promise.resolve(),
+  setAutomaticUpdateChecks: () => Promise.resolve(),
+  setAutomaticUpdateDownloads: () => Promise.resolve(),
+  setUpdateChannel: () => Promise.resolve(),
+};
+
+const notificationEvents = nativeEvents();
+const notifications: Modules["ArdiaNotifications"] = {
+  addListener: notificationEvents.addListener,
+  notificationPermission: () => Promise.resolve("notDetermined"),
+  requestNotificationPermission: () => Promise.resolve(false),
+  postNotification: () => Promise.resolve(null),
+  removeNotifications: () => Promise.resolve(),
+  openNotificationSettings: () => Promise.resolve(),
+};
+
+const scriptingEvents = nativeEvents();
+const scripting: Modules["ArdiaScripting"] = {
+  addListener: scriptingEvents.addListener,
+  setScriptState: () => Promise.resolve(),
+  replyToScript: () => Promise.resolve(),
+};
+
+const dev: Modules["ArdiaDev"] = {
+  devCrash: () => Promise.resolve(),
   devRenderIntroMusic: () => Promise.resolve(null),
   devRunAppleScript: () => Promise.resolve({ ok: false, error: "no AppleScript in tests" }),
   devSnapshotWindow: () => Promise.resolve(false),
   devSetPointer: () => Promise.resolve(false),
   devSetMouseButtons: () => Promise.resolve(false),
+  devLeftEdgePointer: () => Promise.resolve(false),
+  devLeftEdgeStats: () => Promise.resolve({}),
   devHoverStats: () => Promise.resolve({}),
   devMenuCommand: () => Promise.resolve(),
   devTypeKeys: () => Promise.resolve([]),
   devKeyEquivalent: () => Promise.resolve({ handledBy: "none" }),
   devClick: () => Promise.resolve({}),
-  crashReports: () => Promise.resolve([]),
-  devCrash: () => Promise.resolve(),
-  devLeftEdgePointer: () => Promise.resolve(false),
-  devLeftEdgeStats: () => Promise.resolve({}),
 };
 
 const system: Modules["ArdiaSystem"] = {
@@ -245,6 +259,10 @@ const userScripts: Modules["ArdiaUserScripts"] = {
 export const shellNativeModules: Modules = {
   ArdiaShell: shell,
   ArdiaApp: app,
+  ArdiaUpdater: updater,
+  ArdiaNotifications: notifications,
+  ArdiaScripting: scripting,
+  ArdiaDev: dev,
   ArdiaSystem: system,
   ArdiaCalendar: calendar,
   ArdiaKeychain: keychain,
