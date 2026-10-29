@@ -94,7 +94,7 @@ class KeptActiveSites : public ProfileManagerObserver {
 
  private:
   void Apply(Profile* profile) {
-    if (!sites_ || !profile || profile->IsOffTheRecord()) {
+    if (!sites_ || !profile || !profile->IsRegularProfile()) {
       return;
     }
     PrefService* prefs = profile->GetPrefs();
