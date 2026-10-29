@@ -1,9 +1,6 @@
 import {
   getContentBlocker,
-  getSiteSettings,
-  WEBKIT_SITE_SETTINGS,
   isContentBlockerAllowed,
-  setSiteSetting,
   type SiteSettingType,
   type SiteSettingValue,
   type SiteSettings,
@@ -14,9 +11,8 @@ import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useTheme } from "../ui/theme";
 import { webviews } from "../../state/tabs/webviewHandles";
-import { currentEngineProfile, currentLive, currentMuteState } from "../../state/browser/current";
+import { currentEngineProfile } from "../../state/browser/current";
 import { useMuteState } from "../../state/tabs/hooks";
-import { setSiteMuted } from "../../state/browser/actions";
 import { openFind } from "../../state/find/actions";
 import { updateSettings } from "../../state/settings/actions";
 import { useEngineRule, usePageEngine, useRecommendedEngine, useStreamingSite } from "../../state/engines/hooks";
@@ -26,7 +22,7 @@ import { ENGINE_NAMES, ENGINE_SYMBOLS, otherEngine } from "../../state/engines/e
 import { openPageIn, togglePageEngine } from "../../state/engines/actions";
 import { Box, MenuRow, MenuSeparator, PANEL, PanelHeader, Popover, PopoverValue, space, Toggle, usePopoverPresence } from "../ui";
 import { Favicon } from "../favicon/Favicon";
-import { pageOf, patchPage, setPopover, usePage } from "../../state/tabs/pageState";
+import { patchPage, setPopover, usePage } from "../../state/tabs/pageState";
 import { toggleCastPicker } from "../../state/media/cast";
 import { useMedia, usePictureInPicture } from "../../state/media/media";
 import { openSettings } from "../../state/settings/settingsWindows";
@@ -38,21 +34,8 @@ import { CertificateDetails, ConnectionChip, ConnectionRow } from "./SiteConnect
 import { SiteExtensions } from "./SiteExtensions";
 import { TranslateRows } from "./TranslateControls";
 import { ZoomStepper } from "./ZoomControls";
+import { blockerLabel, choiceTitle, featuredPermissions, permissionValue, readSiteSettings, setSitePermission, sitePermissionsFor, type SitePermission } from "../../state/site/siteControls";
 import { isWebPageUrl } from "../../lib/url";
-
-type Permission = { type: SiteSettingType; title: string; icon: string; badge: string; choices: SiteSettingValue[] };
-
-const PERMISSIONS: Permission[] = [
-  { type: "camera", title: "Camera", icon: "video", badge: "video.fill", choices: ["ask", "allow", "block"] },
-  { type: "microphone", title: "Microphone", icon: "mic", badge: "mic.fill", choices: ["ask", "allow", "block"] },
-  { type: "location", title: "Location", icon: "location", badge: "location.fill", choices: ["ask", "allow", "block"] },
-  { type: "notifications", title: "Notifications", icon: "bell", badge: "bell.fill", choices: ["ask", "allow", "block"] },
-  { type: "popups", title: "Pop-ups and Redirects", icon: "macwindow.on.rectangle", badge: "macwindow.on.rectangle", choices: ["allow", "block"] },
-  { type: "sound", title: "Sound", icon: "speaker.wave.2", badge: "speaker.wave.2.fill", choices: ["allow", "block"] },
-];
-
-const choiceTitle = (type: SiteSettingType, value: SiteSettingValue) =>
-  type === "sound" ? (value === "block" ? "Muted" : "Allowed") : value === "allow" ? "Allowed" : value === "block" ? "Blocked" : "Ask";
 
 type Expanded = "connection" | "more" | null;
 type Blocker = { enabled: boolean; allowed: boolean };
@@ -61,16 +44,6 @@ export function SiteControls({ tabId, open, right, left, top }: { tabId: string;
   const presence = usePopoverPresence(open);
   if (!presence.shown) return null;
   return <SiteControlsPanel tabId={tabId} right={right} left={left} top={top} closing={presence.closing} onClosed={presence.onClosed} />;
-}
-
-function featuredPermissions(tabId: string, settings: SiteSettings, list: Permission[]): Set<SiteSettingType> {
-  const access = pageOf(tabId).mediaAccess;
-  const inUse: Partial<Record<SiteSettingType, boolean>> = {
-    camera: !!access?.camera,
-    microphone: !!access?.microphone,
-    sound: currentMuteState(tabId) !== null || !!currentLive(tabId)?.playingAudio,
-  };
-  return new Set(list.filter((p) => !settings[p.type]?.isDefault || inUse[p.type]).map((p) => p.type));
 }
 
 function SiteControlsPanel({
@@ -108,10 +81,8 @@ function SiteControlsPanel({
   const [pip, togglePip] = usePictureInPicture(tabId);
   const pageEngine = usePageEngine(tabId);
   const webkitPage = pageEngine === "webkit";
-  const permissionList = webkitPage ? PERMISSIONS.filter((p) => p.type === "sound" || WEBKIT_SITE_SETTINGS.includes(p.type)) : PERMISSIONS;
-  const siteMuted = useMuteState(tabId) === "site";
-  const soundBlocked = !webkitPage && settings?.sound?.value === "block";
-  const readSettings = (p: string, o: string) => getSiteSettings(p, o, pageEngine).catch((): SiteSettings => ({}) as SiteSettings);
+  const permissionList = sitePermissionsFor(pageEngine);
+  const sound = { siteMuted: useMuteState(tabId) === "site", soundBlocked: !webkitPage && settings?.sound?.value === "block" };
   const engineRule = useEngineRule(url);
   const recommendedEngine = useRecommendedEngine(url);
   const streamingSite = useStreamingSite(url);
@@ -120,7 +91,7 @@ function SiteControlsPanel({
   useEffect(() => {
     if (!origin) return;
     let live = true;
-    void readSettings(profile, origin).then((s) => {
+    void readSiteSettings(profile, origin, pageEngine).then((s) => {
       if (!live) return;
       setSettings(s);
       setFeatured((f) => f ?? featuredPermissions(tabId, s, permissionList));
@@ -134,21 +105,12 @@ function SiteControlsPanel({
 
   if (!tab) return null;
 
-  const setPermission = async (type: SiteSettingType, value: SiteSettingValue) => {
-    if (!origin) return;
-    if (type === "sound") {
-      setSiteMuted(tabId, value === "block");
-      if (value === "block" || !soundBlocked) return;
-      await setSiteSetting(profile, origin, "sound", "default", pageEngine);
-    } else await setSiteSetting(profile, origin, type, value, pageEngine);
-    setSettings(await readSettings(profile, origin));
-  };
-  const permissionValue = (type: SiteSettingType): SiteSettingValue | undefined =>
-    type === "sound" ? (siteMuted || soundBlocked ? "block" : "allow") : settings?.[type]?.value;
   const pickPermission = async (type: SiteSettingType, choices: SiteSettingValue[]) => {
-    const current = permissionValue(type);
+    const current = permissionValue(type, settings, sound);
     const choice = await showMenu(choices.map((v) => ({ id: v, title: choiceTitle(type, v), checked: v === current })));
-    if (choice) void setPermission(type, choice as SiteSettingValue);
+    if (!choice || !origin) return;
+    const next = await setSitePermission({ tabId, profile, origin, engine: pageEngine }, type, choice as SiteSettingValue, sound);
+    if (next) setSettings(next);
   };
   const toggleBlocker = async (on: boolean) => {
     const allowed = await setSiteBlocking(tab, host, on);
@@ -228,20 +190,10 @@ function SiteControlsPanel({
     ) : null,
   ].filter(Boolean);
 
-  const blockerValue = pageEngine === "webkit"
-    ? "Chromium only for now"
-    : !blocker
-    ? "…"
-    : !blocker.enabled
-      ? "Off in Settings"
-      : blocker.allowed
-        ? "Off for this site"
-        : blocked > 0
-          ? `On · ${blocked} blocked on this page`
-          : "On";
+  const blockerValue = blockerLabel(pageEngine, blocker, blocked);
   const shownPermissions = featured ? permissionList.filter((p) => featured.has(p.type)) : [];
   const otherPermissions = permissionList.filter((p) => !featured?.has(p.type));
-  const value = (p: Permission) => (settings ? choiceTitle(p.type, permissionValue(p.type) ?? "ask") : "…");
+  const value = (p: SitePermission) => (settings ? choiceTitle(p.type, permissionValue(p.type, settings, sound) ?? "ask") : "…");
 
   return (
     <Popover width={SITE_PANEL.width} top={top} right={right} left={left} onDismiss={close} fitHeight closing={closing} onClosed={onClosed}>
@@ -276,7 +228,7 @@ function SiteControlsPanel({
                 icon={p.badge}
                 title={p.title}
                 value={value(p)}
-                on={permissionValue(p.type) === "allow"}
+                on={permissionValue(p.type, settings, sound) === "allow"}
                 onPress={() => void pickPermission(p.type, p.choices)}
               />
             ))}
