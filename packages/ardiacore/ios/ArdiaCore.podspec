@@ -1,5 +1,3 @@
-engine_public = File.expand_path('../../../engine/ardiacore/src/ardia/core/public', __dir__)
-
 Pod::Spec.new do |s|
   s.name           = 'ArdiaCore'
   s.version        = '0.0.0'
@@ -17,7 +15,7 @@ Pod::Spec.new do |s|
   s.resources      = 'page_script.js'
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
-    'HEADER_SEARCH_PATHS' => "\"#{engine_public}\"",
+    'HEADER_SEARCH_PATHS' => '"$(PODS_TARGET_SRCROOT)/../../../engine/ardiacore/src/ardia/core/public"',
     'CLANG_CXX_LANGUAGE_STANDARD' => 'c++20',
   }
 end
