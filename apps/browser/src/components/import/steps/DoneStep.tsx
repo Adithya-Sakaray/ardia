@@ -4,13 +4,13 @@ import { allArcHolders, restoreArcFolders } from "../../../state/bookmarks/bookm
 import { useBookmarks } from "../../../state/bookmarks/hooks";
 import { plural } from "../../../state/browser/model";
 import { useProfileOrder, useProfileRecords } from "../../../state/profiles/hooks";
-import type { ImportCounts } from "../../../state/import/apply";
-import { backTo, closeImport, openFoundExtensions, type ImportFlow } from "../../../state/import/flow";
+import { openInWebStore, type ImportCounts } from "../../../state/import/apply";
 import { useOnboarding } from "../../../state/onboarding/onboarding";
 import { Button, space, Symbol, Text, useTheme } from "../../ui";
 import { APP, kindTitle } from "../model";
 import { Spacer, Title } from "../Parts";
 import { importColors, importLayout, importMotion, importType } from "../tokens";
+import type { ImportFlow } from "../useImportFlow";
 
 function summaryOf(counts: ImportCounts) {
   return [
@@ -25,10 +25,9 @@ function summaryOf(counts: ImportCounts) {
 }
 
 function ExtensionList({ flow }: { flow: ImportFlow }) {
-  const { source, step } = flow;
+  const { extensions, source, target } = flow;
   const onboarding = useOnboarding((s) => s.windowId !== null);
-  if (step.name !== "done" || !step.extensions.list.length) return null;
-  const { extensions } = step;
+  if (!extensions.list.length) return null;
   const centered = { textAlign: "center" } as const;
   return (
     <View style={{ alignSelf: "stretch", marginTop: space.lx, gap: space.m }}>
@@ -46,7 +45,10 @@ function ExtensionList({ flow }: { flow: ImportFlow }) {
         <View style={{ alignItems: "center" }}>
           <Button
             title={extensions.list.length === 1 ? "Open in Chrome Web Store" : `Open ${extensions.list.length} in Chrome Web Store`}
-            onPress={openFoundExtensions}
+            onPress={() => {
+              openInWebStore(extensions.profileId || target, extensions.list.map((e) => e.webStoreUrl));
+              flow.setExtensions((x) => ({ ...x, opened: true }));
+            }}
           />
         </View>
       )}
@@ -80,9 +82,7 @@ function RestoreArcFolders() {
 }
 
 export function DoneBody({ flow }: { flow: ImportFlow }) {
-  const { step } = flow;
-  if (step.name !== "done") return null;
-  const { counts, failures, notes } = step;
+  const { counts, failures, notes } = flow;
   const summary = summaryOf(counts);
   if (failures.length)
     return (
@@ -121,12 +121,12 @@ export function DoneBody({ flow }: { flow: ImportFlow }) {
 }
 
 export function DoneFooter({ flow }: { flow: ImportFlow }) {
-  const failed = flow.step.name === "done" && flow.step.failures.length > 0;
+  const failed = flow.failures.length > 0;
   return (
     <>
       <Spacer />
-      {failed && <Button title="Try Again" onPress={() => backTo("choose")} />}
-      <Button title={failed ? "Continue" : "Finish importing"} kind="primary" onPress={closeImport} />
+      {failed && <Button title="Try Again" onPress={() => flow.setStep("choose")} />}
+      <Button title={failed ? "Continue" : "Finish importing"} kind="primary" onPress={flow.close} />
     </>
   );
 }
