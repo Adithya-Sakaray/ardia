@@ -402,7 +402,7 @@ export function pinnedAdapter(profileId: string): Adapter {
       let { live, parkedPins } = s;
       const parkWindow = windows[PARK];
       if (parkWindow) {
-        parkedPins = parkWindowPins(parkedPins, parkWindow, { tabs, groups, history: s.history });
+        parkedPins = parkWindowPins(parkedPins, parkWindow, { tabs, groups, history: s.history, profiles: s.profiles });
         for (const id of parkWindow.tabIds) delete tabs[id];
         live = without(live, parkWindow.tabIds);
         groups = Object.fromEntries(Object.entries(groups).filter(([, g]) => g.windowId !== PARK));

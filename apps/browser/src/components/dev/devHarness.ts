@@ -37,6 +37,9 @@ export function startDevHarness() {
     pageState: usePages,
     openSettings,
     favicons,
+    get bookmarks(): typeof import("../../state/bookmarks/bookmarks") {
+      return require("../../state/bookmarks/bookmarks");
+    },
     get checkIn(): typeof import("../../state/onboarding/defaultBrowserCheckIn") {
       return require("../../state/onboarding/defaultBrowserCheckIn");
     },

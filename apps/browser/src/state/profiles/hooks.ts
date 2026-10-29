@@ -2,6 +2,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useBrowser } from "../browser/store";
 import { plural, profileFor } from "../browser/model";
 import type { Profile } from "../browser/types";
+import { bookmarkRoots } from "../bookmarks/bookmarks";
 import type { Settings } from "../settings/settings";
 import { useLookValue } from "../tabs/tabWatch";
 
@@ -32,7 +33,7 @@ export const useCreateProfileShareDefault = (windowId: string | null): string =>
 
 export const useProfileDataStats = (profileId: string): string =>
   useBrowser((s) => {
-    const roots = s.bookmarks.roots[profileId];
+    const roots = bookmarkRoots(s, profileId);
     let bookmarks = 0;
     const walk = (id: string) => {
       const n = s.bookmarks.nodes[id];

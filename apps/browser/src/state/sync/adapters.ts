@@ -2,7 +2,7 @@ import { addHistoryVisits, deleteHistoryUrls } from "../../platform/history";
 import { deletePassword } from "../../platform/passwords";
 import { orWarn } from "../../lib/fallback";
 import { assignPositions, SyncNative, type Adapter, type SealedLogin } from "../../platform/sync";
-import { bookmarkUuidFor, ensureRoots, isBookmarkUuid } from "../bookmarks/bookmarks";
+import { bookmarkRoots, bookmarkUuidFor, ensureRoots, isBookmarkUuid } from "../bookmarks/bookmarks";
 import { MAX_HISTORY, MAX_VISIT_TIMES } from "../history/history";
 import { useBrowser } from "../browser/store";
 import { engineProfile } from "../browser/model";
@@ -56,13 +56,13 @@ export function deviceAdapter(deviceId: string, name: () => string, retired = fa
 }
 
 export function bookmarksAdapter(profileId: string): Adapter {
-  const ready = () => !!store().bookmarksReady[profileId];
+  const ready = () => !!store().bookmarksReady[engineProfile(store(), profileId)];
   return {
     prefix: BOOKMARK,
     extract: (base) => {
       if (!ready()) return null;
       const b = store().bookmarks;
-      const roots = b.roots[profileId];
+      const roots = bookmarkRoots(store(), profileId);
       const values = new Map<string, unknown>();
       if (!roots) return { values };
       const keyOf = (id: string) => {
@@ -104,7 +104,7 @@ export function bookmarksAdapter(profileId: string): Adapter {
     apply: (visible) => {
       if (!ready()) return false;
       const s = store();
-      const [b, roots] = ensureRoots(s, profileId);
+      const [b, roots] = ensureRoots(s.bookmarks, engineProfile(s, profileId));
       const decoded = [...visible].map(([k, v]) => [k, bookmarkValue(v)] as const);
       if (decoded.some(([, v]) => !v)) return false;
       const values = new Map(decoded.map(([k, v]) => [bookmarkUuidFor(recordId(BOOKMARK, k)), v!]));

@@ -7,7 +7,7 @@ import { samePage } from "../../lib/url";
 import { isRegularWindow } from "../windows/small";
 
 
-type PinSource = Pick<BrowserState, "tabs" | "groups" | "history"> & Partial<Pick<BrowserState, "windows" | "splits">>;
+type PinSource = Pick<BrowserState, "tabs" | "groups" | "history" | "profiles"> & Partial<Pick<BrowserState, "windows" | "splits">>;
 
 function atPin(t: Tab, history: HistoryEntry[]): Partial<Pick<Tab, "url" | "title" | "favicon">> {
   const home = t.pinnedUrl;

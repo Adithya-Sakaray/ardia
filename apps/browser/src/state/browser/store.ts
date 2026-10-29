@@ -151,7 +151,7 @@ export const useBrowser = create<BrowserState>()(transactions.middleware(batched
     );
     const splits = sanitizeSplits(data.splits ?? {}, tabs);
     let bookmarks = data.bookmarks ?? s.bookmarks;
-    for (const id of profileOrder) bookmarks = ensureRoots({ profiles, bookmarks }, id)[0];
+    for (const id of profileOrder) bookmarks = ensureRoots(bookmarks, engineProfile({ profiles }, id))[0];
     const focused = data.focusedWindowId && windows[data.focusedWindowId] ? data.focusedWindowId : (windowOrder.at(-1) ?? null);
 
     const engines = new Set(Object.keys(profiles).map((id) => engineProfile({ profiles }, id)));
@@ -182,7 +182,7 @@ export const useBrowser = create<BrowserState>()(transactions.middleware(batched
       history: Object.fromEntries(Object.entries(data.history ?? {}).filter(([p]) => profiles[p])),
       historyReady: Object.fromEntries(Object.keys(data.history ?? {}).filter((p) => profiles[p]).map((p) => [p, true as const])),
       bookmarks,
-      bookmarksReady: Object.fromEntries(Object.keys(data.bookmarks?.roots ?? {}).filter((p) => profiles[p]).map((p) => [p, true as const])),
+      bookmarksReady: {},
       downloads: data.downloads ?? [],
       windowUi: {},
       peeks: {},

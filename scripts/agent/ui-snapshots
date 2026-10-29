@@ -240,7 +240,7 @@ s.importHistory("default", [
   { url: "https://en.wikipedia.org/wiki/Typography", title: "Typography - Wikipedia", visits: 1, lastVisit: at(1, 11, 2) },
   { url: "https://docs.ardia.test/handbook", title: "Handbook", visits: 4, lastVisit: at(3, 16, 45) },
 ]);
-const roots = s.bookmarks.roots.default;
+const roots = ac.bookmarks.bookmarkRoots(s, "default");
 const folder = s.addBookmarkFolder({ profileId: "default", title: "Reading", parentId: roots && roots.bar });
 s.addBookmark({ profileId: "default", url: "https://swift.org/", title: "Swift", parentId: roots && roots.bar });
 s.addBookmark({ profileId: "default", url: "https://developer.apple.com/", title: "Apple Developer", parentId: roots && roots.bar });

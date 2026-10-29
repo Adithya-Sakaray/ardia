@@ -84,7 +84,7 @@ async function state(name) {
     name,
     `
     const s = ac.store.getState();
-    const b = s.bookmarks; const roots = b.roots.default;
+    const b = s.bookmarks; const roots = ac.bookmarks.bookmarkRoots(s, "default");
     const walk = (id) => { const n = b.nodes[id]; return n.kind === "url" ? n.title + " " + n.url : { [n.title]: n.children.map(walk) }; };
     const u = acSync.useSync.getState();
     const reveal = (p) => ac.engine.call("passwords.reveal", { profile: "", origin: p.origin, username: p.username }).then((r) => r.password, (e) => "(" + e.message + ")");
@@ -227,9 +227,9 @@ try {
     `
     const s = ac.store.getState();
     const nodes = Object.values(s.bookmarks.nodes);
-    s.moveBookmark(nodes.find((n) => n.title === "ACE2E Bookmark Alpha").id, s.bookmarks.roots.default.bar, 0);
+    s.moveBookmark(nodes.find((n) => n.title === "ACE2E Bookmark Alpha").id, ac.bookmarks.bookmarkRoots(s, "default").bar, 0);
     s.removeBookmark(nodes.find((n) => n.title === "ACE2E Folder").id);
-    s.addBookmark({ profileId: "default", url: "${W}/alpha.html?nne2e=bmA2", title: "ACE2E Second from A", parentId: s.bookmarks.roots.default.other });
+    s.addBookmark({ profileId: "default", url: "${W}/alpha.html?nne2e=bmA2", title: "ACE2E Second from A", parentId: ac.bookmarks.bookmarkRoots(s, "default").other });
     s.updateSettings({ appearance: "light", cleanUpInactiveTabsAfterMinutes: null });
     const w = ac.store.getState().windowOrder[0];
     ac.store.getState().pinTabs([s.newTab(w, { url: "${W}/beta.html?nne2e=pin2" })], true);

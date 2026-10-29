@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
+const { bookmarkRoots } = await import("../bookmarks/bookmarks.ts");
 const { addFolderToSidebar, allArcHolders, restorableArcHolder, restoreArcFolders } = await import("../bookmarks/bookmarkGroups.ts");
 const { importArcSpace } = await import("../import/apply.ts");
 const { sidebarEntries } = await import("../sidebar/entries.ts");
@@ -29,9 +30,9 @@ const tree = (groupId) => {
 const roots = (w) => sidebarEntries(S(), w).pinned.filter((e) => e.startsWith("g:")).map((e) => e.slice(2));
 
 function start() {
-  S().hydrate({ bookmarks: { nodes: {}, roots: {} } });
+  S().hydrate({ bookmarks: { nodes: {} } });
   const w = S().createWindow({ url: "https://home.example/" });
-  const bar = S().bookmarks.roots[P]?.bar ?? (S().addBookmark({ profileId: P, url: "https://seed.example/", title: "seed" }), S().bookmarks.roots[P].bar);
+  const bar = bookmarkRoots(S(), P)?.bar ?? (S().addBookmark({ profileId: P, url: "https://seed.example/", title: "seed" }), bookmarkRoots(S(), P).bar);
   return { w, bar };
 }
 

@@ -208,7 +208,7 @@ try {
   await check("tab: Add to Bookmarks…, Add Bookmark to Folder › Bookmarks Bar and › New Folder…", async () => {
     await choose("t:b", "bookmark");
     assert.deepEqual(await run(`const o = ac.menus.useBookmarkDialog.getState().open; ac.menus.useBookmarkDialog.setState({ open: null }); return o && [o.kind, o.windowId];`), ["page", "w1"]);
-    const where = (name) => `const s = st(); const roots = s.bookmarks.roots.default;
+    const where = (name) => `const s = st(); const roots = ac.bookmarks.bookmarkRoots(s, "default");
       return Object.values(s.bookmarks.nodes).filter((n) => n.kind === "url" && n.url.endsWith("/${name}")).map((n) => n.parentId === roots.bar ? "bar" : (s.bookmarks.nodes[n.parentId]?.title ?? n.parentId));`;
     assert.equal((await run(where("b"))).length, 1, "b bookmarked");
     await choose("t:c", "folder:bar");
@@ -388,7 +388,7 @@ try {
     await run(`st().closeTabs(${JSON.stringify(copyTabs)}); mkGroup("ToBar", ["bb1", "bb2"]); return settle(500);`);
     const toBar = await run(`return groupNamed("ToBar").id;`);
     await choose(`g:${toBar}`, "bookmarkBar");
-    assert.deepEqual(await run(`const s = st(); const f = Object.values(s.bookmarks.nodes).find((n) => n.kind === "folder" && n.title === "ToBar"); return f && [f.parentId === s.bookmarks.roots.default.bar, f.children.map((id) => s.bookmarks.nodes[id].url), !!groupNamed("ToBar"), byUrl("bb1").length];`), [true, [url("bb1"), url("bb2")], false, 0]);
+    assert.deepEqual(await run(`const s = st(); const f = Object.values(s.bookmarks.nodes).find((n) => n.kind === "folder" && n.title === "ToBar"); return f && [f.parentId === ac.bookmarks.bookmarkRoots(s, "default").bar, f.children.map((id) => s.bookmarks.nodes[id].url), !!groupNamed("ToBar"), byUrl("bb1").length];`), [true, [url("bb1"), url("bb2")], false, 0]);
     await run(`mkGroup("ToClose", ["cg1"]); return settle(500);`);
     const closeMenu = await choose(`g:${await run(`return groupNamed("ToClose").id;`)}`, "close", { answer: "confirm" });
     rep.log(`Close Group title: ${itemsOf(closeMenu, "close").title}; dialog: ${dialog().title}`);

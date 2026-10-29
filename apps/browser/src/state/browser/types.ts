@@ -120,7 +120,6 @@ export type BookmarkFolder = Extract<BookmarkNode, { kind: "folder" }>;
 
 export type Bookmarks = {
   nodes: Record<string, BookmarkNode>;
-  roots: Record<string, { bar: string; other: string }>;
 };
 
 export type TabSnapshot = Pick<

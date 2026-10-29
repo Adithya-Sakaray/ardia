@@ -1,7 +1,7 @@
 import type { MenuItem } from "../../platform/menus";
 import type { ChoiceItem } from "../app/menuChoice";
 import { menuShortcut } from "../commands/commandShortcuts";
-import { folderChildren, ROOT_TITLES } from "../bookmarks/bookmarks";
+import { bookmarkRoots, folderChildren, ROOT_TITLES } from "../bookmarks/bookmarks";
 import type { BrowserState } from "../browser/store";
 import { bookmarkProfileId, windowTitle } from "../browser/model";
 import { groupLabel } from "../pins/tabGrouping";
@@ -73,7 +73,7 @@ export function groupItems(s: BrowserState, windowId: string, exclude: string | 
 }
 
 export function bookmarkFolderItems(s: BrowserState, windowId: string): DestinationItem[] {
-  const roots = s.bookmarks.roots[bookmarkProfileId(s, s.windows[windowId])];
+  const roots = bookmarkRoots(s, bookmarkProfileId(s, s.windows[windowId]));
   const folders = roots ? [...folderChildren(s.bookmarks, roots.bar), ...folderChildren(s.bookmarks, roots.other)].filter((n) => n.kind === "folder") : [];
   const folder = (parentId: string | undefined, title: string): DestinationItem => ({ value: { kind: "folder", parentId }, title });
   return [

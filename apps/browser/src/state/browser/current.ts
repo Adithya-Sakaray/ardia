@@ -2,6 +2,7 @@ import { engineProfile, resolveWindowId } from "./model";
 import { useBrowser } from "./store";
 import { isSilenced, muteState, type MuteState } from "../tabs/mute";
 import { focusedWindowOf } from "../windows/ui";
+import { bookmarkRoots } from "../bookmarks/bookmarks";
 
 export const currentSettings = () => useBrowser.getState().settings;
 export const currentTab = (tabId: string) => useBrowser.getState().tabs[tabId];
@@ -10,6 +11,7 @@ export const currentProfile = (profileId: string) => useBrowser.getState().profi
 export const currentGroup = (groupId: string) => useBrowser.getState().groups[groupId];
 export const focusedWindowId = () => focusedWindowOf(useBrowser.getState());
 export const currentBookmarks = () => useBrowser.getState().bookmarks;
+export const currentBookmarkRoots = (profileId: string) => bookmarkRoots(useBrowser.getState(), profileId);
 export const currentProfiles = () => useBrowser.getState().profiles;
 export const currentProfileOrder = () => useBrowser.getState().profileOrder;
 export const currentEngineProfile = (profileId: string) => engineProfile(useBrowser.getState(), profileId);

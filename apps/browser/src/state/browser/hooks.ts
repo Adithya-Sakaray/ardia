@@ -99,7 +99,7 @@ export const useSettings = <T>(select: (settings: Settings) => T): T => useBrows
 
 export function useIsBookmarked(url: string): boolean {
   const id = useWindowId();
-  return useBrowser((s) => isBookmarked(s.bookmarks, bookmarkProfileId(s, s.windows[id]), url));
+  return useBrowser((s) => isBookmarked(s, bookmarkProfileId(s, s.windows[id]), url));
 }
 
 export const useAppDark = (): boolean => useBrowser((s) => s.ui.appDark);

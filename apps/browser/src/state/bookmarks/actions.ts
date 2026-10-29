@@ -1,7 +1,7 @@
 import { confirm } from "../../platform/dialogs";
 import { create } from "zustand";
 import { focus, openWindow } from "../browser/actions";
-import { folderLinks, isWithin, ownerOfBookmark } from "./bookmarks";
+import { bookmarkRoots, folderLinks, isWithin, ownerOfBookmark } from "./bookmarks";
 import { storeAction, useBrowser } from "../browser/store";
 import { activeTabId, bookmarkProfileId, resolveWindowId, tabTitle, viewTabIds } from "../browser/model";
 import { originalProfile } from "../windows/small";
@@ -83,7 +83,7 @@ export const useBookmarkDialog = create<{ open: BookmarkDialogState | null }>()(
 
 export const closeBookmarkDialog = () => useBookmarkDialog.setState({ open: null });
 
-export const profileOfBookmark = (id: string) => ownerOfBookmark(useBrowser.getState().bookmarks, id);
+export const profileOfBookmark = (id: string) => ownerOfBookmark(useBrowser.getState(), id);
 
 export function bookmarkTab(windowId: string, tabId: string) {
   const s = useBrowser.getState();
@@ -91,7 +91,7 @@ export function bookmarkTab(windowId: string, tabId: string) {
   const tab = s.tabs[tabId];
   if (!s.windows[id] || !tab?.url) return;
   const profileId = bookmarkProfileId(s, s.windows[id]);
-  const roots = s.bookmarks.roots[profileId];
+  const roots = bookmarkRoots(s, profileId);
   const existing = Object.values(s.bookmarks.nodes).find(
     (n) => n.kind === "url" && n.url === tab.url && roots && isWithin(useBrowser.getState().bookmarks, n.id, [roots.bar, roots.other]),
   );

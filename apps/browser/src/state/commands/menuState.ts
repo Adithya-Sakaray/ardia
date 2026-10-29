@@ -1,7 +1,7 @@
 import type { MenuBookmark, MenuState } from "../../platform/commands";
-import { folderChildren, isBookmarked, isWithin, ROOT_TITLES } from "../bookmarks/bookmarks";
+import { engineBookmarkRoots, folderChildren, isBookmarked, isWithin, ROOT_TITLES } from "../bookmarks/bookmarks";
 import type { BrowserState } from "../browser/store";
-import { activeTab, bookmarkProfileId, IDLE_LIVE, isPinnedRow, tabLabel, togglePinTitle, windowTitle, tabLayoutOf } from "../browser/model";
+import { activeTab, bookmarkProfileId, engineProfile, IDLE_LIVE, isPinnedRow, tabLabel, togglePinTitle, windowTitle, tabLayoutOf } from "../browser/model";
 import { canSwitchEngine, tabEngine } from "../engines/engines";
 import { peekTabId } from "../peek/peek";
 import { splitOf } from "../splits/splits";
@@ -25,12 +25,12 @@ function menuBookmarks(b: Bookmarks, folderId: string, depth = 0): MenuBookmark[
 type BookmarkMenus = Pick<MenuState, "bookmarkFolders" | "recentBookmarks" | "bookmarksBar" | "otherBookmarks">;
 const bookmarkMenuCache = new WeakMap<Bookmarks, Map<string, BookmarkMenus>>();
 
-function bookmarkMenus(b: Bookmarks, profileId: string): BookmarkMenus {
-  let perProfile = bookmarkMenuCache.get(b);
-  if (!perProfile) bookmarkMenuCache.set(b, (perProfile = new Map()));
-  const cached = perProfile.get(profileId);
+function bookmarkMenus(b: Bookmarks, engine: string): BookmarkMenus {
+  let perEngine = bookmarkMenuCache.get(b);
+  if (!perEngine) bookmarkMenuCache.set(b, (perEngine = new Map()));
+  const cached = perEngine.get(engine);
   if (cached) return cached;
-  const roots = b.roots[profileId];
+  const roots = engineBookmarkRoots(b, engine);
   const menus: BookmarkMenus = roots
     ? {
         bookmarkFolders: [
@@ -48,7 +48,7 @@ function bookmarkMenus(b: Bookmarks, profileId: string): BookmarkMenus {
         bookmarksBar: menuBookmarks(b, roots.bar),
         otherBookmarks: menuBookmarks(b, roots.other) }
     : { bookmarkFolders: [], recentBookmarks: [], bookmarksBar: [], otherBookmarks: [] };
-  perProfile.set(profileId, menus);
+  perEngine.set(engine, menus);
   return menus;
 }
 
@@ -95,7 +95,7 @@ export function menuState(s: BrowserState): MenuState {
   if (page) titles.toggleMute = muteTitle(muteState(s, page));
   if (page && tabEngine(s, page.id) === "webkit") titles.togglePageEngine = "Open Page in Chromium";
   if (!canSwitchEngine(page?.url)) disabled.push("togglePageEngine");
-  if (page?.url && isBookmarked(s.bookmarks, bookmarkProfile, page.url)) {
+  if (page?.url && isBookmarked(s, bookmarkProfile, page.url)) {
     titles.bookmarkPage = "Edit Bookmark…";
   }
 
@@ -127,7 +127,7 @@ export function menuState(s: BrowserState): MenuState {
     titles,
     profiles: s.profileOrder.map((id) => ({ id, title: s.profiles[id]!.name, current: w?.profileId === id })),
     windows: w?.incognito ? [] : regularWindows.filter((id) => id !== windowId).map((id) => ({ id, title: windowTitle(s, id) })),
-    ...bookmarkMenus(s.bookmarks, bookmarkProfile),
+    ...bookmarkMenus(s.bookmarks, engineProfile(s, bookmarkProfile)),
     recentlyClosed: closed,
     recentlyClosedGroups: sidebar.recentlyClosedGroups,
     warnBeforeQuitting: s.settings.warnBeforeQuitting,

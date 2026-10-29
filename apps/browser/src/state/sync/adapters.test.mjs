@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
+const { bookmarkRoots } = await import("../bookmarks/bookmarks.ts");
 const model = await import("../browser/model.ts");
 const { Clock, emptyScope, syncScope } = await import("@ardia/sync");
 const adapters = await import("./adapters.ts");
@@ -58,7 +59,7 @@ class Device {
     this.legacy = legacy;
     this.settings = settings;
     S().hydrate({});
-    useBrowser.setState({ historyReady: { default: true }, bookmarksReady: { default: true } });
+    useBrowser.setState({ historyReady: { default: true }, bookmarksReady: { "": true } });
     this.browser = S();
     this.scopes = { app: emptyScope(), p: emptyScope() };
     this.clock = new Clock(id);
@@ -116,7 +117,7 @@ async function syncAll(devices, rounds = 2) {
 function tree(device, profileId = "default") {
   return device.with(() => {
     const b = S().bookmarks;
-    const roots = b.roots[profileId];
+    const roots = bookmarkRoots(S(), profileId);
     const walk = (id) => {
       const n = b.nodes[id];
       return n.kind === "url" ? `${n.title}=${n.url}` : { [n.title]: n.children.map(walk) };
@@ -142,7 +143,7 @@ const OLD_SESSION = (() => {
 const relaunch = (device, settings) =>
   device.with(() => {
     S().hydrate({ settings });
-    useBrowser.setState({ historyReady: { default: true }, bookmarksReady: { default: true } });
+    useBrowser.setState({ historyReady: { default: true }, bookmarksReady: { "": true } });
   });
 
 test("settings: what a Mac only has by default isn't sent; nulls from another Mac are no say; Never and an explicit off apply", async () => {
@@ -1104,25 +1105,24 @@ test("bookmarks: a Mac on old ids and one on Chrome's UUIDs keep one tree", asyn
   const old = new Device("devOld", folder);
   const now = new Device("devNew", folder);
   old.with(() => {
-    const roots = { bar: "bm-bar", other: "bm-other" };
     const n = (id, parentId, x) => ({ id, parentId, addedAt: 5, ...x });
     S().hydrate({
       bookmarks: {
-        roots: { default: roots },
         nodes: {
-          "bm-bar": n("bm-bar", null, { kind: "folder", title: "Bookmarks Bar", children: ["bm-f"] }),
-          "bm-other": n("bm-other", null, { kind: "folder", title: "Other Bookmarks", children: [] }),
-          "bm-f": n("bm-f", "bm-bar", { kind: "folder", title: "F", children: ["bm-a", "bm-b"] }),
+          "bar@default": n("bar@default", null, { kind: "folder", title: "Bookmarks Bar", children: ["bm-f"] }),
+          "other@default": n("other@default", null, { kind: "folder", title: "Other Bookmarks", children: [] }),
+          "bm-f": n("bm-f", "bar@default", { kind: "folder", title: "F", children: ["bm-a", "bm-b"] }),
           "bm-a": n("bm-a", "bm-f", { kind: "url", title: "A", url: "https://a.example/", favicon: null }),
           "bm-b": n("bm-b", "bm-f", { kind: "url", title: "B", url: "https://b.example/", favicon: null }),
         },
       },
     });
+    useBrowser.setState({ bookmarksReady: { "": true } });
   });
   await old.sync();
   now.with(() => {
-    S().hydrate({ bookmarks: { nodes: {}, roots: {} } });
-    useBrowser.setState({ bookmarksReady: { default: true } });
+    S().hydrate({ bookmarks: { nodes: {} } });
+    useBrowser.setState({ bookmarksReady: { "": true } });
     const f = S().addBookmarkFolder({ profileId: "default", title: "F" });
     const a = S().addBookmark({ profileId: "default", url: "https://a.example/", title: "A", parentId: f });
     const b = S().addBookmark({ profileId: "default", url: "https://b.example/", title: "B", parentId: f });
@@ -1138,7 +1138,7 @@ test("bookmarks: a Mac on old ids and one on Chrome's UUIDs keep one tree", asyn
     const uf = bookmarkUuidFor("bm-f");
     nodes[uf] = { ...nodes[uf], children: [bookmarkUuidFor("bm-a"), bookmarkUuidFor("bm-b")] };
     for (const id of [bookmarkUuidFor("bm-a"), bookmarkUuidFor("bm-b")]) nodes[id] = { ...nodes[id], parentId: uf };
-    const bar = S().bookmarks.roots.default.bar;
+    const bar = bookmarkRoots(S(), "default").bar;
     nodes[bar] = { ...nodes[bar], children: [uf] };
     useBrowser.setState({ bookmarks: { ...S().bookmarks, nodes } });
   });
@@ -1988,4 +1988,75 @@ test("settings received while this Mac ran a version that didn't sync them take 
   assert.equal(b.with(() => S().settings.pageScrollBars), "system", "a value chosen here stays");
   assert.equal(a.with(() => S().settings.pageScrollBars), "system", "and goes out as the newer edit");
   assert.equal((await b.sync()).published, 0, "settled");
+});
+
+const nightlyFour = await import("./fixtures/profileData-v0.2.43-nightly.4.ts");
+
+class NightlyFourMac extends Device {
+  constructor(id, folder) {
+    super(id, folder);
+    const root = (rootId, title) => ({ kind: "folder", id: rootId, parentId: null, title, children: [], addedAt: 0 });
+    this.browser = {
+      ...this.browser,
+      bookmarks: { nodes: { "bar@default": root("bar@default", "Bookmarks Bar"), "other@default": root("other@default", "Other Bookmarks") }, roots: { default: { bar: "bar@default", other: "other@default" } } },
+      bookmarksReady: { default: true },
+      history: { default: [] },
+      historyReady: { default: true },
+      historyFloor: {},
+    };
+  }
+  async sync() {
+    stub.current.device = this.id;
+    useBrowser.setState(this.browser, true);
+    try {
+      return await syncScope({
+        scope: "p",
+        state: this.scopes.p,
+        transport: this.folder.transport(),
+        adapters: [nightlyFour.bookmarksAdapter("default"), nightlyFour.historyAdapter("default")],
+        clock: this.clock,
+        device: this.id,
+        options: { expired: nightlyFour.historyExpired },
+      });
+    } finally {
+      this.browser = S();
+    }
+  }
+}
+
+const nightlyFourHistory = (d) => d.with(() => S().history.default.map((h) => h.url).sort());
+const todaysHistory = (d) => d.with(() => (S().history.default ?? []).map((h) => h.url).sort());
+
+test("bookmarks and history: a Mac on v0.2.43-nightly.4 and one on today's build trade adds, edits and deletes both ways", async () => {
+  const folder = new Folder();
+  const today = new Device("devToday", folder);
+  const old = new NightlyFourMac("devFour", folder);
+  for (const d of [today, old]) stub.historyDbs.delete(d.id);
+  today.with(() => useBrowser.setState({ bookmarks: { nodes: {} } }));
+  const t = Date.now() - 3_600_000;
+  const x = today.with(() => S().addBookmark({ profileId: "default", url: "https://x.example/", title: "X" }));
+  today.with(() => S().importHistory("default", [{ url: "https://h1.example/", title: "H1", visits: 1, lastVisit: t }]));
+  await syncAll([today, old]);
+  assert.deepEqual(tree(old), { bar: { "Bookmarks Bar": ["X=https://x.example/"] }, other: { "Other Bookmarks": [] } });
+  assert.deepEqual(nightlyFourHistory(old), ["https://h1.example/"]);
+
+  old.with(() =>
+    useBrowser.setState((s) => ({
+      bookmarks: { ...s.bookmarks, nodes: { ...s.bookmarks.nodes, [x]: { ...s.bookmarks.nodes[x], title: "X2" } } },
+      history: { default: [{ url: "https://h2.example/", title: "H2", favicon: null, visits: 1, lastVisit: t + 1000, visitTimes: [t + 1000] }] },
+    })),
+  );
+  await syncAll([old, today]);
+  assert.deepEqual(tree(today), { bar: { "Bookmarks Bar": ["X2=https://x.example/"] }, other: { "Other Bookmarks": [] } }, "the old Mac's rename arrives");
+  assert.deepEqual(todaysHistory(today), ["https://h2.example/"], "the old Mac's delete and new visit arrive");
+
+  today.with(() => {
+    S().removeBookmark(x);
+    S().addBookmark({ profileId: "default", url: "https://y.example/", title: "Y", parentId: bookmarkRoots(S(), "default").other });
+    S().removeHistory("default", ["https://h2.example/"]);
+  });
+  await syncAll([today, old]);
+  assert.deepEqual(tree(old), { bar: { "Bookmarks Bar": [] }, other: { "Other Bookmarks": ["Y=https://y.example/"] } }, "today's delete and add arrive");
+  assert.deepEqual(nightlyFourHistory(old), [], "today's history delete arrives");
+  assert.equal((await today.sync()).published + (await old.sync()).published, 0, "settled");
 });

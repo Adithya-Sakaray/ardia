@@ -6,10 +6,11 @@ import { applyOps, bookmarkOps, flatFromEngine, flatFromStore, type Flat } from 
 import { useBrowser, type BrowserState } from "../browser/store";
 import { engineProfile, isIncognitoProfile } from "../browser/model";
 import type { BookmarkFolder, BookmarkNode, Bookmarks } from "../browser/types";
-import { engineProfiles, profilesUsing } from "../profiles/engineProfiles";
+import { engineProfiles } from "../profiles/engineProfiles";
 import { migrateLegacyFile } from "../app/legacyFiles";
 
 const LEGACY_FILE = "bookmarks.json";
+type LegacyFile = { bookmarks?: { nodes: Bookmarks["nodes"]; roots: Record<string, { bar: string; other: string }> } };
 const LEGACY_KEPT_MS = 10_000;
 const CACHE_FILE = "bookmarks-cache.json";
 const CACHE_SAVE_MS = 2000;
@@ -48,10 +49,9 @@ function adopt(engine: string, flat: Flat, { ready = legacyMoved } = {}) {
     }
     nodes[roots.bar] = { ...(nodes[roots.bar] as BookmarkFolder), title: ROOT_TITLES.bar };
     nodes[roots.other] = { ...(nodes[roots.other] as BookmarkFolder), title: ROOT_TITLES.other };
-    const ids = profilesUsing(s, engine);
     return {
-      bookmarks: { nodes, roots: { ...s.bookmarks.roots, ...Object.fromEntries(ids.map((id) => [id, roots])) } },
-      ...(ready ? { bookmarksReady: { ...s.bookmarksReady, ...Object.fromEntries(ids.map((id) => [id, true as const])) } } : {}),
+      bookmarks: { ...s.bookmarks, nodes },
+      ...(ready && !s.bookmarksReady[engine] ? { bookmarksReady: { ...s.bookmarksReady, [engine]: true as const } } : {}),
     };
   });
 }
@@ -69,7 +69,7 @@ async function sendOps(engine: string, ops: BookmarkOp[]): Promise<boolean> {
 async function readTree(engine: string, state: EngineState) {
   await watchBookmarks(engine);
   const fetched = flatFromEngine(await bookmarkTree(engine), engine);
-  const base = state.shadow ?? state.shown ?? flatFromStore({ nodes: {}, roots: {} }, engine);
+  const base = state.shadow ?? state.shown ?? flatFromStore({ nodes: {} }, engine);
   const edits = bookmarkOps(base, flatFromStore(store().bookmarks, engine), engine);
   const merged = edits.length ? applyOps(fetched, edits, engine) : fetched;
   state.shadow = fetched;
@@ -153,12 +153,12 @@ function launchTrees(): Record<string, Flat> {
   const out: Record<string, Flat> = {};
   for (const [engine, nodes] of Object.entries(readCache())) {
     const roots = rootIdsFor(engine);
-    const b: Bookmarks = { nodes: Object.fromEntries(nodes.map((n) => [n.id, n])), roots: {} };
+    const b: Bookmarks = { nodes: Object.fromEntries(nodes.map((n) => [n.id, n])) };
     if (b.nodes[roots.bar] && b.nodes[roots.other]) out[engine] = flatFromStore(b, engine);
   }
   if (Object.keys(out).length) return out;
   try {
-    const legacy = (JSON.parse(readDocument(LEGACY_FILE) ?? "null") as { bookmarks?: Bookmarks } | null)?.bookmarks;
+    const legacy = (JSON.parse(readDocument(LEGACY_FILE) ?? "null") as LegacyFile | null)?.bookmarks;
     const s = store();
     const uuids = new Map<string, string>();
     const uuidOf = (old: string) => {
@@ -177,7 +177,7 @@ function launchTrees(): Record<string, Flat> {
         const mapped = { ...n, id: id(n.id), parentId: n.parentId === null ? null : id(n.parentId) } as BookmarkNode;
         nodes[mapped.id] = mapped.kind === "folder" ? { ...mapped, children: mapped.children.map(id) } : mapped;
       }
-      out[engine] = flatFromStore({ nodes, roots: {} }, engine);
+      out[engine] = flatFromStore({ nodes }, engine);
     }
   } catch {}
   return out;
@@ -202,7 +202,7 @@ function saveCache() {
 
 export const migrateBookmarksFile = ({ keepMs = LEGACY_KEPT_MS } = {}) => migrateLegacyFile(LEGACY_FILE, "bookmarks", moveBookmarks, keepMs);
 
-async function moveBookmarks(file: { bookmarks?: Bookmarks }) {
+async function moveBookmarks(file: LegacyFile) {
   const b = file.bookmarks ?? { nodes: {}, roots: {} };
   const s = store();
   const done = new Set<string>();

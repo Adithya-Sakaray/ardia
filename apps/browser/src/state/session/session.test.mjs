@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
+const { bookmarkRoots } = await import("../bookmarks/bookmarks.ts");
 const model = await import("../browser/model.ts");
 const { migrateHistoryFile, reloadHistory, startHistory } = await import("../history/engineSync.ts");
 const { flushPersistence, loadSession, startPersistence } = await import("./persist.ts");
@@ -83,7 +84,7 @@ test("profiles sharing data still share it after a save and reload", () => {
   S().hydrate(saved);
   assert.equal(model.engineProfile(S(), b), a);
   assert.equal(S().history[a], S().history[b]);
-  assert.deepEqual(S().bookmarks.roots[a], S().bookmarks.roots[b]);
+  assert.deepEqual(bookmarkRoots(S(), a), bookmarkRoots(S(), b));
 });
 
 const flushEvents = () => new Promise((r) => setTimeout(r, 0));

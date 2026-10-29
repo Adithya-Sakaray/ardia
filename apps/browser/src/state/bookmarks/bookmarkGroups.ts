@@ -3,6 +3,7 @@ import { bookmarkDraft, hasLinks, MAX_DRAFT_LINKS, withDraftGroups, type DraftGr
 import { bookmarkProfileId, plural } from "../browser/model";
 import { isRegularWindow, mainWindowFor } from "../windows/small";
 import { showToast } from "../app/toasts";
+import { bookmarkRoots, type BookmarkOwners } from "./bookmarks";
 
 export const ARC_HOLDER = " (Arc)";
 
@@ -37,22 +38,22 @@ export function addFolderToSidebar(folderId: string, windowId: string | null): s
   return draft ? addGroupsFromDrafts(profileOfWindow(windowId), [draft], windowId).made : [];
 }
 
-function holderProfile(s: Pick<BrowserState, "bookmarks">, folderId: string, prefer?: string): string | undefined {
+function holderProfile(s: BookmarkOwners, folderId: string, prefer?: string): string | undefined {
   const node = s.bookmarks.nodes[folderId];
   if (node?.kind !== "folder" || !node.title.endsWith(ARC_HOLDER) || !node.parentId) return undefined;
-  const owners = Object.keys(s.bookmarks.roots).filter((p) => s.bookmarks.roots[p]!.bar === node.parentId);
+  const owners = s.profileOrder.filter((p) => bookmarkRoots(s, p)?.bar === node.parentId);
   return prefer && owners.includes(prefer) ? prefer : owners[0];
 }
 
-export function restorableArcHolder(s: Pick<BrowserState, "bookmarks">, folderId: string): boolean {
+export function restorableArcHolder(s: BookmarkOwners, folderId: string): boolean {
   const node = s.bookmarks.nodes[folderId];
   return !!holderProfile(s, folderId) && node?.kind === "folder" && node.children.some((id) => makesGroup(s, id));
 }
 
-export const allArcHolders = (s: Pick<BrowserState, "bookmarks">) => [...new Set(Object.keys(s.bookmarks.roots).flatMap((p) => arcHolders(s, p)))];
+export const allArcHolders = (s: BookmarkOwners) => [...new Set(s.profileOrder.flatMap((p) => arcHolders(s, p)))];
 
-export function arcHolders(s: Pick<BrowserState, "bookmarks">, profileId: string): string[] {
-  const bar = s.bookmarks.roots[profileId]?.bar;
+export function arcHolders(s: BookmarkOwners, profileId: string): string[] {
+  const bar = bookmarkRoots(s, profileId)?.bar;
   const root = bar ? s.bookmarks.nodes[bar] : undefined;
   return root?.kind === "folder" ? root.children.filter((id) => restorableArcHolder(s, id)) : [];
 }

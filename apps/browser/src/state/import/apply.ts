@@ -14,7 +14,7 @@ import {
 } from "../../platform/importModule";
 import { addGroupsFromDrafts } from "../bookmarks/bookmarkGroups";
 import { adoptFavicons } from "../favicons/favicons";
-import type { BookmarkDraft } from "../bookmarks/bookmarks";
+import { bookmarkRoots, type BookmarkDraft } from "../bookmarks/bookmarks";
 import type { GroupDraft } from "../groups/draftGroups";
 import { useBrowser } from "../browser/store";
 import { engineProfile, isIncognitoProfile } from "../browser/model";
@@ -74,8 +74,8 @@ const linkCount = (nodes: ImportedNode[]): number => nodes.reduce((n, c) => n + 
 
 export function importBookmarks(profileId: string, root: ImportedNode | undefined, browserName: string): number {
   if (!root?.children?.length) return 0;
-  if (!useBrowser.getState().bookmarks.roots[profileId]) useBrowser.getState().addBookmarkTree(profileId, []);
-  const roots = useBrowser.getState().bookmarks.roots[profileId]!;
+  if (!bookmarkRoots(useBrowser.getState(), profileId)) useBrowser.getState().addBookmarkTree(profileId, []);
+  const roots = bookmarkRoots(useBrowser.getState(), profileId)!;
   const toolbar = root.children.filter((c) => c.role === "toolbar").flatMap((c) => c.children ?? []);
   const rest = root.children.filter((c) => c.role !== "toolbar");
   const other = rest.flatMap((c) => (c.role === "other" || !c.role ? (c.type === "folder" ? (c.children ?? []) : [c]) : [c]));
