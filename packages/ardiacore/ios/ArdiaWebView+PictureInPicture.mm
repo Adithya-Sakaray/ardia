@@ -1,10 +1,12 @@
 #import "ArdiaWebViewInternal.h"
+#import "ArdiaRuntime.h"
 #import "ArdiaLaunchConfig.h"
 #import "ArdiaPictureInPicture.h"
 
 #import <objc/runtime.h>
 
 using namespace ardia_web_view;
+using namespace ardia_runtime;
 
 static const NSUInteger kControlPressesKept = 8;
 static const NSTimeInterval kControlClickLifetime = 10;
@@ -113,7 +115,7 @@ BOOL TracingPictureInPicture() {
   NSDictionary *np = _nowPlaying[_nowPlayingFrame ?: @""];
   [_tab tracePictureInPicture:[NSString stringWithFormat:@"%@ (%@): autoPictureInPicture=%d capturing=%d nowPlaying=%@ actions=%@",
                                                          what, _tab.url, _autoPictureInPicture, _capturing,
-                                                         np[@"playbackState"] ?: @"none", JSONString(np[@"actions"] ?: @[])]
+                                                         np[@"playbackState"] ?: @"none", JSONText(np[@"actions"] ?: @[])]
                    withInputs:YES];
   ArdiaCoreTab *tab = _tab;
   [_tab evaluate:@"post('result', JSON.stringify({ documentPictureInPicture: 'documentPictureInPicture' in window, "

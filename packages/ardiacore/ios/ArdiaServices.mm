@@ -5,6 +5,7 @@
 #import "ArdiaInternal.h"
 #import "ArdiaExtensionPackage.h"
 #import "ArdiaWebViewInternal.h"
+#import "ArdiaRuntime.h"
 
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
@@ -12,23 +13,15 @@
 
 #include <cmath>
 
+using namespace ardia_runtime;
+
 namespace {
 
 NSDictionary *Parse(NSString *json) {
-  NSData *data = [json dataUsingEncoding:NSUTF8StringEncoding];
-  id value = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
+  id value = JSONObject(json);
   return [value isKindOfClass:NSDictionary.class] ? value : @{@"error" : @"bad reply from the engine"};
 }
 
-NSString *JSON(NSDictionary *value) {
-  NSData *data = value ? [NSJSONSerialization dataWithJSONObject:value options:0 error:nil] : nil;
-  return data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : nil;
-}
-
-void Wipe(NSMutableData *data) {
-  volatile unsigned char *bytes = (volatile unsigned char *)data.mutableBytes;
-  for (NSUInteger i = 0; i < data.length; i++) bytes[i] = 0;
-}
 
 char *AppendHex(char *out, NSString *text) {
   const NSUInteger capacity = [text maximumLengthOfBytesUsingEncoding:NSUTF8StringEncoding];
@@ -42,7 +35,7 @@ char *AppendHex(char *out, NSString *text) {
     *out++ = hex[bytes[i] >> 4];
     *out++ = hex[bytes[i] & 15];
   }
-  Wipe(raw);
+  WipeSecret(raw);
   return out;
 }
 
@@ -132,7 +125,7 @@ NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
 @implementation ArdiaServices
 
 + (void)call:(NSString *)name profile:(NSString *)profile args:(NSDictionary *)args completion:(ArdiaCoreResult)completion {
-  [ArdiaEngineBridge call:name profile:profile args:JSON(args) completion:^(NSString *json) { completion(Parse(json)); }];
+  [ArdiaEngineBridge call:name profile:profile args:args ? JSONText(args) : nil completion:^(NSString *json) { completion(Parse(json)); }];
 }
 
 + (void)callBase:(NSString *)name profile:(NSString *)profile args:(NSDictionary *)args completion:(ArdiaCoreResult)completion {

@@ -1,4 +1,5 @@
 #import "ArdiaWebViewInternal.h"
+#import "ArdiaRuntime.h"
 #import "ArdiaEarlyWindow.h"
 #import "ArdiaFieldTiming.h"
 #import "ArdiaHost.h"
@@ -11,6 +12,7 @@
 #include <cmath>
 
 using namespace ardia_web_view;
+using namespace ardia_runtime;
 
 namespace {
 
@@ -97,7 +99,7 @@ void AnswerHello(ArdiaCoreTab *tab, NSString *profile, NSString *frameId, BOOL m
     config[@"peekOtherSites"] = @([ArdiaTabRegistry viewForTab:to].peeksLinksToOtherSites);
     if (PeekTracing()) config[@"peekTrace"] = @YES;
     if (TracingPictureInPicture()) config[@"pipTrace"] = @YES;
-    [to callFrame:frameId kind:@"config" json:JSONString(config)];
+    [to callFrame:frameId kind:@"config" json:JSONText(config)];
   };
   if (origin && [origin hasPrefix:@"http"])
     [ArdiaServices siteSettings:profile ?: @"" origin:origin reply:^(NSDictionary *settings, NSString *) {
@@ -138,7 +140,7 @@ NSMutableOrderedSet<NSString *> *ScriptFramesOf(ArdiaCoreTab *tab) {
                      main:(BOOL)main
                    origin:(NSString *)verifiedOrigin {
   NSString *sender = VerifiedOrigin(verifiedOrigin) ?: (main ? OriginOf(tab.url) : nil);
-  id data = JSONValue(json);
+  id data = JSONObject(json);
   NSDictionary *dict = [data isKindOfClass:NSDictionary.class] ? data : nil;
   frameId = frameId ?: @"";
   if ([kind isEqualToString:@"hello"]) {
@@ -221,7 +223,7 @@ NSMutableOrderedSet<NSString *> *ScriptFramesOf(ArdiaCoreTab *tab) {
     [self emitZoom];
   } else if ([kind isEqualToString:@"pipTrace"]) {
     if (TracingPictureInPicture())
-      [_tab tracePictureInPicture:[NSString stringWithFormat:@"page (%@): %@", main ? @"main frame" : @"subframe", JSONString(dict ?: @{})]
+      [_tab tracePictureInPicture:[NSString stringWithFormat:@"page (%@): %@", main ? @"main frame" : @"subframe", JSONText(dict ?: @{})]
                        withInputs:NO];
   } else if ([kind isEqualToString:@"notification"] && dict) {
     PeekTrace(@{@"event" : @"notification", @"bytes" : @(json.length), @"origin" : sender ?: @""});
@@ -315,7 +317,7 @@ NSMutableOrderedSet<NSString *> *ScriptFramesOf(ArdiaCoreTab *tab) {
                                origin:request[@"origin"]
                                 audio:audio];
   [self callFrame:request[@"frame"] kind:@"displayMedia"
-             json:JSONString(@{@"id" : request[@"id"], @"sourceId" : sourceId.length ? sourceId : NSNull.null, @"audio" : @(audio != nil)})];
+             json:JSONText(@{@"id" : request[@"id"], @"sourceId" : sourceId.length ? sourceId : NSNull.null, @"audio" : @(audio != nil)})];
 }
 
 @end

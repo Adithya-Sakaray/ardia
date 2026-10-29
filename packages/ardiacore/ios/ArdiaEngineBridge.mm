@@ -1,11 +1,14 @@
 #import "ArdiaEngineBridge.h"
 
 #import "ArdiaInternal.h"
+#import "ArdiaRuntime.h"
 
 #import <dlfcn.h>
 #include <stdlib.h>
 
 #include "../../../engine/chromium/src/chrome/browser/ardia/public/ac_engine.h"
+
+using namespace ardia_runtime;
 
 namespace {
 
@@ -25,14 +28,9 @@ void *Symbol(const char *name) {
   return dlsym(RTLD_DEFAULT, name);
 }
 
-NSString *JSON(id value) {
-  NSData *data = [NSJSONSerialization dataWithJSONObject:value options:0 error:nil];
-  return data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : @"{}";
-}
-
 void Replied(void *context, const char *json) {
   void (^completion)(NSString *) = (__bridge_transfer void (^)(NSString *))context;
-  completion(json ? @(json) : JSON(@{@"error" : @"bad reply from the engine"}));
+  completion(json ? @(json) : JSONText(@{@"error" : @"bad reply from the engine"}));
 }
 
 NSString *RealPath(NSString *path) {
@@ -103,41 +101,38 @@ void InstallSink() {
 
 + (void)call:(NSString *)name profile:(NSString *)profile args:(NSString *)args completion:(void (^)(NSString *))completion {
   auto call = (ac_engine_call_t)Symbol(name.UTF8String);
-  if (!call) return completion(JSON(@{@"error" : [NSString stringWithFormat:@"the engine has no %@", name]}));
+  if (!call) return completion(JSONText(@{@"error" : [NSString stringWithFormat:@"the engine has no %@", name]}));
   if (ardia_host::IsPrivateProfile(profile)) {
     NSData *bytes = [(args.length ? args : @"{}") dataUsingEncoding:NSUTF8StringEncoding];
     NSMutableDictionary *parsed = [[NSJSONSerialization JSONObjectWithData:bytes options:0 error:nil] mutableCopy];
-    if (![parsed isKindOfClass:NSMutableDictionary.class]) return completion(JSON(@{@"error" : @"bad arguments"}));
+    if (![parsed isKindOfClass:NSMutableDictionary.class]) return completion(JSONText(@{@"error" : @"bad arguments"}));
     parsed[@"offTheRecord"] = @YES;
-    args = JSON(parsed);
+    args = JSONText(parsed);
   }
   NSString *data = ardia_host::OriginalProfileName(profile);
   void (^done)(NSString *) = [completion copy];
   NSString *argsCopy = [args copy];
   ardia_host::WithProfile(data, ^(ArdiaCoreProfile *p) {
-    if (!p || !ArdiaHost.isStarted) return done(JSON(@{@"error" : @"profile not loaded"}));
+    if (!p || !ArdiaHost.isStarted) return done(JSONText(@{@"error" : @"profile not loaded"}));
     call(p.path.UTF8String, argsCopy.UTF8String, Replied, (__bridge_retained void *)done);
   });
 }
 
 + (void)callWithSecret:(NSString *)name profile:(NSString *)profile args:(NSMutableData *)args completion:(void (^)(NSString *))completion {
   NSMutableData *secret = args;
-  void (^wipe)(void) = ^{
-    volatile unsigned char *bytes = (volatile unsigned char *)secret.mutableBytes;
-    for (NSUInteger i = 0; i < secret.length; i++) bytes[i] = 0;
-  };
+  void (^wipe)(void) = ^{ WipeSecret(secret); };
   auto call = (ac_engine_call_t)Symbol(name.UTF8String);
   const char *bytes = (const char *)secret.bytes;
   if (!call || ardia_host::IsPrivateProfile(profile) || !secret.length || bytes[secret.length - 1] != 0) {
     wipe();
-    return completion(JSON(@{@"error" : !call ? [NSString stringWithFormat:@"the engine has no %@", name]
+    return completion(JSONText(@{@"error" : !call ? [NSString stringWithFormat:@"the engine has no %@", name]
                                      : ardia_host::IsPrivateProfile(profile) ? @"private profile" : @"bad arguments"}));
   }
   void (^done)(NSString *) = [completion copy];
   ardia_host::WithProfile(profile ?: @"", ^(ArdiaCoreProfile *p) {
     if (!p || !ArdiaHost.isStarted || p.offTheRecord) {
       wipe();
-      return done(JSON(@{@"error" : @"profile not loaded"}));
+      return done(JSONText(@{@"error" : @"profile not loaded"}));
     }
     call(p.path.UTF8String, (const char *)secret.mutableBytes, Replied, (__bridge_retained void *)done);
     wipe();

@@ -1,4 +1,5 @@
 #import "ArdiaWebViewInternal.h"
+#import "ArdiaRuntime.h"
 #import "ArdiaLaunchConfig.h"
 #import "ArdiaEarlyWindow.h"
 #import "ArdiaFieldTiming.h"
@@ -10,6 +11,7 @@
 #include <cmath>
 
 using namespace ardia_web_view;
+using namespace ardia_runtime;
 
 namespace {
 
@@ -41,11 +43,6 @@ bool SamePage(NSString *a, NSString *b) {
   return a && b && [strip(a) isEqualToString:strip(b)];
 }
 
-id JSONValue(NSString *json) {
-  NSData *data = [json dataUsingEncoding:NSUTF8StringEncoding];
-  return data ? [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingFragmentsAllowed error:nil] : nil;
-}
-
 NSString *Text(NSDictionary *d, NSString *key, NSUInteger max) {
   NSString *s = Field<NSString>(d, key);
   if (s.length <= max) return s;
@@ -69,11 +66,6 @@ NSString *OriginOf(NSString *url) {
 }
 
 NSString *VerifiedOrigin(NSString *origin) { return origin.length && ![origin isEqualToString:@"null"] ? origin : nil; }
-
-NSString *JSONString(id value) {
-  NSData *data = [NSJSONSerialization dataWithJSONObject:value ?: NSNull.null options:NSJSONWritingFragmentsAllowed error:nil];
-  return data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : @"null";
-}
 
 void NoteEvent(int browserId, NSString *name, NSDictionary *payload) {
 #if DEBUG

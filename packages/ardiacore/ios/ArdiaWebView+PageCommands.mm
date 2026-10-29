@@ -1,6 +1,8 @@
 #import "ArdiaWebViewInternal.h"
+#import "ArdiaRuntime.h"
 
 using namespace ardia_web_view;
+using namespace ardia_runtime;
 
 @implementation ArdiaWebView (PageCommands)
 
@@ -142,7 +144,7 @@ using namespace ardia_web_view;
 - (void)mediaCommand:(NSString *)action seconds:(double)seconds {
   [self thawHiddenPage];
   if ([action isEqualToString:@"play"] || [action isEqualToString:@"toggle"]) [_tab grantUserActivationToFrame:_nowPlayingFrame ?: @""];
-  [self callFrame:_nowPlayingFrame ?: @"" kind:@"media" json:JSONString(@{@"action" : action ?: @"", @"seconds" : @(seconds)})];
+  [self callFrame:_nowPlayingFrame ?: @"" kind:@"media" json:JSONText(@{@"action" : action ?: @"", @"seconds" : @(seconds)})];
 }
 
 @end
