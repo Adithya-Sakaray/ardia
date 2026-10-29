@@ -368,8 +368,8 @@ enum MainMenu {
     return image
   }
 
-  private static var built: (profiles: [MenuState.Entry], windows: [MenuState.Entry], bookmarks: Int?,
-                             extensions: [String], history: [[MenuState.Entry]])?
+  private static var built: (profiles: [MenuEntry], windows: [MenuEntry], bookmarks: Int?,
+                             extensions: [String], history: [[MenuEntry]])?
 
   static func refresh() {
     let state = MenuState.current
@@ -395,7 +395,7 @@ enum MainMenu {
     return item
   }
 
-  private static func folderItem(_ title: String, _ children: [MenuState.Bookmark], id: String? = nil, holdsArcHolders: Bool = false, arcHolder: Bool = false) -> NSMenuItem {
+  private static func folderItem(_ title: String, _ children: [MenuBookmark], id: String? = nil, holdsArcHolders: Bool = false, arcHolder: Bool = false) -> NSMenuItem {
     let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
     let menu = NSMenu(title: title)
     addBookmarks(children, to: menu, holdsArcHolders: holdsArcHolders)
@@ -412,7 +412,7 @@ enum MainMenu {
     return item
   }
 
-  private static func hasGroupLinks(_ nodes: [MenuState.Bookmark]) -> Bool {
+  private static func hasGroupLinks(_ nodes: [MenuBookmark]) -> Bool {
     nodes.contains { node in
       if let children = node.children { return hasGroupLinks(children) }
       let url = (node.url ?? "").lowercased()
@@ -420,7 +420,7 @@ enum MainMenu {
     }
   }
 
-  private static func addBookmarks(_ nodes: [MenuState.Bookmark], to menu: NSMenu, holdsArcHolders: Bool = false) {
+  private static func addBookmarks(_ nodes: [MenuBookmark], to menu: NSMenu, holdsArcHolders: Bool = false) {
     for node in nodes {
       if let children = node.children {
         menu.addItem(folderItem(node.title, children, id: node.id, arcHolder: holdsArcHolders && node.title.hasSuffix(" (Arc)")))
@@ -507,21 +507,21 @@ enum MainMenu {
 
   private static func buildBookmarkMenus(_ state: MenuState) {
     bookmarkToFolder.removeAllItems()
-    for f in state.bookmarkFolders { bookmarkToFolder.addItem(CommandItem(f.title, "addBookmarkToFolder", arg: f.id)) }
+    for f in state.bookmarks.bookmarkFolders { bookmarkToFolder.addItem(CommandItem(f.title, "addBookmarkToFolder", arg: f.id)) }
     bookmarkToFolder.addItem(.separator())
     bookmarkToFolder.addItem(CommandItem("New Folder…", "addBookmarkToFolder", arg: "new"))
 
     while bookmarks.items.count > bookmarksFixedCount { bookmarks.removeItem(at: bookmarksFixedCount) }
     bookmarks.addItem(.separator())
-    if !state.recentBookmarks.isEmpty {
+    if !state.bookmarks.recentBookmarks.isEmpty {
       let header = NSMenuItem(title: "Recent Bookmarks", action: nil, keyEquivalent: "")
       header.isEnabled = false
       bookmarks.addItem(header)
-      addBookmarks(state.recentBookmarks, to: bookmarks)
+      addBookmarks(state.bookmarks.recentBookmarks, to: bookmarks)
       bookmarks.addItem(.separator())
     }
-    bookmarks.addItem(folderItem("Bookmarks Bar", state.bookmarksBar, holdsArcHolders: true))
-    bookmarks.addItem(folderItem("Other Bookmarks", state.otherBookmarks))
+    bookmarks.addItem(folderItem("Bookmarks Bar", state.bookmarks.bookmarksBar, holdsArcHolders: true))
+    bookmarks.addItem(folderItem("Other Bookmarks", state.bookmarks.otherBookmarks))
   }
 
   private static func buildExtensions(_ state: MenuState) {

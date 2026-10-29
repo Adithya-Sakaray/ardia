@@ -55,7 +55,7 @@ public class AppModule: Module {
     AsyncFunction("requestNotificationPermission") { (promise: Promise) in
       NotificationHub.shared.requestPermission { promise.resolve($0) }
     }.runOnQueue(.main)
-    AsyncFunction("postNotification") { (options: [String: Any], promise: Promise) in
+    AsyncFunction("postNotification") { (options: NotificationOptions, promise: Promise) in
       NotificationHub.shared.post(options) { promise.resolve($0) }
     }.runOnQueue(.main)
     AsyncFunction("removeNotifications") { (ids: [String]) in NotificationHub.shared.remove(ids) }.runOnQueue(.main)
@@ -66,7 +66,7 @@ public class AppModule: Module {
       }
     }.runOnQueue(.main)
 
-    AsyncFunction("setScriptState") { (state: [String: Any]) in ShellScripting.setState(state) }.runOnQueue(.main)
+    AsyncFunction("setScriptState") { (state: ScriptState) in ShellScripting.state = state }.runOnQueue(.main)
     AsyncFunction("replyToScript") { (id: String, result: [String: Any]?, error: String?) in
       ShellScripting.reply(id, result: result, error: error)
     }.runOnQueue(.main)

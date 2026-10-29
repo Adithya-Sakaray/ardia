@@ -8,7 +8,7 @@ final class ScriptWindow: NSObject {
     uniqueID = id
   }
 
-  private var info: ShellScripting.WindowInfo? { ShellScripting.window(uniqueID) }
+  private var info: ScriptWindowState? { ShellScripting.window(uniqueID) }
   private var nsWindow: NSWindow? { WindowManager.shared.windows[uniqueID] }
 
   override var objectSpecifier: NSScriptObjectSpecifier? {
@@ -16,7 +16,7 @@ final class ScriptWindow: NSObject {
   }
 
   @objc var name: String { info?.title ?? "" }
-  @objc var orderedIndex: Int { (ShellScripting.orderedWindowInfos.firstIndex { $0.id == uniqueID } ?? -1) + 1 }
+  @objc var orderedIndex: Int { (ShellScripting.orderedWindows.firstIndex { $0.id == uniqueID } ?? -1) + 1 }
   @objc var incognito: Bool { info?.incognito ?? false }
   @objc var appleScriptTabs: [ScriptTab] { info?.tabs.map { ScriptTab(id: $0.id) } ?? [] }
   @objc var activeTab: ScriptTab? { info?.activeTabId.map(ScriptTab.init(id:)) }

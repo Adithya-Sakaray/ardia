@@ -163,11 +163,11 @@ public class ShellModule: Module {
 
     AsyncFunction("isDarkAppearance") { () -> Bool in ShellModule.isDark }.runOnQueue(.main)
 
-    AsyncFunction("setMenuState") { (state: [String: Any]) in
+    AsyncFunction("setMenuState") { (state: MenuStateUpdate) in
       MenuState.current = MenuState(state)
       MainMenu.refresh()
     }.runOnQueue(.main)
-    AsyncFunction("setMenuBookmarks") { (bookmarks: [String: Any]) in
+    AsyncFunction("setMenuBookmarks") { (bookmarks: MenuBookmarks) in
       MenuState.setBookmarks(bookmarks)
       MainMenu.refresh()
     }.runOnQueue(.main)
