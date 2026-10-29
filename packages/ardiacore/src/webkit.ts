@@ -24,7 +24,6 @@ export const NO_PASSKEY_ACCESS: PasskeyAccess = { entitled: false, status: "enti
 
 export const WEBKIT_SITE_SETTINGS: readonly SiteSettingType[] = ["camera", "microphone"];
 
-export const removeDownloadStaging = (path: string) => call("webKit.removeDownloadStaging", { path });
 export const endWebKitPrivateSession = (session: string) => call("webKit.endPrivateSession", { session });
 export const webKitCookieStoreKey = (profile: string) => call("webKit.cookieStoreKey", { profile });
 export const importWebKitCookies = (profile: string, storeKey: string, cookies: PageCookie[]) =>

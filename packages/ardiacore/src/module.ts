@@ -126,23 +126,6 @@ export const setSelectionPopover = (enabled: boolean) => call("webView.setSelect
 export const setSearchEngineName = (name: string) => call("search.setEngineName", { name });
 export const getDisplayMediaSources = () => call("media.displayMediaSources");
 
-export const onDownload = (listener: (d: Download) => void) => on("downloads.changed", listener);
-export const cancelDownload = (id: string) => call("downloads.cancel", { id });
-export const pauseDownload = (id: string) => call("downloads.pause", { id });
-export const resumeDownload = (id: string) => call("downloads.resume", { id });
-export const keepDownload = (id: string) => call("downloads.keep", { id });
-
 export type DownloadSettings = { folder: string; askWhereToSave: boolean; managed: boolean };
-export const getDownloadSettings = (profile = "") => call("downloads.settings", { profile });
-export const setDownloadSettings = (patch: Partial<Pick<DownloadSettings, "folder" | "askWhereToSave">>, profile = "") =>
-  call("downloads.setSettings", { ...patch, profile });
-
-export const onPermission = (listener: (p: PermissionRequest) => void) => on("permissions.requested", listener);
-export const onPermissionDismissed = (listener: (p: { id: string }) => void) => on("permissions.dismissed", listener);
-export const resolvePermission = (id: string, result: PermissionResult, remember = false) => call("permissions.resolve", { id, result, remember });
 
 export type BrowsingDataType = "history" | "siteData" | "cache" | "downloads";
-export const clearBrowsingData = (profile: string, types: BrowsingDataType[], since?: number) =>
-  call("profiles.clearBrowsingData", { profile, types, since: since ?? null }).then(() => {});
-export const releaseProfile = (profile: string) => call("profiles.release", { profile });
-export const deleteProfileData = async (profile: string): Promise<string[]> => (await call("profiles.deleteData", { profile })).remaining;
