@@ -9,18 +9,17 @@ final class WindowManager: NSObject, NSWindowDelegate {
   private weak var lastPlaced: NSWindow?
   private static let lastFrameKey = "ArdiaLastWindowFrame"
   private var lastFrame = UserDefaults.standard.string(forKey: WindowManager.lastFrameKey) ?? UserDefaults.standard.string(forKey: "NSWindow Frame BrowserWindow")
-  private(set) var auxKinds: [String: WindowKind] = [:]
-  private(set) var smallIds = Set<String>()
+  private(set) var kinds: [String: WindowKind] = [:]
 
   private func isBrowserWindow(_ window: NSWindow?) -> Bool {
-    guard let id = id(of: window) else { return false }
-    return auxKinds[id] == nil
+    id(of: window).flatMap { kinds[$0] }?.isBrowser == true
   }
 
   func isMainWindow(_ window: NSWindow?) -> Bool {
-    guard let id = id(of: window) else { return false }
-    return auxKinds[id] == nil && !smallIds.contains(id)
+    id(of: window).flatMap { kinds[$0] } == .browser
   }
+
+  var keyWindowKind: WindowKind? { keyWindowId.flatMap { kinds[$0] } }
 
   func id(of window: NSWindow?) -> String? {
     guard let window else { return nil }
@@ -77,7 +76,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
       ShellEvents.send(.window, ["type": "close", "id": id])
       return
     }
-    if small { smallIds.insert(id) }
+    kinds[id] = kind
     if let chromeWindow = ChromeWindows.makeWindow(profile: options.profile, chromeWindow: small ? nil : options.chromeWindow, appWindow: small ? claim : id) {
       if options.incognito { chromeWindow.appearance = NSAppearance(named: .darkAqua) }
       let root = makeContentView(id)
@@ -269,7 +268,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
     window.contentViewController = controller
     window.setContentSize(size)
     window.delegate = self
-    auxKinds[id] = kind
+    kinds[id] = kind
     windows[id] = window
     if !window.setFrameUsingName(Self.auxFrameName(kind)) { window.center() }
     for name in [NSWindow.didMoveNotification, NSWindow.didResizeNotification] {
@@ -291,7 +290,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
   }
 
   @objc private func saveAuxFrame(_ window: NSWindow) {
-    guard let id = id(of: window), let kind = auxKinds[id] else { return }
+    guard let id = id(of: window), let kind = kinds[id], !kind.isBrowser else { return }
     window.saveFrame(usingName: Self.auxFrameName(kind))
   }
 
@@ -356,7 +355,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
     WindowMotion.exit(window, style: motionStyle(id), then: finish)
   }
 
-  private func motionStyle(_ id: String) -> WindowMotion.Style { smallIds.contains(id) ? .little : .main }
+  private func motionStyle(_ id: String) -> WindowMotion.Style { kinds[id] == .small ? .little : .main }
 
   private func nextKeyWindow(after closing: NSWindow) -> NSWindow? {
     NSApp.orderedWindows.first { $0 !== closing && $0.isVisible && !$0.isMiniaturized && $0.canBecomeKey && isBrowserWindow($0) && exits[id(of: $0) ?? ""] == nil }
@@ -378,17 +377,23 @@ final class WindowManager: NSObject, NSWindowDelegate {
       window.orderOut(nil)
       CATransaction.flush()
       if let waiting = unrevealed.removeValue(forKey: id) { waiting.forEach { $0() } }
-      stopKeepingContentSized(id)
-      lightsCenters[id] = nil
-      fullScreenIds.remove(id)
-      auxKinds[id] = nil
-      smallIds.remove(id)
+      forget(id)
       ArdiaChromeWindowHost.close(window)
       DispatchQueue.main.async { ArdiaChromeWindowHost.removeRootView(of: window) }
       return
     }
     closingFromJS.insert(id)
     window.close()
+  }
+
+  private func forget(_ id: String) {
+    entrances[id] = nil
+    contentShown.remove(id)
+    if let observer = firstContentObservers.removeValue(forKey: id) { NotificationCenter.default.removeObserver(observer) }
+    stopKeepingContentSized(id)
+    lightsCenters[id] = nil
+    fullScreenIds.remove(id)
+    kinds[id] = nil
   }
 
   func focus(id: String) {
@@ -406,7 +411,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
   }
 
   func windowShouldClose(_ sender: NSWindow) -> Bool {
-    guard let id = id(of: sender), auxKinds[id] == nil, ShellEvents.isAttached(.app) else { return true }
+    guard let id = id(of: sender), kinds[id]?.isBrowser == true, ShellEvents.isAttached(.app) else { return true }
     return !ShellEvents.send(.window, ["type": "closeRequest", "id": id])
   }
 
@@ -419,17 +424,12 @@ final class WindowManager: NSObject, NSWindowDelegate {
   func windowWillClose(_ notification: Notification) {
     guard let window = notification.object as? NSWindow, let id = id(of: window) else { return }
     NotificationCenter.default.removeObserver(self, name: nil, object: window)
-    if let kind = auxKinds[id] {
+    if let kind = kinds[id], !kind.isBrowser {
       NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(saveAuxFrame(_:)), object: window)
       window.saveFrame(usingName: Self.auxFrameName(kind))
     }
     windows[id] = nil
-    entrances[id] = nil
-    stopKeepingContentSized(id)
-    lightsCenters[id] = nil
-    fullScreenIds.remove(id)
-    auxKinds[id] = nil
-    smallIds.remove(id)
+    forget(id)
     if closingFromJS.remove(id) == nil {
       ShellEvents.send(.window, ["type": "close", "id": id])
     }
