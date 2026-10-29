@@ -8,7 +8,7 @@ import { RELEASE_VERSION } from "./stats/queries.mjs";
 import { parseSince } from "./stats/since.mjs";
 import { clickhouse, hasTelemetryEnv } from "./telemetry-env.mjs";
 import {
-  APP_LIBS, APP_SOURCES, AUTO_EVENTS, DAILY_LIB, HISTORY_SOURCE, PRODUCTION_HOSTS, SITE_EVENTS, SITE_LIBS, SITE_SOURCES, classifyNoise,
+  APP_LIBS, APP_SOURCES, AUTO_EVENTS, DAILY_LIB, HISTORY_SOURCE, PRODUCTION_HOSTS, SITE_EVENTS, SITE_LIBS, SITE_SOURCES, classifyNoise, visitorOnSql,
 } from "../apps/site/src/data/telemetry.ts";
 
 const USAGE = `usage: node scripts/stats.mjs [--since <when>] [--json] [--no-save]
@@ -56,7 +56,7 @@ const REPORTED_EVENTS = [
 const unknownEvents = REPORTED_EVENTS.filter((e) => !SITE_EVENTS.includes(e) && !AUTO_EVENTS.includes(e));
 if (unknownEvents.length) throw new Error(`stats.mjs reports events the site no longer sends: ${unknownEvents.join(", ")}`);
 const WINDOW_EVENTS = sqlList(REPORTED_EVENTS);
-const MAC_DEVICE = "if({p}['ardia_device'] = '', {p}['$os'] = 'Mac OS X' AND {p}['$device_type'] = 'Desktop', {p}['ardia_device'] = 'mac')";
+const MAC_DEVICE = visitorOnSql("mac", (key) => `{p}['${key}']`);
 
 const OTEL = {
   table: "telemetry.otel_logs", final: " FINAL",
