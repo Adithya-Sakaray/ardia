@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
-. "$here/../../scripts/lib/paths.sh"
-src=$chromium_src
+src=${CHROMIUM_SRC:-$HOME/chromium-build/chromium_git/chromium/src}
 
 mode=apply
 [[ "${1:-}" == --check ]] && mode=check
