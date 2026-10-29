@@ -21,6 +21,7 @@ import { JAVASCRIPT_FROM_APPLE_EVENTS_REFUSED, runsJavaScript } from "../setting
 import { webviews } from "../../platform/webviews";
 import { handleWebNotificationResponse } from "../site/webNotifications";
 import { errorText } from "../../lib/errors";
+import { APP_COMMANDS } from "../commands/commandCatalog";
 
 export function startAppIntegration() {
   onCommand(runAppCommand);
@@ -49,6 +50,7 @@ export function startAppIntegration() {
 }
 
 function runAppCommand({ command, windowId }: CommandEvent) {
+  if (!APP_COMMANDS.has(command)) return;
   switch (command) {
     case "sendFeedback":
       return void sendFeedback(windowId);

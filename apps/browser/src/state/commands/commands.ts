@@ -36,7 +36,7 @@ import { webviews } from "../../platform/webviews";
 import { togglePageEngine } from "../engines/actions";
 import { goBack, goForward } from "../tabs/navigation";
 import { openSplitPane } from "../splits/actions";
-import { LITTLE_ARDIA_PAGE_COMMANDS } from "./commandCatalog";
+import { APP_COMMANDS, LITTLE_ARDIA_PAGE_COMMANDS } from "./commandCatalog";
 import { runSidebarCommand } from "../sidebar/commands";
 import { numberedTabs } from "../sidebar/entries";
 import { openExtensionFromMenu } from "../extensions/bridge";
@@ -63,6 +63,7 @@ import { isWebPageUrl } from "../../lib/url";
 const newOrId = (arg: string) => (arg === "new" ? null : arg);
 
 export function runCommand({ command, arg, windowId: requested }: CommandEvent) {
+  if (APP_COMMANDS.has(command)) return;
   const s = useBrowser.getState();
 
   if (isUtilityWindowId(requested)) {
