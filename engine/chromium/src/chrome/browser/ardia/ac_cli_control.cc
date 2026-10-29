@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "ardia/core/ac_content_hooks.h"  // nogncheck
+#include "ardia/core/ac_content_hooks.h"
 #include "base/base64url.h"
 #include "base/command_line.h"
 #include "base/containers/span.h"

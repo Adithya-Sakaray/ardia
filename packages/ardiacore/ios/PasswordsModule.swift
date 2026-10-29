@@ -33,9 +33,9 @@ public class PasswordsModule: Module {
     "neverSaveOrigins": { args, reply in ArdiaServices.neverSaveOrigins(profile: args.profile) { reply.service($0, $1) } },
     "allowSaving": { args, reply in ArdiaServices.allowSaving(profile: args.profile, origin: try args.text("origin")) { reply.service($0, $1) } },
     "export": { args, reply in ArdiaServices.exportPasswords(profile: args.profile, path: nil) { reply.service($0, $1) } },
-    "autofillEnabled": { args, reply in reply.ok(ArdiaServices.boolPreference("credentials_enable_service", profile: args.profile)) },
+    "autofillEnabled": { args, reply in reply.ok(ArdiaServices.profileToggle(.passwordsOffered, profile: args.profile)) },
     "setAutofillEnabled": { args, reply in
-      ArdiaServices.setBoolPreference("credentials_enable_service", value: try args.bool("enabled"), profile: args.profile)
+      ArdiaServices.setProfileToggle(.passwordsOffered, value: try args.bool("enabled"), profile: args.profile)
       reply.ok()
     },
   ])

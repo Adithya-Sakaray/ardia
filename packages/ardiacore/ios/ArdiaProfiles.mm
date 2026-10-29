@@ -205,13 +205,6 @@ ArdiaCoreProfile *PersonalIfLoaded(ArdiaCoreEngine *engine) {
   return [profile.name isEqualToString:@"Default"] ? profile : nil;
 }
 
-NSString *ProfileNameOfDirectory(NSString *directory) {
-  for (ArdiaCoreProfile *profile in LoadedProfiles())
-    if (!profile.offTheRecord && [profile.name isEqualToString:directory])
-      return ProfileName(profile);
-  return ProfileNameOfDirectoryName(directory);
-}
-
 NSString *ProfileName(ArdiaCoreProfile *profile) {
   if (!profile) return @"";
   for (NSString *name in Profiles())

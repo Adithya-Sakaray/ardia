@@ -63,6 +63,7 @@ source_set("ardia") {
   ]
 
   deps = [
+    "//ardia/core:hooks",
     "//ardia/core:launch_switches",
     "//base",
     "//cc/paint",

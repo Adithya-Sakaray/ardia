@@ -166,10 +166,13 @@ using namespace ardia_host;
   return YES;
 }
 
-- (void)engine:(ArdiaCoreEngine *)engine extensionInstallPrompt:(NSDictionary *)prompt tab:(ArdiaCoreTab *)tab {
+- (void)engine:(ArdiaCoreEngine *)engine
+    extensionInstallPrompt:(NSDictionary *)prompt
+                   profile:(ArdiaCoreProfile *)profile
+                       tab:(ArdiaCoreTab *)tab {
   NSMutableDictionary *payload = [prompt mutableCopy];
   payload[@"tabId"] = ardia_host::AppTabIdValue(tab);
-  if ([prompt[@"profile"] isKindOfClass:NSString.class]) payload[@"profile"] = ardia_host::ProfileNameOfDirectory(prompt[@"profile"]);
+  payload[@"profile"] = ardia_host::ProfileName(profile);
   gInstallPrompts[payload[@"requestId"] ?: @""] = payload;
   [ArdiaEvents emit:@"extensions.installPrompt" data:payload];
 }

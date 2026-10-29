@@ -13,7 +13,6 @@
 #include "base/strings/sys_string_conversions.h"
 #include "base/strings/utf_string_conversions.h"
 #include "chrome/browser/renderer_context_menu/render_view_context_menu.h"
-#include "chrome/browser/ui/browser_window/public/global_browser_collection.h"
 #include "chrome/browser/ui/cocoa/renderer_context_menu/render_view_context_menu_mac_cocoa.h"
 #include "chrome/browser/ui/tab_contents/chrome_web_contents_menu_helper.h"
 #include "chrome/browser/ui/tab_contents/chrome_web_contents_view_delegate.h"
@@ -47,12 +46,7 @@ constexpr int kHostLast = IDC_CONTENT_CONTEXT_CUSTOM_FIRST + 999;
 constexpr int kOpenLinkInProfileItems = 100;
 
 ArdiaCoreTab* TabOf(content::WebContents* contents) {
-  BrowserWindowInterface* browser =
-      contents ? GlobalBrowserCollection::GetInstance()->FindBrowserWithTab(contents)
-               : nullptr;
-  return browser && WindowHost::ForBrowser(browser)
-             ? TabBridge::GetOrCreate(contents)->tab()
-             : nil;
+  return WindowHost::ForContents(contents) ? TabBridge::GetOrCreate(contents)->tab() : nil;
 }
 
 NSArray* DescribeMenu(ui::MenuModel* model) {

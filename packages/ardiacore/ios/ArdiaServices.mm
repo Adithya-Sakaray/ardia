@@ -210,15 +210,23 @@ NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
   [panel beginWithCompletionHandler:^(NSModalResponse response) { run(response == NSModalResponseOK ? panel.URL.path : nil); }];
 }
 
-+ (BOOL)boolPreference:(NSString *)name profile:(NSString *)profile {
++ (BOOL)profileToggle:(ArdiaProfileToggle)toggle profile:(NSString *)profile {
   ArdiaCoreProfile *p = ardia_host::LoadedProfile(ardia_host::OriginalProfileName(profile));
-  NSNumber *value = [p boolPreference:name];
-  return value ? value.boolValue : YES;
+  if (!p) return YES;
+  switch (toggle) {
+    case ArdiaProfileTogglePasswordsOffered: return p.passwordsOffered;
+    case ArdiaProfileToggleAddressesAutofilled: return p.addressesAutofilled;
+    case ArdiaProfileToggleCardsAutofilled: return p.cardsAutofilled;
+  }
 }
 
-+ (void)setBoolPreference:(NSString *)name value:(BOOL)value profile:(NSString *)profile {
++ (void)setProfileToggle:(ArdiaProfileToggle)toggle value:(BOOL)value profile:(NSString *)profile {
   ArdiaCoreProfile *p = ardia_host::LoadedProfile(ardia_host::OriginalProfileName(profile));
-  [p setBoolPreference:name value:value];
+  switch (toggle) {
+    case ArdiaProfileTogglePasswordsOffered: p.passwordsOffered = value; break;
+    case ArdiaProfileToggleAddressesAutofilled: p.addressesAutofilled = value; break;
+    case ArdiaProfileToggleCardsAutofilled: p.cardsAutofilled = value; break;
+  }
 }
 
 + (void)addresses:(NSString *)profile reply:(ArdiaServiceReply)reply {

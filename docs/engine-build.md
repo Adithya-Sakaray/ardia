@@ -118,13 +118,21 @@ and the next app build picks it up.
 Where our patches and `engine/ardiacore/apply.sh` let ArdiaCore decide something in Chrome's code, the hook is a
 `g_ardia_*` function pointer (or flag) defined in the Chrome file that calls it; unset, Chrome behaves as stock. Each is
 declared once, in `//ardia/core`'s `ac_hooks.h` (hooks in `chrome/`) or `ac_content_hooks.h` (in `content/`,
-`components/`, `extensions/`, which can't see `chrome/`'s headers), and both the Chrome file and ArdiaCore include that
-header (`// nogncheck`), so a signature that drifts on either side is a compile error, not a crash at the first call.
+`components/`, `extensions/`, which can't see `chrome/`'s headers), and both the Chrome file (`// nogncheck`) and our
+layers include that header (ArdiaCore and `chrome/browser/ardia` through the header-only `//ardia/core:hooks` target), so
+a signature that drifts on either side is a compile error, not a crash at the first call.
 (Some changes are direct instead: `ChromeMain` making ArdiaCore's main delegate, the PiP window factory, the `CHECK`s made tolerant of a Browser without a `BrowserView`.) ArdiaCore sets the patches' hooks as
 the browser process starts (`ACMainDelegate::PreSandboxStartup`), in `ardiacore::InstallChromeHooks` (`ac_seams.mm`: the
-password bubble, the extension install prompt, device choosers, the Cast dialog, extension side panels, hidden
-windows, windows without tabs, docked DevTools' changes, the WebContentsDelegate (H2), and `g_ardia_viewless_browsers`, which apply.sh's toast and
-reading mode hooks read); apply.sh's other hooks are set next to the code they serve.
+browser window factory (H1), reserved and global accelerators, history eligibility, DNR rule matches, the extension
+installed bubble, action popups, the password bubble, the extension install prompt, device choosers, the Cast dialog,
+extension side panels, hidden windows, windows without tabs, docked DevTools' changes, the WebContentsDelegate (H2), and
+`g_ardia_viewless_browsers`, which apply.sh's toast and reading mode hooks read). Hooks that need a started browser are
+installed in one list, `ardiacore::OnEngineStarted` (`ardiacore_engine.mm`: permission prompts, external apps, host
+visibility…). `ACMainDelegate` sets the process-wide switches (idle timers, storage, Bluetooth) in
+`BasicStartupComplete`, and a few hooks are still set by the object that serves them when it is first made
+(`ac_navigation_hold.mm`, `ac_tab_bridge.mm`'s opacity flag, the extension sync installer, the scripts policy, the CLI
+control server). A new hook goes into the patch series (`engine/patches/`), not into `apply.sh`, and is installed in
+`InstallChromeHooks` unless it needs a started browser.
 
 `apply.sh` also adds H1–H6, which stand where CEF's patches had seams ArdiaCore used. "Is this Browser ours" is
 `WindowHost::ForBrowser`: ArdiaCore's record (`ac_browser_window.h`), made when a Browser gets one of ArdiaCore's
