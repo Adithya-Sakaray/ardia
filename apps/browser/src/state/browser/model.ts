@@ -7,9 +7,6 @@ import type { BrowserWindow, Profile, Tab, TabGroup, TabLive, TabSnapshot } from
 const launch = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 let counter = 0;
 export const newId = (prefix: string) => `${prefix}-${launch}-${(++counter).toString(36)}`;
-export const restoreId = (tabId: string) => `restore:${tabId}`;
-export const pendingRestore = (t: Pick<Tab, "wakeAdoptId">): string | undefined =>
-  t.wakeAdoptId?.startsWith("restore:") ? t.wakeAdoptId.slice("restore:".length) : undefined;
 
 let navSeq = 0;
 export const navigationTo = (url: string, userInitiated = false) => ({ url, seq: ++navSeq, ...(userInitiated ? { userInitiated } : {}) });

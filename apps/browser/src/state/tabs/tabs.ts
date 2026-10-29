@@ -5,7 +5,6 @@ import {
   inPinnedContainer,
   makeTab,
   navigationTo,
-  pendingRestore,
   pinnedFirst,
   viewTabIds,
   wake,
@@ -20,6 +19,7 @@ import { leavesEmptyWindow } from "../omnibox/newTabBarPolicy";
 import { holderOf, withSharedFamily } from "../pins/pinShare";
 import { removeFromSplits, splitOf, withPinnedPanes } from "../splits/splits";
 import { closedTabEntry, MAX_CLOSED_TABS } from "../pins/closedTabs";
+import { pendingRestore } from "./adoptIds";
 import type { BrowserWindow, ClosedTab, Tab, TabSnapshot } from "../browser/types";
 
 export type NewTabOptions = {

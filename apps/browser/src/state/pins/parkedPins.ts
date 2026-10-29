@@ -1,6 +1,7 @@
 import type { BrowserState } from "../browser/store";
 import { ancestorIds, depthOf, orderSections, placeBlock, syncGroupOrder, withParent } from "../groups/groups";
-import { IDLE_LIVE, isIncognitoProfile, makeTab, newId, pendingRestore, pinnedFirst, restoreId, snapshotTab, without } from "../browser/model";
+import { IDLE_LIVE, isIncognitoProfile, makeTab, newId, pinnedFirst, snapshotTab, without } from "../browser/model";
+import { pendingRestore, restoreId } from "../tabs/adoptIds";
 import { samePage } from "./organize";
 import { pinKeyOf } from "./pinMirror";
 import type { BrowserWindow, HistoryEntry, ParkedPins, Tab, TabGroup } from "../browser/types";

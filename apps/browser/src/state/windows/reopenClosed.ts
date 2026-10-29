@@ -1,6 +1,7 @@
 import type { BrowserState } from "../browser/store";
 import { rejoinGroups } from "../groups/groups";
-import { findLast, IDLE_LIVE, isIncognitoProfile, makeTab, newId, pinnedFirst, resolveWindowId, restoreId } from "../browser/model";
+import { findLast, IDLE_LIVE, isIncognitoProfile, makeTab, newId, pinnedFirst, resolveWindowId } from "../browser/model";
+import { restoreId } from "../tabs/adoptIds";
 import { hasPage } from "../tabs/pageSession";
 import { adoptParkedPins } from "../pins/parkedPins";
 import { holderOf, swapPinPage } from "../pins/pinShare";

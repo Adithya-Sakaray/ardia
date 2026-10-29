@@ -1,5 +1,6 @@
 import type { StateCreator } from "zustand";
 import { startNavigation } from "./earlyNavigate";
+import { cloneId } from "./adoptIds";
 import type { BrowserState } from "../browser/store";
 import { syncGroupOrder } from "../groups/groups";
 import { activeTabId, inPinnedContainer, merge, navigationTo, pinSection, snapshotTab, viewTabIds } from "../browser/model";
@@ -201,7 +202,7 @@ export const createTabsSlice: StateCreator<BrowserState, [], [], TabsSlice> = (s
       profileId: source.profileId,
       snapshot: { ...snapshotTab(source), pinned: false },
       index: w.tabIds.indexOf(id) + 1,
-      adoptId: source.url ? `clone:${id}` : undefined,
+      adoptId: source.url ? cloneId(id) : undefined,
     });
     set(next);
     return copy;

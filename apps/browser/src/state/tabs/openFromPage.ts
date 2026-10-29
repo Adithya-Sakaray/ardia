@@ -5,6 +5,7 @@ import { engineProfile } from "../browser/model";
 import { peekSourceOf } from "../peek/peek";
 import { isSmall, originalProfile, privateWindowProfile } from "../windows/small";
 import { openLinkInSplit, openSplitPane } from "../splits/actions";
+import { isAdoptKind } from "./adoptIds";
 
 export type { OpenWindowRequest } from "../../platform/tabs";
 
@@ -32,7 +33,7 @@ export function openFromPage({ url, adoptId, disposition, profile, point }: Open
   }
   if (disposition === "incognito") {
     const profileId = privateWindowProfile(s, w, profile);
-    if (adoptId?.startsWith("tab:")) return void openWindow({ incognito: true, url, adoptId, profileId });
+    if (isAdoptKind(adoptId, "tab")) return void openWindow({ incognito: true, url, adoptId, profileId });
     return void openWindow({ incognito: true, url, profileId });
   }
   if (disposition === "window") {

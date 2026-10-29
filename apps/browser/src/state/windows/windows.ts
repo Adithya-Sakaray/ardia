@@ -8,7 +8,6 @@ import {
   isIncognitoProfile,
   navigationTo,
   newId,
-  pendingRestore,
   pinnedFirst,
   resolveWindowId,
   snapshotTab,
@@ -21,6 +20,7 @@ import { adoptParkedPins, parkWindowPins } from "../pins/parkedPins";
 import { settleMovedPins } from "../pins/pinMirror";
 import { returnSharedPages } from "../pins/pinShare";
 import { closedWindowEntry, MAX_CLOSED_WINDOWS } from "../pins/closedTabs";
+import { pendingRestore } from "../tabs/adoptIds";
 import { sharedElsewhere, sharesTabs } from "../tabs/tabShare";
 import { isSmall, isSmallWindow, lastActiveProfile, linkProfileOf, mainWindowFor } from "./small";
 import { activated, apply, removeTabs, withNewTab } from "../tabs/tabs";

@@ -10,6 +10,7 @@ import { isPeekTab, withoutPeek } from "../peek/peek";
 import { settleMovedPins } from "../pins/pinMirror";
 import { splitOf } from "../splits/splits";
 import { activated, apply, removeTabs } from "./tabs";
+import { isAdoptKind } from "./adoptIds";
 
 type Keyed = StripTab & { key: string };
 const known = (s: BrowserState, t: StripTab | undefined): t is Keyed => !!t?.key && !!s.tabs[t.key] && !isPeekTab(s, t.key);
@@ -19,7 +20,7 @@ const chromeGroupOf = (s: BrowserState, key: string | undefined) => {
   return g && rootOf(s.groups, g.id);
 };
 
-const madeByChrome = (s: BrowserState, key: string) => !!s.tabs[key]?.adoptId?.startsWith("tab:");
+const madeByChrome = (s: BrowserState, key: string) => isAdoptKind(s.tabs[key]?.adoptId, "tab");
 const CHROME_COLORS = new Set<string>(TAB_GROUP_COLORS);
 const chromeColor = (color: TabGroup["color"]): StripGroup["color"] => (color && CHROME_COLORS.has(color) ? (color as StripGroup["color"]) : "grey");
 

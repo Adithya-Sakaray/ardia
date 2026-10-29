@@ -2,6 +2,7 @@ import { cancelDownload, leftDownloadStaging, removeLeftDownloadStaging, type Do
 import { endWebKitPrivateSession } from "../../platform/webkit";
 import { readDocument, writeDocument } from "../../platform/documents";
 import { SESSION_DOCUMENT } from "./sessionDocument";
+import { pendingRestore } from "../tabs/adoptIds";
 import { useBrowser, type BrowserState, type HydrateData } from "../browser/store";
 import { inPinnedContainer, isIncognitoProfile, privateSession, snapshotTab } from "../browser/model";
 import { earlyLaunchTabOn, launchTab, linkProfile } from "../tabs/launchTab";
@@ -46,7 +47,7 @@ const publicProfiles = <T,>(byProfile: Record<string, T>) => Object.fromEntries(
 
 const persistedTab = ({ navigation: _n, adoptId: _a, wakeAdoptId, pageIn, ...tab }: Tab) => {
   const t = pageIn ? { ...tab, unloaded: true as const } : tab;
-  return wakeAdoptId?.startsWith("restore:") && !isIncognitoProfile(t.profileId) ? { ...t, wakeAdoptId } : t;
+  return pendingRestore({ wakeAdoptId }) && !isIncognitoProfile(t.profileId) ? { ...t, wakeAdoptId } : t;
 };
 
 const savedWindows = (s: Pick<BrowserState, "windows">) =>

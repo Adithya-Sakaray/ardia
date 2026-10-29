@@ -1,6 +1,7 @@
 import type { BrowserState } from "../browser/store";
 import { ancestorIds, closedGroupInfo, descendantIds, innermostGroupOf, insertAll, nestGroups, orderSections, placeGroups, rejoinGroups, syncGroupOrder } from "../groups/groups";
-import { inPinnedContainer, newId, pendingRestore, restoreId, snapshotTab, viewTabIds } from "../browser/model";
+import { inPinnedContainer, newId, snapshotTab, viewTabIds } from "../browser/model";
+import { pendingRestore, restoreId } from "../tabs/adoptIds";
 import { activated, apply, removeTabs, withNewTab } from "../tabs/tabs";
 import { groupLabel, withGroup } from "./tabGrouping";
 import type { BrowserWindow, ClosedGroup, ClosedTab, ClosedWindow, NestedGroupSnapshot, Tab, TabGroup } from "../browser/types";
