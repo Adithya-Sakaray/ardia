@@ -10,7 +10,6 @@ import {
   uninstallExtension,
   type ActionState,
   type ExtensionInstallPrompt,
-  type ExtensionPackage,
   type InstalledExtension,
 } from "../../platform/extensions";
 import { webStoreExtensionId } from "@ardia/core";
@@ -75,8 +74,7 @@ export const findExtension = (profile: string, id: string) => useExtensions.getS
 export function addFromWebStore(windowId: string, urlOrId: string, profile = extensionProfile(useBrowser.getState(), windowId)) {
   const id = webStoreExtensionId(urlOrId);
   if (!id) {
-    const pkg = { name: "Extension", version: "", description: "", manifestVersion: 3, icon: null, permissions: [], optionalPermissions: [], hostPermissions: [], hasAction: false, popup: null, optionsPage: null, sidePanel: null, path: "" };
-    useExtensions.setState({ install: { windowId, profile, source: "webStore", status: "error", pkg, error: "That isn't a link to an extension in the Chrome Web Store." } });
+    useExtensions.setState({ install: { windowId, profile, source: "webStore", status: "error", error: "That isn't a link to an extension in the Chrome Web Store." } });
     return;
   }
   const url = `https://chromewebstore.google.com/detail/${id}`;
@@ -100,50 +98,34 @@ export async function loadUnpacked(windowId: string, profile = extensionProfile(
 
 export function showInstallPrompt(windowId: string, prompt: ExtensionInstallPrompt) {
   const current = useExtensions.getState().install;
-  if (current?.prompt) void resolveExtensionInstallPrompt(current.prompt.requestId, false);
+  if (current?.status === "prompt") void resolveExtensionInstallPrompt(current.prompt.requestId, false);
   else cancelInstall();
-  const pkg: ExtensionPackage = {
-    id: prompt.id,
-    name: prompt.name,
-    version: prompt.version,
-    description: "",
-    manifestVersion: 3,
-    icon: prompt.icon || null,
-    permissions: [],
-    optionalPermissions: [],
-    hostPermissions: [],
-    hasAction: false,
-    popup: null,
-    optionsPage: null,
-    sidePanel: null,
-    path: "",
-  };
-  useExtensions.setState({ install: { windowId, profile: prompt.profile, source: "webStore", status: "ready", pkg, prompt } });
+  useExtensions.setState({ install: { windowId, profile: prompt.profile, source: "webStore", status: "prompt", prompt } });
 }
 
 export async function confirmInstall() {
   const request = useExtensions.getState().install;
-  if (!request?.pkg || request.status !== "ready") return;
-  if (request.prompt) {
+  if (request?.status === "prompt") {
     useExtensions.setState({ install: null });
     await resolveExtensionInstallPrompt(request.prompt.requestId, true);
     for (const ms of [1500, 5000]) setTimeout(() => void refreshExtensions(request.profile), ms);
     return;
   }
+  if (request?.status !== "ready") return;
   useExtensions.setState({ install: { ...request, status: "installing" } });
   try {
     await installExtension(request.pkg, request.profile);
     useExtensions.setState({ install: null });
     await refreshExtensions(request.profile);
   } catch (error) {
-    useExtensions.setState({ install: { ...request, status: "error", error: errorText(error) } });
+    useExtensions.setState({ install: { windowId: request.windowId, profile: request.profile, source: request.source, status: "error", error: errorText(error) } });
   }
 }
 
 export function cancelInstall() {
   const request = useExtensions.getState().install;
   if (!request) return;
-  if (request.prompt) void resolveExtensionInstallPrompt(request.prompt.requestId, false);
+  if (request.status === "prompt") void resolveExtensionInstallPrompt(request.prompt.requestId, false);
   useExtensions.setState({ install: null });
 }
 

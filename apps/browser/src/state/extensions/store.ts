@@ -11,15 +11,11 @@ export type { ActionState, InstalledExtension } from "../../platform/extensions"
 
 export type Anchor = { x: number; y: number; width: number; height: number };
 
-export type InstallRequest = {
-  windowId: string;
-  profile: string;
-  source: "webStore" | "unpacked";
-  status: "ready" | "installing" | "error";
-  pkg?: ExtensionPackage;
-  error?: string;
-  prompt?: ExtensionInstallPrompt;
-};
+export type InstallRequest = { windowId: string; profile: string; source: "webStore" | "unpacked" } & (
+  | { status: "error"; error: string }
+  | { status: "ready" | "installing"; pkg: ExtensionPackage }
+  | { status: "prompt"; prompt: ExtensionInstallPrompt }
+);
 
 type ExtensionsStore = {
   lists: Record<string, InstalledExtension[]>;
