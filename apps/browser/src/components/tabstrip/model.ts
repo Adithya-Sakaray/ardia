@@ -1,8 +1,7 @@
 import type { Animated } from "react-native";
 import type { DropSpot } from "../../state/drag/drops";
-import { dropTabsAt, dropTabsInSlot, useStripOntoIs, type StripMember } from "../../state/tabs/topStrip";
+import { dropTabsAt, dropTabsInSlot, useStripOntoIs } from "../../state/tabs/topStrip";
 import type { DragGeometry } from "./stripGroups";
-import { PINNED_CELL, PINNED_SPACING } from "./tokens";
 
 export type DropTarget = { kind: "tab" | "group"; id: string };
 
@@ -11,9 +10,6 @@ export const useOnto = (target: DropTarget) => useStripOntoIs(ontoKey(target));
 
 export const chipKey = (groupId: string) => `strip-group-chip|${groupId}`;
 export const folderKey = (groupId: string) => `strip-folder-chip|${groupId}`;
-export const holds = (m: StripMember, tabId: string) => (m.kind === "tab" ? m.id === tabId : m.tabIds.includes(tabId));
-export const tabsOf = (m: StripMember) => (m.kind === "tab" ? [m.id] : m.tabIds);
-export const units = (m: StripMember, activeId: string) => (m.kind === "split" ? Math.min(m.tabIds.length, 2) : m.kind === "folder" ? (holds(m, activeId) ? 1 : 0) : 1);
 
 export type StripDrag = {
   tabId: string | null;
@@ -38,8 +34,6 @@ export type Cross = { at: (dx: number, grab: number) => boolean; land: (dx: numb
 
 export type Dock = { ids: string[]; left: number; geometry: DragGeometry };
 export type Strip = { dock: Dock | null; top: DragGeometry; targets: (DropTarget | null)[]; chip: number; grow: Animated.Value };
-export const CELL_STEP = PINNED_CELL + PINNED_SPACING;
-export const dockWidth = (cells: number) => cells * CELL_STEP - PINNED_SPACING;
 
 export function reorder(ids: string[], { geometry, from, pinned, groupId }: StripDrag, to: number): boolean {
   return dropTabsInSlot(ids, geometry.slots, from, to, { pinned, groupId });
