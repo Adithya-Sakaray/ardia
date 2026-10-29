@@ -216,7 +216,7 @@ export function historyAdapter(profileId: string): Adapter {
         const url = recordId(HISTORY, key);
         if (!isWebPageUrl(url)) continue;
         const v = historyValue(visible.get(key));
-        if (visible.has(key) && !v) continue;
+        if (visible.has(key) && !v) return false;
         const old = byUrl.get(url);
         if (v) {
           const have = old?.visitTimes ?? [];
@@ -322,7 +322,7 @@ export function passwordsAdapter(profileId: string, forced: () => boolean, login
       let ok = true;
       for (const key of changed) {
         const v = passwordValue(visible.get(key));
-        if (visible.has(key) && !v) continue;
+        if (visible.has(key) && !v) return false;
         const have = local.get(key);
         const known = passwordValue(base(key));
         if (have && known?.s !== have.s) continue;

@@ -271,8 +271,9 @@ export async function stopSync({ deleteData = false } = {}) {
   const native = SyncNative;
   if (!native || !doc.enabled) return;
   clearTimeout(timer);
-  while (cycle) await cycle;
-  if (useSync.getState().status !== "locked") await runCycle({ retiring: true });
+  const reportFailure = (error: unknown) => console.warn("[sync] the last cycle before stopping failed", error);
+  while (cycle) await cycle.catch(reportFailure);
+  if (useSync.getState().status !== "locked") await runCycle({ retiring: true }).catch(reportFailure);
   clearTimeout(timer);
   const folder = doc.folder;
   if (deleteData && folder) {
