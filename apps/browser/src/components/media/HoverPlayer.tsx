@@ -1,7 +1,6 @@
 import { devRegister } from "../dev/devRegister";
-import { Surface } from "../ui";
-import { hex, layout, useTheme } from "../ui/theme";
-import { ink } from "../ui/tokens";
+import { Panel } from "../ui";
+import { layout } from "../ui/theme";
 import { clickTab } from "../../state/sidebar/actions";
 import { cardHoverProps, dismissHover } from "../../state/sidebar/hover";
 import { hoverCardOrigin } from "../sidebar/hoverMotion";
@@ -9,7 +8,7 @@ import { measureRow, setSidebarUi, type Anchor } from "../../state/sidebar/sideb
 import { useSidebarWidth } from "../../state/sidebar/hooks";
 import { MINI_PLAYER_HEIGHT, MINI_PLAYER_WIDTH, MiniPlayer } from "./MiniPlayer";
 import { useMedia, usePinnedWithMediaControls } from "../../state/media/media";
-import { useMediaTokens } from "./tokens";
+import { HOVER_CARD, useMediaTokens } from "./tokens";
 
 export function useShowsMiniPlayer(tabId: string | undefined): boolean {
   const pinned = usePinnedWithMediaControls(tabId);
@@ -26,20 +25,15 @@ export function usePlayerEdge(windowId: string, anchor: Anchor | undefined): num
 }
 
 export function HoverPlayer({ tabId, windowId, anchor }: { tabId: string; windowId: string; anchor: Anchor }) {
-  const theme = useTheme();
   const tokens = useMediaTokens();
   const edge = usePlayerEdge(windowId, anchor);
   return (
-    <Surface
+    <Panel
       {...cardHoverProps}
       fill={tokens.background}
-      cornerRadius={12}
-      borderColor={hex(tokens.border)}
-      borderWidth={0.5}
-      shadowColor={ink.black}
-      shadowOpacity={theme.panelShadowOpacity * 0.8}
-      shadowRadius={16}
-      shadowOffset={[0, 6]}
+      radius={HOVER_CARD.radius}
+      border={tokens.border}
+      shadow={HOVER_CARD.shadow}
       style={{ position: "absolute", ...hoverCardOrigin(anchor, edge), width: MINI_PLAYER_WIDTH, height: MINI_PLAYER_HEIGHT }}
     >
       <MiniPlayer
@@ -49,7 +43,7 @@ export function HoverPlayer({ tabId, windowId, anchor }: { tabId: string; window
           clickTab(windowId, tabId);
         }}
       />
-    </Surface>
+    </Panel>
   );
 }
 

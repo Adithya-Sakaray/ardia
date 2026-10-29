@@ -1,8 +1,8 @@
-import { Surface } from "@ardia/shell";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from "react-native";
-import { hex, useTheme } from "./theme";
-import { hairline, radius, shadow, space, type Space } from "./tokens";
+import { useTheme } from "./theme";
+import { Panel } from "./Panel";
+import { radius, shadow, space, type Space } from "./tokens";
 
 const CENTERED: StyleProp<ViewStyle> = [StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center" }];
 
@@ -22,21 +22,16 @@ export function Dialog({
   children: ReactNode;
 }) {
   const theme = useTheme();
-  const level = shadow.dialog;
   const surface = (
-    <Surface
-      fill={hex(theme.panel)}
-      cornerRadius={radius.sheet}
-      borderColor={hex(theme.panelBorder)}
-      borderWidth={hairline.panel}
-      shadowColor={level.color}
-      shadowOpacity={theme.panelShadowOpacity}
-      shadowRadius={level.radius}
-      shadowOffset={level.offset}
+    <Panel
+      fill={theme.panel}
+      radius={radius.sheet}
+      border={theme.panelBorder}
+      shadow={shadow.dialog}
       style={place ? { position: "absolute", ...place, width, padding: space[pad] } : { width, maxHeight, padding: space[pad] }}
     >
       {children}
-    </Surface>
+    </Panel>
   );
   if (place)
     return (
