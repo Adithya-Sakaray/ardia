@@ -46,7 +46,7 @@ export type QuestionId =
 
 type Question = { id: QuestionId; keys: readonly (keyof Settings)[]; askedWithPreset?: true };
 
-const QUESTIONS: Record<Exclude<OnboardingStep, "intro">, Question[]> = {
+export const QUESTIONS: Record<Exclude<OnboardingStep, "intro">, Question[]> = {
   source: [{ id: "source", keys: [] }],
   layout: [
     { id: "tabs", keys: ["tabLayout"] },
