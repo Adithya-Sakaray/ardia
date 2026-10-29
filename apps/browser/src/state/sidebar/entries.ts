@@ -4,6 +4,7 @@ import { hiddenEmptyCard } from "../omnibox/newTabBarPolicy";
 import { splitRowPanes } from "../splits/splits";
 import { splitIndex, stableList } from "../browser/structure";
 import { tileCells } from "../pins/tileFolders";
+import { entryKey, parseEntry } from "./entryKey";
 
 type SidebarEntries = { tiles: string[]; cells: string[]; pinned: string[]; list: string[] };
 
@@ -50,7 +51,7 @@ function computeEntries(s: BrowserState, windowId: string, profileId?: string): 
       continue;
     }
     const groupId = groupOf.get(id);
-    const entry = groupId ? `g:${groupId}` : splitEntry(s, id, splits);
+    const entry = groupId ? entryKey("group", groupId) : splitEntry(s, id, splits);
     if (seen.has(entry)) continue;
     seen.add(entry);
     if (groupId && s.groups[groupId]!.pinned) pinned.push(entry);
@@ -63,9 +64,9 @@ export function numberedTabs(s: BrowserState, windowId: string): string[] {
   const { tiles, pinned, list } = sidebarEntries(s, windowId);
   const active = activeTabId(s, windowId);
   const rowTab = (entry: string): string[] => {
-    const id = entry.slice(2);
-    if (entry.startsWith("g:")) return groupEntries(s, id).flatMap(rowTab);
-    if (!entry.startsWith("s:")) return [id];
+    const { kind, id } = parseEntry(entry);
+    if (kind === "group") return groupEntries(s, id).flatMap(rowTab);
+    if (kind !== "split") return [id];
     const panes = splitRowPanes(s, s.splits[id]);
     if (active && panes.includes(active)) return [active];
     const last = panes.reduce<string | undefined>((a, b) => (!a || s.tabs[b]!.lastActiveAt > s.tabs[a]!.lastActiveAt ? b : a), undefined);
@@ -101,9 +102,9 @@ export function keptEntry(s: BrowserState, windowId: string, profileId: string, 
 }
 
 export function holdsTab(s: BrowserState, entry: string, tabId: string): boolean {
-  const id = entry.slice(2);
-  if (entry.startsWith("g:")) return !!s.groups[id]?.tabIds.includes(tabId);
-  if (entry.startsWith("s:")) return !!s.splits[id]?.tabIds.includes(tabId);
+  const { kind, id } = parseEntry(entry);
+  if (kind === "group") return !!s.groups[id]?.tabIds.includes(tabId);
+  if (kind === "split") return !!s.splits[id]?.tabIds.includes(tabId);
   return id === tabId;
 }
 
@@ -119,7 +120,7 @@ export function groupEntries(s: BrowserState, groupId: string): string[] {
   const out: string[] = [];
   for (const id of g.tabIds) {
     const child = childOf.get(id);
-    const entry = child ? `g:${child}` : splitEntry(s, id, splits);
+    const entry = child ? entryKey("group", child) : splitEntry(s, id, splits);
     if (!seen.has(entry)) {
       seen.add(entry);
       out.push(entry);
@@ -131,13 +132,13 @@ export function groupEntries(s: BrowserState, groupId: string): string[] {
 }
 
 function pinnedRowEntry(s: BrowserState, tabId: string, splits: ReturnType<typeof splitIndex>): string {
-  for (const v of splits.get(tabId) ?? []) if (splitRowPanes(s, v).includes(tabId)) return `s:${v.id}`;
-  return `t:${tabId}`;
+  for (const v of splits.get(tabId) ?? []) if (splitRowPanes(s, v).includes(tabId)) return entryKey("split", v.id);
+  return entryKey("tab", tabId);
 }
 
 function splitEntry(s: BrowserState, tabId: string, splits = splitIndex(s.splits)): string {
   for (const v of splits.get(tabId) ?? []) {
-    if (v.tabIds.filter((id) => s.tabs[id] && !s.tabs[id]!.pinned).length >= 2) return `s:${v.id}`;
+    if (v.tabIds.filter((id) => s.tabs[id] && !s.tabs[id]!.pinned).length >= 2) return entryKey("split", v.id);
   }
-  return `t:${tabId}`;
+  return entryKey("tab", tabId);
 }

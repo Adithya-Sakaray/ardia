@@ -24,6 +24,7 @@ import { SELECTED_ROW_SHADOW_OFFSET, useSidebarTokens } from "./tokens";
 import { useSelectedTabGlow, useSidebarRowLook } from "./rowLook";
 import { withShortcut } from "../../state/commands/commandShortcuts";
 import { TabPressArea } from "./TabPressArea";
+import { entryKey } from "../../state/sidebar/entryKey";
 
 export const TabRowItem = memo(function TabRowItem({
   tabId,
@@ -36,8 +37,8 @@ export const TabRowItem = memo(function TabRowItem({
   parentGroup?: string;
   motion?: EntryMotion | null;
 }) {
-  const { wrapper, handle } = useDragItem(`t:${tabId}`, { kind: "row", tabIds: [tabId], section, parentGroup }, motion?.clip);
-  const onto = useDropOnto(`t:${tabId}`);
+  const { wrapper, handle } = useDragItem(entryKey("tab", tabId), { kind: "row", tabIds: [tabId], section, parentGroup }, motion?.clip);
+  const onto = useDropOnto(entryKey("tab", tabId));
   return (
     <Animated.View ref={wrapper.ref} style={wrapper.style} {...handle}>
       <TabRow tabId={tabId} onto={onto} shift={motion?.shift ?? null} />
@@ -204,13 +205,13 @@ export const SplitRowItem = memo(function SplitRowItem({
 }) {
   const windowId = useWindowId();
   const tabIds = useSplitRowKey(splitId).split(",").filter(Boolean);
-  const { wrapper, handle } = useDragItem(`s:${splitId}`, { kind: "split", tabIds, section, parentGroup }, motion?.clip);
+  const { wrapper, handle } = useDragItem(entryKey("split", splitId), { kind: "split", tabIds, section, parentGroup }, motion?.clip);
   const theme = useTheme();
   const glow = useSelectedTabGlow();
   const profileId = usePageProfileId();
   const active = useWindow(windowId, (w) => tabIds.includes(w?.activeTabIds[profileId] ?? ""));
   const { hovered, hoverProps } = useRowHover(windowId, null);
-  const [moved, movedRef] = useShift(motion?.shift ?? null, useCallback((v: View | null) => registerRow(windowId, `s:${splitId}`, v), [windowId, splitId]));
+  const [moved, movedRef] = useShift(motion?.shift ?? null, useCallback((v: View | null) => registerRow(windowId, entryKey("split", splitId), v), [windowId, splitId]));
   if (tabIds.length < 2) return null;
   return (
     <Animated.View ref={wrapper.ref} style={wrapper.style} {...handle}>

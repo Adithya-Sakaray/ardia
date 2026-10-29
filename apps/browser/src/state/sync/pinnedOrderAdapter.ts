@@ -6,6 +6,7 @@ import { arrangeParked, arrangePinnedArea, parkedAnchors, parkedAreaKeys, pinned
 import { fromSync } from "../pins/pinOrderChoices";
 import { PIN_TAB, PIN_GROUP, anchorIn, PIN_ORDER, PIN_ROW, ROW, type PinOrderValue, type PinValue } from "./pinRecords";
 import { homeWindow, openWindows, settleChoices, store } from "./pinnedSyncState";
+import { entryId } from "../sidebar/entryKey";
 
 export function pinnedOrderAdapter(profileId: string): Adapter {
   const shownIn = (s: BrowserState) => openWindows(s).filter((w) => w.tabIds.some((id) => s.tabs[id]?.profileId === profileId));
@@ -21,7 +22,7 @@ export function pinnedOrderAdapter(profileId: string): Adapter {
       const anchors = shown ? pinnedAnchors(s, home!, profileId) : parkedAnchors(s, profileId);
       const chosen = s.pinChoices[profileId] ?? {};
       const choiceOf = (k: string) => orderChoiceKey(k.slice(PIN_ORDER.length));
-      const rows = new Set((shown ? pinnedAreaKeys(s, home!, profileId) : parkedAreaKeys(s, profileId)).filter((k) => k.startsWith("t:")).map((k) => k.slice(2)));
+      const rows = new Set((shown ? pinnedAreaKeys(s, home!, profileId) : parkedAreaKeys(s, profileId)).flatMap((k) => entryId(k, "tab") ?? []));
       const values = new Map<string, unknown>();
       for (const [group, a] of anchors) {
         const was = base(`${PIN_ORDER}${group}`) as PinOrderValue | undefined;

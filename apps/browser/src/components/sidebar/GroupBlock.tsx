@@ -26,6 +26,8 @@ import { TabIcon } from "./TabIcon";
 import { RenameField, SplitRowItem, TabRowItem } from "./TabRow";
 import { groupSurface, TABULAR_NUMS, useSidebarTokens } from "./tokens";
 import { curve } from "../ui/motion";
+import { entryKey, parseEntry } from "../../state/sidebar/entryKey";
+import { LiveFolderBlock } from "./LiveFolderBlock";
 
 const PAD = GROUP_PAD;
 const BOX_FADE = curve.fade;
@@ -78,7 +80,7 @@ export const GroupBlock = memo(function GroupBlock({
   const windowId = useWindowId();
   const tokens = useSidebarTokens();
   const stored = useGroup(groupId, (g) => !!g?.collapsed);
-  const collapsed = useDragFolded(`g:${groupId}`) || stored;
+  const collapsed = useDragFolded(entryKey("group", groupId)) || stored;
   const color = useGroup(groupId, (g) => g?.color ?? null);
   const tabIds = useGroup(groupId, (g) => g?.tabIds.join(",") ?? "");
   const [captured] = useState(newCapture);
@@ -87,7 +89,7 @@ export const GroupBlock = memo(function GroupBlock({
   const profileId = usePageProfileId();
   const activeEntry = useKeptEntry(windowId, profileId, entries);
   const foldedHeight = () => foldedGroupHeight(windowId, profileId, groupId);
-  const { wrapper, handle, headerRef } = useDragItem(`g:${groupId}`, { kind: "group", tabIds: tabIds.split(",").filter(Boolean), section, groupId, collapsed: stored, foldedHeight, parentGroup }, own?.clip);
+  const { wrapper, handle, headerRef } = useDragItem(entryKey("group", groupId), { kind: "group", tabIds: tabIds.split(",").filter(Boolean), section, groupId, collapsed: stored, foldedHeight, parentGroup }, own?.clip);
   const tail = useDragItem(`tail:group:${groupId}`, { kind: "tail", tabIds: [], section, parentGroup: groupId });
 
   const fold = useFold(collapsed);
@@ -121,7 +123,7 @@ export const GroupBlock = memo(function GroupBlock({
                 : {
                     key: slot.entry,
                     node: (
-                      <Entry entry={slot.entry} section={section} groupId={groupId} motion={motion.motion(slot.entry)} />
+                      <SidebarEntry entry={slot.entry} section={section} parentGroup={groupId} motion={motion.motion(slot.entry)} />
                     ),
                   },
             )}
@@ -141,13 +143,25 @@ export const GroupBlock = memo(function GroupBlock({
   );
 });
 
-const Entry = memo(function Entry({ entry, section, groupId, motion }: { entry: string; section: "list" | "pinnedGroups"; groupId: string; motion: EntryMotion | null }) {
-  if (entry.startsWith("g:")) return <GroupBlock groupId={entry.slice(2)} section={section} parentGroup={groupId} motion={motion} />;
-  return entry.startsWith("s:") ? (
-    <SplitRowItem splitId={entry.slice(2)} section={section} parentGroup={groupId} motion={motion} />
-  ) : (
-    <TabRowItem tabId={entry.slice(2)} section={section} parentGroup={groupId} motion={motion} />
-  );
+export const SidebarEntry = memo(function SidebarEntry({
+  entry,
+  section,
+  rowSection = section,
+  parentGroup,
+  motion = null,
+}: {
+  entry: string;
+  section: "list" | "pinnedGroups";
+  rowSection?: "list" | "pinnedRows" | "pinnedGroups";
+  parentGroup?: string;
+  motion?: EntryMotion | null;
+}) {
+  const windowId = useWindowId();
+  const { kind, id } = parseEntry(entry);
+  if (kind === "live") return <LiveFolderBlock folderId={id} windowId={windowId} />;
+  if (kind === "group") return <GroupBlock groupId={id} section={section} parentGroup={parentGroup} motion={motion} />;
+  if (kind === "split") return <SplitRowItem splitId={id} section={rowSection} parentGroup={parentGroup} motion={motion} />;
+  return <TabRowItem tabId={id} section={rowSection} parentGroup={parentGroup} motion={motion} />;
 });
 
 function GroupHeader({ groupId, windowId, collapsed, open }: { groupId: string; windowId: string; collapsed: boolean; open: Animated.Value }) {

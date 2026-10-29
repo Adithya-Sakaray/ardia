@@ -4,7 +4,8 @@ import { activeTabId, tabLayoutOf } from "../browser/model";
 import { live } from "../live/store";
 import { updateProfile } from "../profiles/actions";
 import { keptEntry } from "./entries";
-import { LIVE, pinnedSequence } from "./pinnedOrder";
+import { pinnedSequence } from "./pinnedOrder";
+import { entryKey } from "./entryKey";
 
 export const PINNED_FOLD_TITLES = { collapse: "Collapse Pinned Tabs", expand: "Expand Pinned Tabs" } as const;
 
@@ -22,7 +23,8 @@ export function pinnedKept(s: BrowserState, windowId: string, profileId: string,
   const kept = keptEntry(s, windowId, profileId, entries);
   if (kept) return kept;
   const folderId = s.tabs[activeTabId(s, windowId, profileId) ?? ""]?.liveItem?.folderId;
-  return folderId && entries.includes(`${LIVE}${folderId}`) ? `${LIVE}${folderId}` : null;
+  const entry = folderId && entryKey("live", folderId);
+  return entry && entries.includes(entry) ? entry : null;
 }
 
 export const shownPinnedEntries = (s: BrowserState, windowId: string, profileId: string, pinned: string[]): string[] =>

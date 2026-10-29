@@ -10,6 +10,7 @@ import { entryHeight } from "../../state/sidebar/geometry";
 import { ghostEntry, snapshotEntry, type EntrySnapshot } from "./GhostEntry";
 import { curve } from "../ui/motion";
 import { SIDEBAR_MOTION } from "./tokens";
+import { entryId, entryKey, parseEntry } from "../../state/sidebar/entryKey";
 
 export const SLIDE_MS = SIDEBAR_MOTION.listSlide;
 export const FADE_MS = SIDEBAR_MOTION.listFade;
@@ -35,9 +36,9 @@ export const ListMotionContext = createContext<ListMotionScope>({ enabled: false
 let ghostIds = 0;
 
 const tabsOf = (s: BrowserState, entry: string): string[] => {
-  const id = entry.slice(2);
-  if (entry.startsWith("g:")) return s.groups[id]?.tabIds ?? [];
-  if (entry.startsWith("s:")) return s.splits[id]?.tabIds ?? [];
+  const { kind, id } = parseEntry(entry);
+  if (kind === "group") return s.groups[id]?.tabIds ?? [];
+  if (kind === "split") return s.splits[id]?.tabIds ?? [];
   return [id];
 };
 
@@ -323,8 +324,9 @@ export function useListMotion(windowId: string, profileId: string, entries: stri
     if (before.state.groups !== after.state.groups) {
       const had = new Set(before.list);
       for (const e of after.list) {
-        if (!had.has(e) || !e.startsWith("g:")) continue;
-        const change = groupChange(before.state, after.state, e.slice(2));
+        const groupId = entryId(e, "group");
+        if (!had.has(e) || groupId === null) continue;
+        const change = groupChange(before.state, after.state, groupId);
         if (change === "other" && height(before.state, e) !== height(after.state, e)) return null;
         if (change === "grown" || change === "extended") changes.set(e, change);
       }
@@ -368,7 +370,7 @@ export function useGroupMotion(windowId: string, profileId: string, groupId: str
     if (!atEnd) return plan;
     return { ...(plan ?? { moves: [], ghosts: [], clipped: [] }), below: old.end - next.end };
   };
-  const below = scope.slideBelow ? (delta: number) => scope.slideBelow?.(`g:${groupId}`, delta) : null;
+  const below = scope.slideBelow ? (delta: number) => scope.slideBelow?.(entryKey("group", groupId), delta) : null;
   return useMotion({ devKey: `${windowId}:${groupId}`, entries, from, planner, height: (e) => height(workspaceSnapshot(), e), enabled, nativeTail: false, below });
 }
 

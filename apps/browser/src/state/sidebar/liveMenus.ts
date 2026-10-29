@@ -12,7 +12,8 @@ import type { LiveItem, LiveSourceId } from "../live/types";
 import { useBrowser } from "../browser/store";
 import { openSettings } from "../settings/settingsWindows";
 import { openIconPicker } from "../sidebar/actions";
-import { LIVE, moveLiveFolder, pinnedSequence } from "./pinnedOrder";
+import { moveLiveFolder, pinnedSequence } from "./pinnedOrder";
+import { entryKey } from "./entryKey";
 import { activeTabId } from "../browser/model";
 import { hintWhen, sections, sep, withAlternate } from "./menuParts";
 
@@ -45,7 +46,7 @@ function folderPlace(windowId: string, folderId: string) {
   const s = live();
   const folder = s.folders[folderId]!;
   const sequence = pinnedSequence(useBrowser.getState(), s.folders, s.folderOrder, windowId, folder.profileId);
-  const index = sequence.indexOf(`${LIVE}${folderId}`);
+  const index = sequence.indexOf(entryKey("live", folderId));
   return { canMoveUp: index > 0, canMoveDown: index >= 0 && index < sequence.length - 1 };
 }
 

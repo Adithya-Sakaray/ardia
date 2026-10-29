@@ -19,6 +19,7 @@ import { FolderDropRing, TileFace, useSlotPosition } from "./TileFace";
 import { folderIdOfCell } from "../../state/pins/tileFolders";
 import { useSidebarTokens } from "./tokens";
 import { TabPressArea } from "./TabPressArea";
+import { entryKey } from "../../state/sidebar/entryKey";
 
 export const PinnedGrid = memo(function PinnedGrid({ tabs, innerWidth, flush = false }: { tabs: string[]; innerWidth: number; flush?: boolean }) {
   const controller = useDragController();
@@ -146,8 +147,8 @@ const PinnedTile = memo(function PinnedTile({ tabId, width, sliding, x, y }: { t
   const playing = useTabLive(tabId, (l) => l.playingAudio);
   const mute = useMuteState(tabId);
   const { hovered, hoverProps } = useRowHover(windowId, { kind: "tab", id: tabId });
-  const { wrapper, handle, dragging } = useDragItem(`t:${tabId}`, { kind: "tile", tabIds: [tabId], section: "tiles" });
-  const target = useFolderTarget(`t:${tabId}`);
+  const { wrapper, handle, dragging } = useDragItem(entryKey("tab", tabId), { kind: "tile", tabIds: [tabId], section: "tiles" });
+  const target = useFolderTarget(entryKey("tab", tabId));
   const position = useSlotPosition(x, y, width, sliding, dragging);
   if (!tab) return null;
 

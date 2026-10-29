@@ -9,6 +9,7 @@ import { overPins, pinGridHeight, pinSlot } from "./pinZone";
 import { boxed, FOLDER_HOLD_MS, inside, pinnedBlock, PIN_SLOT, ROW_GAP, spring, type Drop, type Item } from "./dragModel";
 import { DragGeometry } from "./dragGeometry";
 import { hapticTick } from "../../state/drag/dragNative";
+import { entryKey } from "../../state/sidebar/entryKey";
 
 export class DragTargeting extends DragGeometry {
   protected clearHold() {
@@ -53,7 +54,7 @@ export class DragTargeting extends DragGeometry {
     const moved = this.sources
       .filter((s) => s.frame)
       .sort(byY)
-      .flatMap((s) => (s.kind === "group" || s.kind === "live" || s.kind === "split" ? [s.key] : s.tabIds.map((id) => `t:${id}`)));
+      .flatMap((s) => (s.kind === "group" || s.kind === "live" || s.kind === "split" ? [s.key] : s.tabIds.map((id) => entryKey("tab", id))));
     const pinnedAt = (): { before: Item | undefined; beforeId: string | null; sequence: string[] } => {
       const before = blocks.find((b) => cy(b) > y);
       const at = before ? blocks.indexOf(before) : blocks.length;

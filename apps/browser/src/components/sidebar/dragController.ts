@@ -12,6 +12,7 @@ import { dragMarksOf, markDrag } from "../../state/sidebar/dragMarks";
 import { boxed, EDGE, measure, ROW_GAP, spring, type Drop, type Item } from "./dragModel";
 import { DragTargeting } from "./dragTargeting";
 import { setDragEscapeCapture } from "../../state/drag/dragNative";
+import { entryKey } from "../../state/sidebar/entryKey";
 
 export class DragController extends DragTargeting {
   create(key: string): Item {
@@ -215,7 +216,7 @@ export class DragController extends DragTargeting {
     };
     let closing = 0;
     for (const i of this.items.values()) if (i.frame && i.section !== "tiles" && (i === ref || i.frame.y < top)) closing += now(i.gap);
-    const group = source.parentGroup ? this.items.get(`g:${source.parentGroup}`) : undefined;
+    const group = source.parentGroup ? this.items.get(entryKey("group", source.parentGroup)) : undefined;
     const emptied = !!group && group.tabIds.every((id) => source.tabIds.includes(id)) && !!group.frame && group.frame.y < top && group !== ref;
     if (!emptied && source !== ref && source.frame && source.frame.y < top)
       closing += source.parentGroup ? Math.max(0, now(source.size) - ROW_GAP) + ROW_GAP : now(source.size);

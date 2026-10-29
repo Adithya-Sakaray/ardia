@@ -16,6 +16,7 @@ import { FaviconFallback, NewTabIcon } from "../favicon/Favicon";
 import { TabIcon } from "./TabIcon";
 import { SYMBOL_PREFIX } from "../../state/groups/groupIcons";
 import { groupSurface, TABULAR_NUMS, useSidebarTokens } from "./tokens";
+import { entryKey, parseEntry } from "../../state/sidebar/entryKey";
 
 type TabShot = { kind: "tab"; key: string; title: string; url: string; favicon?: string | null; icon?: string | null; profileId: string; uri: string | null; template: boolean; sound: "muted" | "playing" | null; hovered: boolean };
 type SplitShot = { kind: "split"; key: string; panes: TabShot[] };
@@ -40,7 +41,7 @@ function tabShot(s: BrowserState, tabId: string, hovered: boolean): TabShot | nu
     uri,
     template: shape?.kind === "template" && !!shape.stroke,
     kind: "tab",
-    key: `t:${tabId}`,
+    key: entryKey("tab", tabId),
     title: tabTitle(tab),
     url: tab.url,
     favicon: tab.favicon,
@@ -53,13 +54,13 @@ function tabShot(s: BrowserState, tabId: string, hovered: boolean): TabShot | nu
 
 function splitShot(s: BrowserState, splitId: string): SplitShot {
   const panes = splitRowPanes(s, s.splits[splitId]);
-  return { kind: "split", key: `s:${splitId}`, panes: panes.flatMap((id) => tabShot(s, id, false) ?? []) };
+  return { kind: "split", key: entryKey("split", splitId), panes: panes.flatMap((id) => tabShot(s, id, false) ?? []) };
 }
 
 export function snapshotEntry(s: BrowserState, windowId: string, profileId: string, entry: string): EntrySnapshot | null {
-  const id = entry.slice(2);
-  if (entry.startsWith("s:")) return splitShot(s, id);
-  if (!entry.startsWith("g:")) return tabShot(s, id, pointerOnRow(id));
+  const { kind, id } = parseEntry(entry);
+  if (kind === "split") return splitShot(s, id);
+  if (kind !== "group") return tabShot(s, id, pointerOnRow(id));
   const group = s.groups[id];
   if (!group) return null;
   const entries = groupEntries(s, id);
@@ -73,7 +74,7 @@ export function snapshotEntry(s: BrowserState, windowId: string, profileId: stri
     icon: group.icon || first ? { url: first?.url ?? "", favicon: first?.favicon, icon: group.icon ?? first?.customIcon, profileId: first?.profileId } : null,
     collapsed: !!group.collapsed,
     hovered: pointerOnGroup(id),
-    members: (group.collapsed ? (kept ? [kept] : []) : entries).flatMap((e) => (e.startsWith("t:") ? tabShot(s, e.slice(2), false) : snapshotEntry(s, windowId, profileId, e)) ?? []),
+    members: (group.collapsed ? (kept ? [kept] : []) : entries).flatMap((e) => (parseEntry(e).kind === "tab" ? tabShot(s, parseEntry(e).id, false) : snapshotEntry(s, windowId, profileId, e)) ?? []),
   };
 }
 

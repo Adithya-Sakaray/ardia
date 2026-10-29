@@ -4,6 +4,7 @@ import type { Drop as StoreDrop } from "../../state/drag/drops";
 import { SLIDE } from "../tabstrip/stripReorder";
 import { TILE_GAP } from "./pinZone";
 import { folderIdOfCell } from "../../state/pins/tileFolders";
+import { entryKey } from "../../state/sidebar/entryKey";
 
 export type Frame = { x: number; y: number; w: number; h: number };
 export type Section = "tiles" | "pinnedRows" | "pinnedGroups" | "list" | "folder";
@@ -38,7 +39,7 @@ export const boxed = (i: Item) => i.kind === "group" || i.kind === "live";
 export const apart = (a: Item, b: Item) => a.section !== b.section && (a.section === "folder" || b.section === "folder");
 export const cellKey = (cell: string) => {
   const folderId = folderIdOfCell(cell);
-  return folderId ? `tf:${folderId}` : `t:${cell}`;
+  return folderId ? entryKey("tileFolder", folderId) : entryKey("tab", cell);
 };
 
 export type Ghost = { item: Item; count: number; width: number; height: number; position: Animated.ValueXY; landing?: boolean };
