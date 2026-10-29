@@ -15,7 +15,8 @@ import { popoverOf, setPopover, usePage, usePages, type PageState } from "../../
 import { useHistoryAvailability } from "../../state/tabs/navigation";
 import { toggleBookmarkOfTab } from "../../state/bookmarks/actions";
 import { closePane, openSplitPane, showSplitMenu } from "../../state/splits/actions";
-import { toolbarPalette, useEasedColor, type ToolbarPalette } from "../ui/toolbarColors";
+import { useEasedColor, type ToolbarPalette } from "../ui/toolbarColors";
+import { useSitePalette } from "./useSitePalette";
 import { setToolbarExtensionsWidth } from "../../state/windows/layout";
 import { SIDEBAR_FIELD } from "../sidebar/geometry";
 import { FieldSiteButton, SidebarFieldFill } from "../sidebar/SidebarField";
@@ -63,10 +64,7 @@ export function Toolbar({
   const sidebarHint = useShortcutHint("toggleSidebar");
   const tab = useToolbarTab(tabId);
   const isLoading = useTabLive(tabId, (l) => l.isLoading);
-  const themeColor = useTabLive(tabId, (l) => l.themeColor);
-  const extendColor = useSettings((s) => s.extendWebsiteColor);
-  const website = extendColor && tab?.url ? themeColor : null;
-  const palette = toolbarPalette(theme, website);
+  const palette = useSitePalette(tabId);
   const band = useEasedColor(bare ? null : palette.background);
   const history = useHistoryAvailability(tabId);
   const row = useToolbarRow();
@@ -131,11 +129,8 @@ export function Toolbar({
 }
 
 export function ToolbarBackdrop({ tabId }: { tabId: string }) {
-  const theme = useTheme();
   const url = useTab(tabId, (t) => t?.url ?? "");
-  const themeColor = useTabLive(tabId, (l) => l.themeColor);
-  const extendColor = useSettings((s) => s.extendWebsiteColor);
-  const palette = toolbarPalette(theme, extendColor && url ? themeColor : null);
+  const palette = useSitePalette(tabId);
   const band = useEasedColor(palette.background);
   const row = useToolbarRow();
   return (
