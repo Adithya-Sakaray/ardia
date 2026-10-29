@@ -89,34 +89,11 @@ public class SystemModule: Module {
       let icon = FileManager.default.fileExists(atPath: path)
         ? NSWorkspace.shared.icon(forFile: path)
         : NSWorkspace.shared.icon(for: .init(filenameExtension: (path as NSString).pathExtension) ?? .data)
-      let points = CGFloat(size)
-      let rep = NSBitmapImageRep(
-        bitmapDataPlanes: nil, pixelsWide: Int(points * 2), pixelsHigh: Int(points * 2), bitsPerSample: 8,
-        samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)
-      guard let rep else { return nil }
-      rep.size = NSSize(width: points, height: points)
-      NSGraphicsContext.saveGraphicsState()
-      NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-      icon.draw(in: NSRect(x: 0, y: 0, width: points, height: points))
-      NSGraphicsContext.restoreGraphicsState()
-      guard let png = rep.representation(using: .png, properties: [:]) else { return nil }
-      return "data:image/png;base64,\(png.base64EncodedString())"
+      return icon.pngDataURL(points: CGFloat(size), scale: 2)
     }.runOnQueue(.main)
 
     AsyncFunction("appIcon") { (pid: Int, size: Double) -> String? in
-      guard let icon = NSRunningApplication(processIdentifier: pid_t(pid))?.icon else { return nil }
-      let points = CGFloat(size)
-      guard let rep = NSBitmapImageRep(
-        bitmapDataPlanes: nil, pixelsWide: Int(points * 2), pixelsHigh: Int(points * 2), bitsPerSample: 8,
-        samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)
-      else { return nil }
-      rep.size = NSSize(width: points, height: points)
-      NSGraphicsContext.saveGraphicsState()
-      NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-      icon.draw(in: NSRect(x: 0, y: 0, width: points, height: points))
-      NSGraphicsContext.restoreGraphicsState()
-      guard let png = rep.representation(using: .png, properties: [:]) else { return nil }
-      return "data:image/png;base64,\(png.base64EncodedString())"
+      NSRunningApplication(processIdentifier: pid_t(pid))?.icon?.pngDataURL(points: CGFloat(size), scale: 2)
     }.runOnQueue(.main)
 
     Function("hapticTick") {

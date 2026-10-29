@@ -332,6 +332,8 @@ public class ShellModule: Module {
       }
     }
 
+    AsyncFunction("readText") { () -> String in NSPasteboard.general.string(forType: .string) ?? "" }.runOnQueue(.main)
+
     AsyncFunction("showMenu") { (items: [MenuItem], promise: Promise) in
       if let file = MenuChoice.testFile(flag: "appMenu", name: "menu.json") {
         promise.resolve(MenuChoice.testPick(items, dumpingTo: file, appContext: self.appContext))
@@ -421,8 +423,8 @@ public class ShellModule: Module {
       if let symbol = item.symbol {
         entry.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         if #available(macOS 27.0, *) { entry.preferredImageVisibility = .visible }
-      } else if let hex = item.swatch, let light = NSColor(hex: hex) {
-        let dark = item.swatchDark.flatMap { NSColor(hex: $0) } ?? light
+      } else if let hex = item.swatch, let light = RGBA(hex: hex)?.srgb {
+        let dark = item.swatchDark.flatMap { RGBA(hex: $0)?.srgb } ?? light
         entry.image = light.alphaComponent == 0
           ? emptySwatch() : swatch(NSColor(name: nil) { $0.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? dark : light })
         if #available(macOS 27.0, *) { entry.preferredImageVisibility = .visible }

@@ -431,16 +431,7 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
   }
 
   static func iconURI(_ app: URL) -> String? {
-    let icon = NSWorkspace.shared.icon(forFile: app.path)
-    let size = NSSize(width: 64, height: 64)
-    guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 64, pixelsHigh: 64, bitsPerSample: 8, samplesPerPixel: 4,
-                                     hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)
-    else { return nil }
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-    icon.draw(in: NSRect(origin: .zero, size: size))
-    NSGraphicsContext.restoreGraphicsState()
-    return rep.representation(using: .png, properties: [:]).map { "data:image/png;base64," + $0.base64EncodedString() }
+    NSWorkspace.shared.icon(forFile: app.path).pngDataURL(points: 64, scale: 1)
   }
 
   static let siteDataTypes: Set<String> = WKWebsiteDataStore.allWebsiteDataTypes().subtracting([
