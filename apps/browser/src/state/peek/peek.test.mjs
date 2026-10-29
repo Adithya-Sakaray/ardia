@@ -70,7 +70,7 @@ test("closing a peek throws its page away without a closed-tab entry", () => {
 test("Open as Tab keeps the same tab, puts it right after its source and shows it, without reloading", () => {
   const { w, a, b } = windowWithTabs();
   const id = S().openPeek(a, "https://peek.example/");
-  S().navigated(id, { url: "https://peek.example/next", title: "Next" }, { isLoading: false, canGoBack: true });
+  S().updateTab(id, { url: "https://peek.example/next", title: "Next" }, { isLoading: false, canGoBack: true });
   const moved = S().peekToTab(w);
   assert.equal(moved, id);
   assert.equal(S().peeks[w], undefined);
@@ -118,9 +118,9 @@ test("switching tab closes the peek", () => {
 test("the source tab closing or navigating away closes the peek, a same-page hash change doesn't", () => {
   const { w, a } = windowWithTabs();
   let id = S().openPeek(a, "https://peek.example/");
-  S().navigated(a, { url: "https://a.example/#section", title: "A" }, {});
+  S().updateTab(a, { url: "https://a.example/#section", title: "A" }, {});
   assert.equal(peekTabId(S(), w), id);
-  S().navigated(a, { url: "https://a.example/elsewhere", title: "A" }, {});
+  S().updateTab(a, { url: "https://a.example/elsewhere", title: "A" }, {});
   assert.equal(S().peeks[w], undefined);
   assert.equal(S().tabs[id], undefined);
 

@@ -5,11 +5,11 @@ import { pickFiles, prompt } from "../../platform/dialogs";
 import type { CommandEvent } from "../../platform/commands";
 import { markdownLink } from "@ardia/core";
 import { useBrowser } from "../browser/store";
+import { requestCreateProfile } from "../profiles/createProfileRequest";
 import { activeTabId, bookmarkProfileId, isPinnedRow, resolveWindowId } from "../browser/model";
 import {
   closeGroup,
   closeTab,
-  createProfile,
   cycleProfile,
   focus,
   moveTabToProfile,
@@ -313,7 +313,7 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent) 
     case "autofill":
       return void requestAutofill(windowId, arg, tabId);
     case "newProfile":
-      return void createProfile(windowId).then((id) => id && switchProfile(windowId, id));
+      return void requestCreateProfile(windowId).then((id) => id && switchProfile(windowId, id));
   }
 }
 

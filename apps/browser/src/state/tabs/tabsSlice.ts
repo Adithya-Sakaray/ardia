@@ -33,8 +33,6 @@ export type TabsSlice = {
   navigate(id: string, input: string, options?: { userInitiated?: boolean }): void;
   updateTab(id: string, patch: Partial<Tab>, live?: Partial<TabLive>): void;
   updateLive(id: string, patch: Partial<TabLive>): void;
-  navigated(id: string, page: { url: string; title: string }, live: Partial<TabLive>): void;
-  faviconChanged(id: string, favicon: string): void;
   duplicateTab(id: string): string | undefined;
   togglePin(id: string): void;
   moveTab(id: string, toIndex: number): void;
@@ -182,14 +180,6 @@ export const createTabsSlice: StateCreator<BrowserState, [], [], TabsSlice> = (s
     if (!live) return;
     const next = merge(live, patch);
     if (next !== live) set((s) => ({ live: { ...s.live, [id]: next } }));
-  },
-
-  navigated(id, page, live) {
-    get().updateTab(id, page, live);
-  },
-
-  faviconChanged(id, favicon) {
-    get().updateTab(id, { favicon });
   },
 
   duplicateTab(id) {

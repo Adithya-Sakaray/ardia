@@ -2,7 +2,7 @@ import type { BrowserState } from "../browser/store";
 import { activeTabId, viewTabIds } from "../browser/model";
 import { hiddenEmptyCard } from "../omnibox/newTabBarPolicy";
 import { splitRowPanes } from "../splits/splits";
-import { splitIndex, stableList } from "../browser/structure";
+import { groupIndex, splitIndex, stableList } from "../browser/structure";
 import { tileCells } from "../pins/tileFolders";
 import { entryKey, parseEntry } from "./entryKey";
 
@@ -34,8 +34,7 @@ function computeEntries(s: BrowserState, windowId: string, profileId?: string): 
   const tiles: string[] = [];
   const pinned: string[] = [];
   const list: string[] = [];
-  const groupOf = new Map<string, string>();
-  for (const g of Object.values(s.groups)) if (g.windowId === windowId && !g.parentId) g.tabIds.forEach((id) => groupOf.set(id, g.id));
+  const rootGroups = groupIndex(s.groups);
   const splits = splitIndex(s.splits);
   const seen = new Set<string>();
   for (const id of viewTabIds(s, windowId, profileId)) {
@@ -50,7 +49,7 @@ function computeEntries(s: BrowserState, windowId: string, profileId?: string): 
       }
       continue;
     }
-    const groupId = groupOf.get(id);
+    const groupId = rootGroups.get(id)?.id;
     const entry = groupId ? entryKey("group", groupId) : splitEntry(s, id, splits);
     if (seen.has(entry)) continue;
     seen.add(entry);

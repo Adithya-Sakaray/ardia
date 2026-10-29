@@ -95,7 +95,7 @@ test("the frozen copy follows the page's title, URL, favicon and audio", () => {
   reset();
   const { a, b, mail } = twoWindows();
   S().activate(tileOf(b, "https://mail.com"));
-  S().navigated(mail, { url: "https://mail.com/inbox/42", title: "Inbox (42)" }, { playingAudio: true, isLoading: false });
+  S().updateTab(mail, { url: "https://mail.com/inbox/42", title: "Inbox (42)" }, { playingAudio: true, isLoading: false });
   const frozen = S().tabs[shown(a)];
   assert.equal(frozen.title, "Inbox (42)");
   assert.equal(frozen.url, "https://mail.com/inbox/42");
@@ -106,7 +106,7 @@ test("navigating from a frozen copy (address bar, Back to Pinned URL) pulls the 
   reset();
   const { a, b, mail } = twoWindows();
   S().activate(tileOf(b, "https://mail.com"));
-  S().navigated(mail, { url: "https://mail.com/inbox", title: "Inbox" }, {});
+  S().updateTab(mail, { url: "https://mail.com/inbox", title: "Inbox" }, {});
   S().returnToPinnedUrl(shown(a));
   assert.equal(S().tabs[mail].windowId, a, "the page came back to A");
   assert.equal(S().tabs[mail].navigation.url, "https://mail.com", "and navigates home");

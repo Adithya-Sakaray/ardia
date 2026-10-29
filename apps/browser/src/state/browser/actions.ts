@@ -4,8 +4,8 @@ import { confirm } from "../../platform/dialogs";
 import { focusWindow } from "../../platform/windows";
 import { chooseFromMenu, type ChoiceItem } from "../app/menuChoice";
 import { pageToProfile } from "../windows/profilePager";
-import { profileNames, requestCreateProfile, type CreateProfilePreset } from "../profiles/createProfileRequest";
-import { useBrowser, type CreateWindowOptions } from "./store";
+import { profileNames, requestCreateProfile } from "../profiles/createProfileRequest";
+import { storeAction, useBrowser } from "./store";
 import { rootOf } from "../groups/groups";
 import { closesWindow, engineProfile, isIncognitoProfile, plural, resolveWindowId } from "./model";
 import { leavesEmptyWindow } from "../omnibox/newTabBarPolicy";
@@ -26,9 +26,7 @@ export function focus(windowId: string) {
   void focusWindow(windowId);
 }
 
-export function openWindow(options?: CreateWindowOptions): string {
-  return store().createWindow(options);
-}
+export const openWindow = storeAction("createWindow");
 
 export function switchToTab(tabId: string) {
   const tab = store().tabs[tabId];
@@ -85,18 +83,12 @@ export function toggleMute(tabId: string) {
   if (tab.muted) s.setMuted([tabId], false);
 }
 
-export function setSiteMuted(tabId: string, muted: boolean) {
-  store().setSiteMuted(tabId, muted);
-}
+export const setSiteMuted = storeAction("setSiteMuted");
 
 export function toggleSiteMute(tabId: string) {
   const s = store();
   const tab = s.tabs[tabId];
   if (tab) s.setSiteMuted(tabId, !isSiteMuted(s, tab));
-}
-
-export function createProfile(windowId?: string, preset?: CreateProfilePreset): Promise<string | null> {
-  return requestCreateProfile(windowId, preset);
 }
 
 export async function deleteProfile(profileId: string, windowId?: string) {
@@ -130,7 +122,7 @@ type ProfileMove = { windowId: string; fromProfileId: string; title: (profileNam
 
 async function profileMoveTarget(move: ProfileMove, target: string | null): Promise<string | null> {
   if (isIncognitoProfile(move.fromProfileId)) return null;
-  const profileId = target ?? (await createProfile(move.windowId));
+  const profileId = target ?? (await requestCreateProfile(move.windowId));
   if (!profileId || profileId === move.fromProfileId) return null;
   const shared = engineProfile(useBrowser.getState(), profileId) === engineProfile(useBrowser.getState(), move.fromProfileId);
   if (!store().settings.warnBeforeMovingTabsToProfile || shared) return profileId;
@@ -236,7 +228,7 @@ export async function openProfileMenu(windowId: string) {
     if (choice.open === "switch") switchProfile(windowId, choice.profileId, true);
     else openWindow({ profileId: choice.profileId });
   } else if (choice === "new") {
-    const id = await createProfile(windowId);
+    const id = await requestCreateProfile(windowId);
     if (id) switchProfile(windowId, id);
   } else if (choice === "edit") openSettings("profiles", current);
 }

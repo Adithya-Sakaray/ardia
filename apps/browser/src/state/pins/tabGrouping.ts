@@ -2,7 +2,7 @@ import type { BrowserState } from "../browser/store";
 import { autoGroupName } from "../groups/groupNames";
 import { ancestorIds, canNest, commonGroup, innermostGroupOf, insertAll, leaveGroups, nestGroups, orderSections, placeBlock, placeGroups, reparent, syncGroupOrder, withParent } from "../groups/groups";
 import { inPinnedContainer, isIncognitoProfile, isPinnedRow, newId, pinKeyOf } from "../browser/model";
-import { withSplitRows } from "../splits/splits";
+import { splitOf, withSplitRows } from "../splits/splits";
 import { markPinned } from "./pinChoices";
 import type { BrowserWindow, Tab, TabGroup } from "../browser/types";
 
@@ -41,7 +41,7 @@ export function groupWithOpener(s: BrowserState, tabId: string, openerId: string
   const existing = groupOf(s, openerId);
   if (!existing && !(background && s.settings.cmdClickCreatesTabGroup)) return s;
   if (existing) return joinGroup(s, w, existing, tabId);
-  const panes = Object.values(s.splits).find((v) => v.tabIds.includes(openerId))?.tabIds ?? [openerId];
+  const panes = splitOf(s, openerId)?.tabIds ?? [openerId];
   return withGroup(s, [...panes, tabId], { autoUngroup: true })[0];
 }
 
