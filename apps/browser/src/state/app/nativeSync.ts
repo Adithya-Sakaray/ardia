@@ -33,6 +33,7 @@ import { flushPersistence, resumePersistence } from "../session/persist";
 import { startWindowCloseGuard } from "../windows/windowClose";
 import { startExtensionsBridge } from "../extensions/bridge";
 import { extensionMenu, useExtensions } from "../extensions/actions";
+import { focusedWindowOf } from "../windows/ui";
 
 let quitting = false;
 export const isQuitting = () => quitting;
@@ -168,7 +169,8 @@ function bookmarkMenus(b: Bookmarks, profileId: string): BookmarkMenus {
 }
 
 export function menuState(s: BrowserState): MenuState {
-  const windowId = s.ui.focusedWindowId && s.windows[s.ui.focusedWindowId] ? s.ui.focusedWindowId : undefined;
+  const focused = focusedWindowOf(s);
+  const windowId = focused && s.windows[focused] ? focused : undefined;
   const w = windowId ? s.windows[windowId] : undefined;
   const tab = windowId ? activeTab(s, windowId) : undefined;
   const peek = windowId ? peekTabId(s, windowId) : undefined;

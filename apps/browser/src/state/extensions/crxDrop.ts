@@ -2,6 +2,7 @@ import { installExtensionCrx, onExtensionInstallFailed } from "../../platform/ex
 import { useBrowser } from "../browser/store";
 import { extensionProfile } from "./store";
 import { showToast } from "../app/toasts";
+import { focusedWindowOf } from "../windows/ui";
 
 export function crxPath(url: string): string | null {
   const encoded = /^file:\/\/(\/[^/?#][^?#]*)$/i.exec(url)?.[1];
@@ -31,7 +32,7 @@ export function installDroppedCrx(windowId: string, urls: string[]): string[] {
 export function watchExtensionInstallFailures() {
   onExtensionInstallFailed(({ message, tabId }) => {
     const s = useBrowser.getState();
-    const windowId = (tabId && s.tabs[tabId]?.windowId) || s.ui.focusedWindowId || s.windowOrder[0];
+    const windowId = (tabId && s.tabs[tabId]?.windowId) || focusedWindowOf(s) || s.windowOrder[0];
     if (windowId) toast(windowId, message);
   });
 }

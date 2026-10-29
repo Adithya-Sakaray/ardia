@@ -131,5 +131,5 @@ test("full screen comes back oldest first", () => {
   const sync = start(native);
   const s = S();
   sync.restoreFullScreen({ ...s, windows: { ...s.windows, [a]: { ...s.windows[a], fullScreen: 2 }, [b]: { ...s.windows[b], fullScreen: 1 } } });
-  assert.deepEqual(native.of("restoreFullScreen"), [["restoreFullScreen", [b, a], s.ui.focusedWindowId]]);
+  assert.deepEqual(native.of("restoreFullScreen"), [["restoreFullScreen", [b, a], (s.ui.focusOrder[0] ?? null)]]);
 });

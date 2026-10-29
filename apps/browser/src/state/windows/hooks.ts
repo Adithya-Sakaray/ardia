@@ -1,6 +1,7 @@
 import { useShallow } from "zustand/react/shallow";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { engineProfile } from "../browser/model";
+import { focusedWindowOf } from "./ui";
 
 export const useWindowUiOf = <T>(windowId: string, select: (ui: BrowserState["windowUi"][string] | undefined) => T): T =>
   useBrowser((s) => select(s.windowUi[windowId]));
@@ -38,6 +39,6 @@ export const useProfileNeighbours = (windowId: string) =>
     }),
   );
 
-export const useIsFocusedWindow = (windowId: string): boolean => useBrowser((s) => s.ui.focusedWindowId === windowId);
+export const useIsFocusedWindow = (windowId: string): boolean => useBrowser((s) => focusedWindowOf(s) === windowId);
 
 export const useDownload = (id: string) => useBrowser((s) => s.downloads.find((x) => x.id === id));

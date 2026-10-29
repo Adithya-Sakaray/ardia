@@ -3,7 +3,7 @@ if (!P) throw new Error("perf probe is off (no perf-probe file in the data folde
 const store = ac.store;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const S = () => store.getState();
-const windowId = () => S().ui.focusedWindowId;
+const windowId = () => S().ui.focusOrder[0];
 const activeId = () => {
   const s = S();
   const w = s.windows[windowId()];

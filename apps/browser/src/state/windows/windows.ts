@@ -30,6 +30,7 @@ import { emptyWindow, smallWindow, withWindow } from "./newWindow";
 import { lastClosedEntry, lastClosedTab, restoreTab, restoreWindow } from "./reopenClosed";
 import { groupTree, regrouped, splitsWithin, withSplitsBack } from "./groupMoves";
 import { orderSections } from "../groups/groups";
+import { focusedWindowOf } from "./ui";
 
 export type CreateWindowOptions = {
   profileId?: string;
@@ -69,7 +70,7 @@ export type WindowsSlice = {
 
 function lastProfileAfterClosing(s: BrowserState, id: string): string | null {
   const w = s.windows[id];
-  if (!w || w.incognito || s.ui.focusedWindowId !== id) return s.ui.lastProfileId;
+  if (!w || w.incognito || focusedWindowOf(s) !== id) return s.ui.lastProfileId;
   const next = s.ui.focusOrder.find((f) => f !== id && linkProfileOf(s, s.windows[f]));
   return linkProfileOf(s, next ? s.windows[next] : undefined) ?? s.ui.lastProfileId;
 }
@@ -160,11 +161,11 @@ export const createWindowsSlice: StateCreator<BrowserState, [], [], WindowsSlice
     const shown = next.windows[id]!.activeTabIds[next.tabs[first]!.profileId] ?? first;
     if (!small) next = adoptParkedPins(next, id, next.tabs[shown]!.profileId);
     next = apply(next, activated(next, shown));
-    const focused = s.ui.focusedWindowId;
+    const focused = focusedWindowOf(s);
     if (o.background && focused && s.windows[focused]) {
       next = {
         ...next,
-        ui: { ...next.ui, focusedWindowId: focused, focusOrder: [focused, id, ...s.ui.focusOrder.filter((w) => w !== focused)], lastProfileId: s.ui.lastProfileId },
+        ui: { ...next.ui, focusOrder: [focused, id, ...s.ui.focusOrder.filter((w) => w !== focused)], lastProfileId: s.ui.lastProfileId },
       };
     }
     set(next);
@@ -203,7 +204,6 @@ export const createWindowsSlice: StateCreator<BrowserState, [], [], WindowsSlice
       ui: {
         ...next.ui,
         focusOrder: next.ui.focusOrder.filter((f) => f !== id),
-        focusedWindowId: next.ui.focusedWindowId === id ? (next.ui.focusOrder.find((f) => f !== id) ?? null) : next.ui.focusedWindowId,
         lastProfileId: lastProfileAfterClosing(s, id),
       },
     });
@@ -247,7 +247,7 @@ export const createWindowsSlice: StateCreator<BrowserState, [], [], WindowsSlice
     target ??= s.windows[windowId]!.tabIds.find((id) => s.tabs[id]?.profileId === profileId && !s.tabs[id]!.unloaded);
     if (!target) [s, target] = withNewTab(s, windowId, { profileId, background: true });
     s = apply(s, activated(s, target));
-    if (s.ui.focusedWindowId === windowId) s = { ...s, ui: { ...s.ui, lastProfileId: profileId } };
+    if (focusedWindowOf(s) === windowId) s = { ...s, ui: { ...s.ui, lastProfileId: profileId } };
     set(s);
   },
 

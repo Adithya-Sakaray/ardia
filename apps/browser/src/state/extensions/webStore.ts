@@ -4,6 +4,7 @@ import { webStoreExtensionId } from "@ardia/core";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { changedIds } from "../browser/changes";
 import { extensionProfile, findExtension, removeExtension, showInstallPrompt } from "./actions";
+import { focusedWindowOf } from "../windows/ui";
 
 const STORE_SCRIPT = `
 const g = window;
@@ -44,7 +45,7 @@ export function startWebStoreIntegration() {
   onExtensionInstallPrompt((prompt) => {
     const s = useBrowser.getState();
     const tabId = prompt.tabId ?? undefined;
-    const windowId = (tabId && s.tabs[tabId]?.windowId) || s.ui.focusedWindowId || s.windowOrder[0];
+    const windowId = (tabId && s.tabs[tabId]?.windowId) || focusedWindowOf(s) || s.windowOrder[0];
     if (windowId) showInstallPrompt(windowId, prompt);
     else void resolveExtensionInstallPrompt(prompt.requestId, false);
   });

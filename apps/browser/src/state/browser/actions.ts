@@ -18,6 +18,7 @@ import { menuCommandAlternate, menuShortcut } from "../commands/commandShortcuts
 import { openSettings } from "../settings/settingsWindows";
 import { profileAccentOf } from "../profiles/looks";
 import { isSiteMuted } from "../tabs/mute";
+import { focusedWindowOf } from "../windows/ui";
 
 const store = () => useBrowser.getState();
 
@@ -32,7 +33,7 @@ export function switchToTab(tabId: string) {
   const tab = store().tabs[tabId];
   if (!tab) return;
   store().activate(tabId);
-  if (tab.windowId !== store().ui.focusedWindowId) focus(tab.windowId);
+  if (tab.windowId !== focusedWindowOf(store())) focus(tab.windowId);
 }
 
 export async function closeTab(tabId: string) {

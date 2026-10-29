@@ -7,6 +7,7 @@ import { extensionProfile, useExtensions, windowExtensions } from "./store";
 import { syncSidePanel, wantedSidePanels } from "./sidePanels";
 import { refreshExtensionsAfterChange } from "./actions";
 import { refreshActionStates } from "./actionStates";
+import { focusedWindowOf } from "../windows/ui";
 
 const ACTION_POLL_MS = 1500;
 const ACTION_EVENT_COALESCE_MS = 150;
@@ -79,7 +80,7 @@ export function startActionStates() {
   });
   AppState.addEventListener("change", (state) => state === "active" && flushSoon());
   useBrowser.subscribe((s, prev) => {
-    if (s.windows !== prev.windows || s.ui.focusedWindowId !== prev.ui.focusedWindowId) return void refreshActionStates();
+    if (s.windows !== prev.windows || focusedWindowOf(s) !== focusedWindowOf(prev)) return void refreshActionStates();
     if (s.tabs === prev.tabs) return;
     if (s.windowOrder.some((id) => { const active = activeTabId(s, id); return !!active && s.tabs[active] !== prev.tabs[active]; })) void refreshActionStates();
   });

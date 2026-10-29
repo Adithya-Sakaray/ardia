@@ -27,6 +27,7 @@ import { newProfileLiveFolder } from "../live/engine";
 import { live } from "../live/store";
 import type { LiveSourceId } from "../live/types";
 import { isWebPageUrl, withoutFragment } from "../../lib/url";
+import { focusedWindowOf } from "../windows/ui";
 
 export type { BrowserProfile, BrowserSource, DiaTabsResult, ImportedExtension, ImportKind, ImportResult, SpaceSummary } from "../../platform/importModule";
 
@@ -269,7 +270,7 @@ export function profileColorFor(hex: string | undefined): ProfileColor | undefin
 
 export function defaultTarget(): string {
   const s = useBrowser.getState();
-  const w = s.windows[s.ui.focusedWindowId ?? ""];
+  const w = s.windows[focusedWindowOf(s) ?? ""];
   return w && !w.incognito ? w.profileId : s.settings.defaultProfileId;
 }
 

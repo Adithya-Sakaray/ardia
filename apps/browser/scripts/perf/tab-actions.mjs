@@ -211,8 +211,8 @@ class Rig {
     return this.eval(`
       const S = () => ac.store.getState();
       const state = (s) => {
-        const w = s.windows[s.ui.focusedWindowId];
-        return w ? [s.ui.focusedWindowId, w.profileId, w.activeTabIds[w.profileId], w.tabIds.length, w.tabIds.filter((id) => s.tabs[id]?.pinned).length, w.tabIds.join(",")].join("|") : "";
+        const w = s.windows[s.ui.focusOrder[0]];
+        return w ? [s.ui.focusOrder[0], w.profileId, w.activeTabIds[w.profileId], w.tabIds.length, w.tabIds.filter((id) => s.tabs[id]?.pinned).length, w.tabIds.join(",")].join("|") : "";
       };
       const tb = globalThis.__tb = { changes: [], last: state(S()), offset: Date.now() - performance.now() };
       ac.store.subscribe((s) => {
@@ -292,7 +292,7 @@ function analyse(rec, startAt, endWindow = 500) {
 async function runAction(rig, ctx, name) {
   const { w1 } = ctx;
   const S = (body) => rig.store(body);
-  const focus = async () => S(`if (S().ui.focusedWindowId !== ${JSON.stringify(w1)}) S().focusWindow?.(${JSON.stringify(w1)}); return S().ui.focusedWindowId;`);
+  const focus = async () => S(`if (S().ui.focusOrder[0] !== ${JSON.stringify(w1)}) S().focusWindow?.(${JSON.stringify(w1)}); return S().ui.focusOrder[0];`);
   await focus();
   const viewList = () => S(`const s = S(), w = s.windows[${JSON.stringify(w1)}]; return w.tabIds.filter((id) => s.tabs[id].profileId === w.profileId && !s.tabs[id].pinned && !s.groups[Object.keys(s.groups).find((g) => s.groups[g].tabIds.includes(id))]?.collapsed);`);
   const active = () => S(`const w = S().windows[${JSON.stringify(w1)}]; return w.activeTabIds[w.profileId];`);

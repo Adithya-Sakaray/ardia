@@ -3,6 +3,7 @@ import type { OpenWindowOptions, WindowEvent } from "../../platform/windows";
 import type { BrowserState } from "../browser/store";
 import { engineProfile, windowTitle } from "../browser/model";
 import { windowOpens } from "./windowOpenOrder";
+import { focusedWindowOf } from "./ui";
 
 export type LightsCenter = [number, number] | null;
 
@@ -84,7 +85,7 @@ export function createWindowSync({ port, getState, isQuitting, lightsCenter, isU
   const restoreFullScreen = (s: BrowserState) => {
     const stamp = (id: string) => s.windows[id]?.fullScreen ?? 0;
     const ids = s.windowOrder.filter((id) => stamp(id) > 0).sort((a, b) => stamp(a) - stamp(b));
-    if (ids.length) port.restoreFullScreen(ids, s.ui.focusedWindowId);
+    if (ids.length) port.restoreFullScreen(ids, focusedWindowOf(s));
   };
 
   const sweep = () =>

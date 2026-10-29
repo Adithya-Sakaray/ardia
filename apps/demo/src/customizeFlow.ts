@@ -2,6 +2,7 @@ import { useBrowser } from "../../browser/src/state/browser/store";
 import { PRESETS, presetFor, startOnboarding, useOnboarding } from "../../browser/src/state/onboarding/onboarding";
 import { onboardingSetupCode } from "../../browser/src/state/presets/actions";
 import { DEFAULT_SETTINGS, type Settings } from "../../browser/src/state/settings/settings";
+import { focusedWindowOf } from "../../browser/src/state/windows/ui";
 
 export const DEMO_PRESET = presetFor("arc");
 
@@ -9,7 +10,7 @@ export const demoSettings = (): Settings => ({ ...DEFAULT_SETTINGS, ...PRESETS[D
 
 export function startCustomize() {
   if (useOnboarding.getState().windowId) return;
-  startOnboarding(useBrowser.getState().ui.focusedWindowId);
+  startOnboarding(focusedWindowOf(useBrowser.getState()));
   useOnboarding.setState({ preset: DEMO_PRESET });
 }
 

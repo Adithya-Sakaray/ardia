@@ -6,9 +6,10 @@ import { linkProfileOf } from "./small";
 import type { FindState, NewTabTarget, WindowUi } from "../browser/types";
 import { commandBarFocus, expectFocus } from "../focus/focusClaims";
 
+export const focusedWindowOf = (s: Pick<BrowserState, "ui">): string | null => s.ui.focusOrder[0] ?? null;
+
 export type UiSlice = {
   ui: {
-    focusedWindowId: string | null;
     focusOrder: string[];
     appDark: boolean;
     lastProfileId: string | null;
@@ -58,7 +59,7 @@ function patchWindowUi(s: BrowserState, windowId: string, patch: Partial<WindowU
 }
 
 export const createUiSlice: StateCreator<BrowserState, [], [], UiSlice> = (set, get) => ({
-  ui: { focusedWindowId: null, focusOrder: [], appDark: true, lastProfileId: null },
+  ui: { focusOrder: [], appDark: true, lastProfileId: null },
   windowUi: {},
   find: {},
   downloads: [],
@@ -68,8 +69,8 @@ export const createUiSlice: StateCreator<BrowserState, [], [], UiSlice> = (set, 
     const { ui, windows } = s;
     if (!windows[id]) return;
     const lastProfileId = linkProfileOf(s, windows[id]) ?? ui.lastProfileId;
-    if (ui.focusedWindowId === id && ui.lastProfileId === lastProfileId) return;
-    set({ ui: { ...ui, focusedWindowId: id, focusOrder: [id, ...ui.focusOrder.filter((w) => w !== id)], lastProfileId } });
+    if (ui.focusOrder[0] === id && ui.lastProfileId === lastProfileId) return;
+    set({ ui: { ...ui, focusOrder: [id, ...ui.focusOrder.filter((w) => w !== id)], lastProfileId } });
   },
 
   setAppDark(appDark) {
@@ -105,7 +106,7 @@ export const createUiSlice: StateCreator<BrowserState, [], [], UiSlice> = (set, 
         return {};
       }
       const downloads = exists ? s.downloads.map((x) => (x.id === d.id ? d : x)) : [d, ...s.downloads].slice(0, MAX_DOWNLOADS);
-      const focused = s.ui.focusedWindowId;
+      const focused = focusedWindowOf(s);
       const open = !exists && focused && downloadVisibleIn(s, d, s.windows[focused]);
       return { downloads, ...(open ? patchWindowUi(s, focused, { downloadsOpen: true }) : {}) };
     });

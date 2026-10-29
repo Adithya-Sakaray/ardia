@@ -8,6 +8,7 @@ import { joinMeeting } from "./meetingGroups";
 import { ALERT_LEADS, dueAlerts, joinLink, joinTitle, relativeTime, type CalendarEvent } from "./meetings";
 import { everySlowly } from "../../platform/slowTimers";
 import { dismissAlert, live } from "./store";
+import { focusedWindowOf } from "../windows/ui";
 
 export const useMeetingAlert = create<{ event: CalendarEvent | null }>()(() => ({ event: null }));
 
@@ -52,7 +53,7 @@ export function dismiss(event: CalendarEvent) {
 
 const frontWindow = () => {
   const s = useBrowser.getState();
-  const id = s.ui.focusedWindowId;
+  const id = focusedWindowOf(s);
   return id && s.windows[id] && !s.windows[id]!.incognito ? id : s.windowOrder.find((w) => !s.windows[w]!.incognito);
 };
 

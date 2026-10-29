@@ -6,11 +6,12 @@ import { activeTabId, bookmarkProfileId, IDLE_LIVE, profileFor, tabLayoutOf } fr
 import type { Settings } from "../settings/settings";
 import type { BrowserWindow, FindState, Profile, Tab, TabGroup, TabLive } from "./types";
 import { CLOSED_FIND, DEFAULT_WINDOW_UI, downloadsIn } from "../windows/ui";
+import { focusedWindowOf } from "../windows/ui";
 
 export const WindowContext = createContext<string | null>(null);
 
 export function useWindowId(): string {
-  return useContext(WindowContext) ?? useBrowser.getState().ui.focusedWindowId ?? "";
+  return useContext(WindowContext) ?? focusedWindowOf(useBrowser.getState()) ?? "";
 }
 
 function useWindowField<T>(select: (w: BrowserWindow) => T, fallback: T): T {

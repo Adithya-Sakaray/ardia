@@ -13,6 +13,6 @@ export function withWindow(s: BrowserState, w: BrowserWindow): BrowserState {
     ...s,
     windows: { ...s.windows, [w.id]: w },
     windowOrder: [...s.windowOrder, w.id],
-    ui: { ...s.ui, focusedWindowId: w.id, focusOrder: [w.id, ...s.ui.focusOrder], lastProfileId: linkProfileOf(s, w) ?? s.ui.lastProfileId },
+    ui: { ...s.ui, focusOrder: [w.id, ...s.ui.focusOrder], lastProfileId: linkProfileOf(s, w) ?? s.ui.lastProfileId },
   };
 }

@@ -25,7 +25,7 @@ const hydrate = (windows, tabs, extra = {}) =>
 
 test("the focused window's active web page, under its engine profile", () => {
   hydrate([win("w1", ["a", "b"], "b"), win("w2", ["c"], "c")], [tab("a", "w1", "https://a.com/"), tab("b", "w1", "https://b.com/x"), tab("c", "w2", "http://c.com/")], { focusedWindowId: "w1" });
-  assert.deepEqual(launchTab(S(), S().ui.focusedWindowId), { id: "b", url: "https://b.com/x", profile: "" });
+  assert.deepEqual(launchTab(S(), (S().ui.focusOrder[0] ?? null)), { id: "b", url: "https://b.com/x", profile: "" });
   assert.deepEqual(launchTab(S(), "w2"), { id: "c", url: "http://c.com/", profile: "" });
   assert.equal(S().tabs.b.navigation?.url, "https://b.com/x");
 });
@@ -56,7 +56,7 @@ test("session.json's hint is what the next launch claims", () => {
   const saved = JSON.parse(stub.docs.get("session.json"));
   assert.deepEqual(saved.launchTab, { id: "b", url: "https://b.com/", profile: "" });
   S().hydrate(loadSession());
-  assert.deepEqual(launchTab(S(), S().ui.focusedWindowId), saved.launchTab);
+  assert.deepEqual(launchTab(S(), (S().ui.focusOrder[0] ?? null)), saved.launchTab);
 });
 
 test("a reopened tab not shown yet keeps its back/forward list across a relaunch; nothing else pending does", () => {
@@ -86,7 +86,7 @@ test("a tab the engine made (a link, an extension, DevTools) is the hint once ad
   assert.deepEqual(savedHint(), { id, url: "https://made.example/page", profile: "" });
   S().hydrate(loadSession());
   assert.equal(S().tabs[id].adoptId, undefined, "the relaunch loads it by its address");
-  assert.deepEqual(launchTab(S(), S().ui.focusedWindowId), { id, url: "https://made.example/page", profile: "" });
+  assert.deepEqual(launchTab(S(), (S().ui.focusOrder[0] ?? null)), { id, url: "https://made.example/page", profile: "" });
   assert.equal(S().tabs[id].navigation?.url, "https://made.example/page");
 });
 
@@ -120,7 +120,7 @@ test("staleness: after a crash the file read at launch has the hint of its own s
   S().updateTab("a", { url: "https://a.com/lost", title: "" }, { isLoading: false, canGoBack: true, canGoForward: false });
   const onDisk = JSON.parse(stub.docs.get("session.json"));
   S().hydrate(loadSession());
-  assert.deepEqual(launchTab(S(), S().ui.focusedWindowId), onDisk.launchTab);
+  assert.deepEqual(launchTab(S(), (S().ui.focusOrder[0] ?? null)), onDisk.launchTab);
   assert.equal(onDisk.launchTab.url, "https://a.com/");
 });
 

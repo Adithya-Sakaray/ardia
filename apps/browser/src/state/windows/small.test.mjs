@@ -104,7 +104,7 @@ test("the window in front closing hands over to the next most recent window's pr
   assert.equal(lastActiveProfile(S()), work);
   S().closeWindow(a);
   assert.equal(lastActiveProfile(S()), "default");
-  assert.equal(S().ui.focusedWindowId, b);
+  assert.equal((S().ui.focusOrder[0] ?? null), b);
   openExternalUrls(["https://after-close.example/"]);
   assert.equal(lastSmall().profileId, "default");
   S().closeWindow(lastSmall().id);
@@ -139,7 +139,7 @@ test("the last active profile survives a quit and relaunch", () => {
   assert.equal(saved.lastProfileId, work);
   S().hydrate(saved);
   assert.equal(S().ui.lastProfileId, work);
-  assert.equal(S().ui.focusedWindowId, b);
+  assert.equal((S().ui.focusOrder[0] ?? null), b);
   openExternalUrls(["https://after-relaunch.example/"]);
   assert.equal(lastSmall().profileId, work);
   S().hydrate({ ...saved, lastProfileId: "gone" });

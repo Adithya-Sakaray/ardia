@@ -247,7 +247,7 @@ test("⇧⌘T after the close, then ⌘N: no second set of pinned tabs", () => {
   const { w } = pinnedWindow();
   S().closeWindow(w);
   S().reopenClosed(null);
-  const restored = S().ui.focusedWindowId;
+  const restored = (S().ui.focusOrder[0] ?? null);
   assert.notEqual(restored, w);
   assert.deepEqual(sidebar(restored), PINS, "the reopened window has them");
   assert.deepEqual(model.viewTabIds(S(), restored).filter((id) => !model.inPinnedContainer(S(), id)).map((id) => S().tabs[id].url), ["https://a.com"]);

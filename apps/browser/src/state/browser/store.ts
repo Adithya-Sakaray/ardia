@@ -184,7 +184,6 @@ export const useBrowser = create<BrowserState>()(transactions.middleware(batched
       find: {},
       ui: {
         ...s.ui,
-        focusedWindowId: focused,
         focusOrder: focused ? [focused, ...windowOrder.filter((id) => id !== focused).reverse()] : [],
         lastProfileId: data.lastProfileId && profiles[data.lastProfileId] ? data.lastProfileId : null,
       },

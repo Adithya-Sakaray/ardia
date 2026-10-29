@@ -9,6 +9,7 @@ import { tabEngine } from "../engines/engines";
 import type { Tab } from "../browser/types";
 import { webviews } from "../../platform/webviews";
 import { issuedSeq } from "./earlyNavigate";
+import { focusedWindowOf } from "../windows/ui";
 
 export const wantsPage = (t: Tab | undefined): t is Tab => !!t && hasPage(t) && !isInternalTab(t);
 
@@ -56,7 +57,7 @@ export function startTabPages() {
 
 function claimLaunch() {
   const s = useBrowser.getState();
-  const launch = earlyLaunchTabOn() ? launchTab(s, s.ui.focusedWindowId) : null;
+  const launch = earlyLaunchTabOn() ? launchTab(s, focusedWindowOf(s)) : null;
   const tab = launch ? s.tabs[launch.id] : undefined;
   const kept = launch && wantsPage(tab) && tab.navigation?.url === launch.url && tabEngine(s, launch.id) === "chromium" ? launch : null;
   if (kept) {
