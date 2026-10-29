@@ -1,15 +1,21 @@
+import { openFile } from "../../platform/files";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { downloadVisibleIn } from "./ui";
 
 const openWhenDone = new Set<string>();
 
-export const watchOpenWhenDone = (open: (path: string) => void) =>
+let openingWhenDone = false;
+
+export function startOpenWhenDone() {
+  if (openingWhenDone) return;
+  openingWhenDone = true;
   useBrowser.subscribe((s, prev) => {
     if (s.downloads === prev.downloads || !openWhenDone.size) return;
     for (const d of s.downloads) {
-      if (d.state !== "downloading" && openWhenDone.delete(d.id) && d.state === "finished") open(d.path);
+      if (d.state !== "downloading" && openWhenDone.delete(d.id) && d.state === "finished") void openFile(d.path);
     }
   });
+}
 
 export const opensWhenDone = (id: string) => openWhenDone.has(id);
 

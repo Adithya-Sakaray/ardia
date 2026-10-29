@@ -1,7 +1,5 @@
-import type { useDownload } from "../../state/windows/hooks";
-import { awaitsKeep } from "../../state/downloads/downloadMenu";
-
-type Download = NonNullable<ReturnType<typeof useDownload>>;
+import type { Download } from "./actions";
+import { awaitsKeep } from "./downloadMenu";
 
 function formatBytes(n: number) {
   if (n < 0) return "";
@@ -19,8 +17,6 @@ function formatDuration(seconds: number) {
   if (seconds < 3600) return `${Math.round(seconds / 60)} min left`;
   return `${Math.round(seconds / 3600)} hr left`;
 }
-
-export { awaitsKeep };
 
 export function dangerWarning(d: Download, short = false) {
   if (d.url.startsWith("http:")) return short ? "Blocked: not secure" : "Insecure download blocked";
