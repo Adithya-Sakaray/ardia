@@ -134,6 +134,25 @@ enum KeyEquivalents {
     }
   }
 
+  static func menuBar(_ menu: NSMenu? = NSApp.mainMenu) -> [[String: Any]] {
+    guard let menu else { return [] }
+    menu.update()
+    return menu.items.map { item in
+      if item.isSeparatorItem { return ["separator": true, "hidden": item.isHidden] }
+      var entry = describe(item)
+      entry["key"] = item.keyEquivalent
+      entry["modifiers"] = item.keyEquivalent.isEmpty ? [] : ModifierName.names(item.keyEquivalentModifierMask)
+      entry["hidden"] = item.isHidden
+      entry["alternate"] = item.isAlternate
+      entry["keyWhenHidden"] = item.allowsKeyEquivalentWhenHidden
+      entry["state"] = item.state.rawValue
+      entry["enabled"] = item.isEnabled
+      entry["identifier"] = item.identifier?.rawValue ?? ""
+      if let submenu = item.submenu, submenu !== NSApp.servicesMenu { entry["submenu"] = menuBar(submenu) }
+      return entry
+    }
+  }
+
   private static func begin(dry: Bool) {
     if pressing == 0, let method = class_getInstanceMethod(NSMenu.self, #selector(NSMenu.performKeyEquivalent(with:))) {
       let original = method_getImplementation(method)

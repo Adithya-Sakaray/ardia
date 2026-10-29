@@ -1,5 +1,6 @@
 export * from "./app";
 export * from "./cli";
+export * from "./browserCommand";
 export * from "./commands";
 export * from "./dialogs";
 export * from "./documents";

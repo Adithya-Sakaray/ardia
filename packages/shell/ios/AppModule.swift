@@ -369,6 +369,14 @@ public class AppModule: Module {
       #endif
     }.runOnQueue(.main)
 
+    AsyncFunction("devMenuBar") { () -> [[String: Any]] in
+      #if DEBUG
+      return KeyEquivalents.menuBar()
+      #else
+      return []
+      #endif
+    }.runOnQueue(.main)
+
     AsyncFunction("devKeyEquivalentTrace") { () -> [String] in
       #if DEBUG
       return KeyEquivalents.trace

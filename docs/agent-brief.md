@@ -241,6 +241,10 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
     key as AppKit dispatches it (Chrome's window, then the menu bar), `ac.shell.devTypeKeys("key", text, ms)` types
     into whatever window is key, and
     `node apps/browser/scripts/shortcuts-test.mjs <Debug app>` checks every shortcut in every focus.
+    `expo.modules.ArdiaApp.devMenuBar()` returns the whole menu bar (titles, keys, hidden, checked, enabled) to diff
+    a menu change before and after. The menu's titles and default keys live in `state/commands/commandCatalog.ts`;
+    after editing it, run `node apps/browser/scripts/command-tables.mjs` to regenerate `BrowserCommand` and
+    `packages/shell/ios/CommandTable.swift`.
   - Page content: `scripts/agent/ac page <data dir> <url part> '<expression>'`, or CDP on the instance's port
     (`http://localhost:<port>/json`, `Runtime.evaluate`, `Page.captureScreenshot`). A `ARDIA_BACKGROUND` instance's windows answer NO to
     `-[NSWindow isOccluded]` (`ArdiaHost+Launch.mm`), so a covered window shows a tab at once instead of after Chrome's 1 s
