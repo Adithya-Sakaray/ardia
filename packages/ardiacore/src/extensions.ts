@@ -70,18 +70,11 @@ export type ExtensionsChange = {
   event: "installed" | "uninstalled" | "enabled" | "disabled" | "configured" | "reloaded";
 };
 
-export type TabsRequest = {
-  action: "open" | "closeWindow";
-  profile: string;
-  extensionId: string;
-  window: string | null;
-  url: string;
-  active?: boolean;
-  adoptId?: string;
-  chromeWindow?: string;
-  focused?: boolean;
-  tabId?: string;
-};
+export type TabsRequest =
+  | { action: "adopt"; adoptId: string; url: string; profile: string }
+  | { action: "adoptInto"; chromeWindow: string; adoptId: string; url: string; profile: string; active: boolean; focused: boolean }
+  | { action: "moveInto"; chromeWindow: string; tabId: string; focused: boolean }
+  | { action: "closeWindow"; chromeWindow: string };
 
 export type ExtensionInstallPrompt = {
   requestId: string;

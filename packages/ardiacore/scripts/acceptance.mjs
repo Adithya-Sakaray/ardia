@@ -2728,14 +2728,14 @@ try {
 
   await check("site-settings", async () => {
     const origin = "https://settings.test";
-    await engine("sites.setSetting", { profile: "", origin, type: "popups", value: "allow" });
+    await engine("sites.setSetting", { profile: "", engine: "chromium", origin, type: "popups", value: "allow" });
     const settings = await until("the setting", async () => {
-      const s = await engine("sites.settings", { profile: "", origin });
+      const s = await engine("sites.settings", { profile: "", engine: "chromium", origin });
       return s?.popups?.value === "allow" ? s : null;
     });
     const origins = await engine("sites.origins", { profile: "" });
     await engine("sites.reset", { profile: "", origin });
-    const cleared = await engine("sites.clearData", { profile: "", origin });
+    const cleared = await engine("sites.clearData", { profile: "", engine: "chromium", origin });
     return { popups: settings.popups, origins: origins.length, cleared };
   });
 
@@ -2771,7 +2771,7 @@ try {
         await closeTab(tab.id);
       }
     };
-    await engine("sites.setSetting", { profile: "", origin: secure, type: "notifications", value: "allow" });
+    await engine("sites.setSetting", { profile: "", engine: "chromium", origin: secure, type: "notifications", value: "allow" });
     const persistTab = await openTab(`${secure}/site-data`, "Site data", true);
     try {
       const t = await until("the secure page", () => pageTarget(`${secure}/site-data`));
@@ -2789,13 +2789,13 @@ try {
     for (const k of ["embeddedOnSite", "siteEmbeddedElsewhere"])
       if (before[k]?.cookie !== "chips=1" || before[k]?.ls !== "yes") throw new Error(`the fixture's partitioned data: ${JSON.stringify(before)}`);
     if (before.persisted !== true) throw new Error(`persistent storage wasn't granted: ${JSON.stringify(before)}`);
-    const cleared = await engine("sites.clearData", { profile: "", origin: one });
+    const cleared = await engine("sites.clearData", { profile: "", engine: "chromium", origin: one });
     const after = {
       one: await read(`${one}/site-data`), two: await read(`${two}/site-data`),
       embeddedOnSite: await readFrame(secure, `${thirdParty}/frame-probe`),
       siteEmbeddedElsewhere: await readFrame(elsewhere, `${secure}/frame-probe`),
       persisted: await persisted(),
-      notifications: (await engine("sites.settings", { profile: "", origin: secure }))?.notifications?.value,
+      notifications: (await engine("sites.settings", { profile: "", engine: "chromium", origin: secure }))?.notifications?.value,
     };
     await engine("sites.reset", { profile: "", origin: secure });
     const wrong = [];
@@ -2955,10 +2955,10 @@ try {
 
   await check("settings-services", async () => {
     await engine("profiles.clearBrowsingData", { profile: "", types: ["cache", "history"], since: null }, 90000);
-    await engine("sites.setSetting", { profile: "", origin: "https://reset.test", type: "sound", value: "block" });
+    await engine("sites.setSetting", { profile: "", engine: "chromium", origin: "https://reset.test", type: "sound", value: "block" });
     await engine("sites.reset", { profile: "", origin: "https://reset.test" });
     const reset = await until("the site reset", async () => {
-      const r = await engine("sites.settings", { profile: "", origin: "https://reset.test" });
+      const r = await engine("sites.settings", { profile: "", engine: "chromium", origin: "https://reset.test" });
       return r?.sound?.isDefault ? r.sound : null;
     });
     const before = await engine("contentBlocker.state");
@@ -3183,7 +3183,7 @@ try {
   });
 
   await check("notifications", async () => {
-    await engine("sites.setSetting", { profile: "", origin: base, type: "notifications", value: "allow" });
+    await engine("sites.setSetting", { profile: "", engine: "chromium", origin: base, type: "notifications", value: "allow" });
     await evalApp(`ac.actions.switchToTab("${first.id}"); return true`);
     const t = await pageFor(first.id, `${base}/a`);
     await cdp(t, "Runtime.evaluate", {
@@ -3198,7 +3198,7 @@ try {
     }, 8000);
     await cdp(t, "Runtime.evaluate", { expression: "window.__n2 = new Notification('Second'); setTimeout(() => window.__n2.close(), 300); true", userGesture: true });
     const closed = await until("onNotificationClose", async () => (await eventsOf(first.id)).find((x) => x.name === "notificationClose"), 8000);
-    await engine("sites.setSetting", { profile: "", origin: base, type: "notifications", value: "default" });
+    await engine("sites.setSetting", { profile: "", engine: "chromium", origin: base, type: "notifications", value: "default" });
     return { title: e.payload.title, body: e.payload.body, clicked, closed: !!closed };
   });
 
@@ -4544,7 +4544,7 @@ try {
     await secret("ArdiaPasswords", "save", "", origin, "nnoriginal", "s3cret");
     await engineOrError("autofill.saveAddress", { profile: "", address: { fullName: "Original Mascot", city: "Haifa", country: "IL" } });
     await engine("sites.setZoom", { profile: "", host: "original.test", zoom: 1.5 });
-    await engine("sites.setSetting", { profile: "", origin, type: "popups", value: "allow" });
+    await engine("sites.setSetting", { profile: "", engine: "chromium", origin, type: "popups", value: "allow" });
     await engine("webKit.devTouchStore", { profile: "" });
     await until("the data saved", async () => {
       const p = await engineOrError("passwords.list", { profile: "" }), a = await engineOrError("autofill.addresses", { profile: "" }), z = await engine("sites.zoomLevels", { profile: "" }), o = await engine("sites.origins", { profile: "" });

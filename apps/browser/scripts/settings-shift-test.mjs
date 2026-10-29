@@ -152,7 +152,7 @@ try {
   await ac(`
     return Promise.all([
       ac.engine.call("sites.setZoom", { profile: "", host: "example.com", zoom: 1.25 }),
-      ac.engine.call("sites.setSetting", { profile: "", origin: "https://example.com", type: "notifications", value: "block" }),
+      ac.engine.call("sites.setSetting", { profile: "", engine: "chromium", origin: "https://example.com", type: "notifications", value: "block" }),
     ]).then(() => true, (e) => String(e));
   `);
 
