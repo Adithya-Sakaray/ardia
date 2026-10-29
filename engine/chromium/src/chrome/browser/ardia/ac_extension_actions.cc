@@ -126,7 +126,7 @@ class ActionWatch : public ProfileState,
 }
 }
 
-AC_PROFILE_CALL(ac_extensions_watch_actions, ardia::OffTheRecord::kAllow) {
-  ardia::StateFor<ardia::ActionWatch>(call.profile()->GetOriginalProfile());
+AC_PROFILE_CALL(ac_extensions_watch_actions) {
+  ardia::StateFor<ardia::ActionWatch>(call.profile());
   call.TakeReply().Ok();
 }

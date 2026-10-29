@@ -83,8 +83,13 @@ ArgsCall::ArgsCall(const char* args_json,
                    OffTheRecord off_the_record)
     : reply_(reply, context) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  const bool sensitive = max_bytes != kNoArgsLimit;
+  if (sensitive && !(args_json && *args_json)) {
+    reply_.Error("arguments are not a JSON object");
+    return;
+  }
   if (args_json && *args_json) {
-    if (max_bytes != kNoArgsLimit &&
+    if (sensitive &&
         strnlen(args_json, max_bytes + 1) > max_bytes) {
       reply_.Error("arguments too large");
       return;
