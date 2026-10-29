@@ -13,7 +13,7 @@ import { useProfileTheme } from "./ThemeScope";
 import { opaqueCard } from "../ui/opaqueCard";
 import { handOff, takeHandOff, wantsPage } from "../../state/tabs/tabPages";
 import { noteDiscarded, noteGone, noteReady } from "../../state/tabs/tabLifecycle";
-import { clearEngineOffer, followSiteChoice, noteWebKitPage, offerWebKit, persistEngine } from "../../state/engines/actions";
+import { noteWebKitPage, offerWebKit, persistEngine } from "../../state/engines/actions";
 import { webviewRef, webviews } from "../../state/tabs/webviewHandles";
 import { noteIssued, takeStartedNavigation } from "../../state/tabs/earlyNavigate";
 import { currentEngineProfile, currentTab, isTabSilenced } from "../../state/browser/current";
@@ -24,21 +24,20 @@ import { setPageProgress } from "../../state/tabs/pageProgress";
 import { shallowEqual, useBrowserWhile, useProfilesValue, useTabValue } from "../../state/tabs/tabWatch";
 import { isIncognitoProfile, navigationTo } from "../../state/browser/model";
 import type { Tab } from "../../state/browser/types";
-import { dismissPermissions } from "../../state/site/permissions";
 import { zoomChangedByUser } from "../../state/site/zoomBubble";
 import { markTabReady, patchPage, pageOf, popoverOf, setPopover } from "../../state/tabs/pageState";
 import { closeFolderPanelIn } from "../../state/sidebar/tileFolderUi";
-import { answerExternalApp, shouldPromptForPopups, showAutofillPrompt, showPasswordPrompt } from "../site/Prompts";
+import { popupBlocked, showAutofillPrompt, showPasswordPrompt } from "../../state/site/prompts";
+import { leftPage } from "../../state/tabs/pageEvents";
 import { copyLinkToSelection, searchSelection, setPageSelection } from "../../state/site/selection";
 import { useAutoPictureInPicture } from "../../state/media/pip";
 import { requestDisplayMedia } from "../../state/media/screenShare";
 import { setNowPlaying, setPictureInPictureState } from "../../state/media/media";
-import { noteScroll, revealToolbar } from "../../state/windows/toolbarAutoHide";
+import { noteScroll } from "../../state/windows/toolbarAutoHide";
 import { closeWebNotification, showWebNotification } from "../../state/site/webNotifications";
 import { closeLittleArdiaOnEscape } from "../../state/littleArdia/actions";
 import { closePeekOnEscape } from "../../state/peek/actions";
 import { withoutFragment } from "../../lib/url";
-import { hostOf } from "@ardia/core";
 
 const webViewTab = (t: Tab | undefined) => ({ navigation: t?.navigation, adoptId: t?.adoptId, profileId: t?.profileId ?? "", shownUrl: t?.url ?? "" });
 
@@ -165,16 +164,7 @@ function EngineWebView({ tabId, visible, warm, peekOf, engine }: TabWebViewProps
         updateTab(tabId, { url, title }, { isLoading, canGoBack, canGoForward, themeColor: shownTheme });
         dropOutlivedFavicon(tabId, url, isLoading);
         if (engine === "webkit") noteWebKitPage(tabId, { url, title, isLoading, committedUrl: committedUrl ?? "" });
-        if (lastPage.current !== null && withoutFragment(url) !== lastPage.current) {
-          if (pageOf(tabId).externalApp && hostOf(url) !== hostOf(lastPage.current)) answerExternalApp(tabId, false);
-          dismissPermissions(tabId);
-          setPopover(tabId, null);
-          setPageSelection(tabId, null);
-          clearEngineOffer(tabId);
-          patchPage(tabId, { popups: [], passwordPrompt: null, crashed: null, status: "" });
-          revealToolbar(tabId);
-          if (peekOf === undefined) followSiteChoice(tabId, engine, url, lastPage.current);
-        }
+        if (lastPage.current !== null && withoutFragment(url) !== lastPage.current) leftPage(tabId, url, lastPage.current, engine, peekOf !== undefined);
         lastPage.current = withoutFragment(url);
         patchPage(tabId, { themeColorSource: themeColorSource ?? null });
       }}
@@ -215,11 +205,7 @@ function EngineWebView({ tabId, visible, warm, peekOf, engine }: TabWebViewProps
       onMediaAccess={(mediaAccess) => patchPage(tabId, { mediaAccess: mediaAccess.camera || mediaAccess.microphone || mediaAccess.screen ? mediaAccess : null })}
       onSecurity={(security) => !prewarmOnly() && patchPage(tabId, { security })}
       onContentBlocked={({ count }) => patchPage(tabId, { blocked: count })}
-      onPopupBlocked={(popup) => {
-        const first = !pageOf(tabId).popups.length;
-        patchPage(tabId, { popups: [...pageOf(tabId).popups, popup] });
-        if (first) void shouldPromptForPopups(currentEngineProfile(profileId), popup.origin).then((ask) => ask && setPopover(tabId, "popups"));
-      }}
+      onPopupBlocked={(popup) => popupBlocked(tabId, popup)}
       onPasswordPrompt={(prompt) => showPasswordPrompt(tabId, prompt)}
       onAutofillPrompt={(prompt, id) => showAutofillPrompt(tabId, prompt, id)}
       onExternalApp={(externalApp) => patchPage(tabId, { externalApp })}
