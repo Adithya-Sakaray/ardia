@@ -8,6 +8,7 @@ import {
   hex,
   ink,
   radius as radii,
+  reduceMotionKnown,
   space,
   spring,
   Surface,
@@ -18,7 +19,7 @@ import {
   VisualEffect,
 } from "../ui";
 import { useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, Animated, Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Animated, Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { profileAccent } from "../ui/theme";
 import { mix } from "../../lib/color";
 import { useWindowProfileValue } from "../../state/profiles/hooks";
@@ -58,7 +59,7 @@ export function ReleaseNotesPostcard({ notes, size, onOpen, onDismiss }: { notes
 
   useEffect(() => {
     let cancelled = false;
-    AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
+    void reduceMotionKnown.then((reduce) => {
       if (cancelled) return;
       if (reduce) return drop.setValue(0), opacity.setValue(1);
       Animated.parallel([
