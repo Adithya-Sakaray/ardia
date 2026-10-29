@@ -5,7 +5,7 @@ import { profilesAdapter, profileThemesAdapter } from "./profileAdapters";
 import { settingsAdapter } from "./settingsAdapter";
 import { pinnedAreaAdapters } from "./pinned";
 import { extensionsAdapterFor } from "./extensions";
-import { APP_SCOPE, type SyncDoc } from "./syncDoc";
+import { APP_SCOPE, typeSyncedFor, type DataType, type SyncDoc } from "./syncDoc";
 
 export const deviceName = () => SyncNative?.deviceName() ?? "This Mac";
 
@@ -17,9 +17,8 @@ export function forgetScopeAdapters() {
   extensionAdapters.clear();
 }
 
-const ownsSyncedData = (profileId: string) => !useBrowser.getState().profiles[profileId]?.dataId;
-
-export const extensionsSynced = (doc: SyncDoc, profileId: string) => doc.types.extensions && ownsSyncedData(profileId);
+export const typeSynced = (doc: SyncDoc, type: DataType, profileId: string) =>
+  typeSyncedFor(doc.types, type, !useBrowser.getState().profiles[profileId]?.dataId);
 
 export function extensionsOf(profileId: string): ExtensionsAdapter {
   let adapter = extensionAdapters.get(profileId);
@@ -43,16 +42,15 @@ export function appAdapters(doc: SyncDoc, retiring: boolean, themeAdopted: (prof
 export function profileAdapters(doc: SyncDoc, profileId: string, retiring: boolean, forcePasswords: () => boolean): Adapter[] {
   const id = doc.deviceId!;
   if (retiring) return [deviceTabsAdapter(profileId, id, deviceName, true)];
-  const ownsData = ownsSyncedData(profileId);
-  const t = doc.types;
+  const synced = (type: DataType) => typeSynced(doc, type, profileId);
   let passwords = passwordAdapters.get(profileId);
   if (!passwords) passwordAdapters.set(profileId, (passwords = passwordsAdapter(profileId, forcePasswords)));
   return [
-    ...(t.pinned ? pinnedAreaAdapters(profileId) : []),
-    ...(t.bookmarks && ownsData ? [inTodaysNames(bookmarksAdapter(profileId))] : []),
-    ...(t.history && ownsData ? [inTodaysNames(historyAdapter(profileId))] : []),
-    inTodaysNames(deviceTabsAdapter(profileId, id, deviceName, !t.tabs)),
-    ...(t.passwords && ownsData ? [passwords] : []),
-    ...(extensionsSynced(doc, profileId) ? [extensionsOf(profileId)] : []),
+    ...(synced("pinned") ? pinnedAreaAdapters(profileId) : []),
+    ...(synced("bookmarks") ? [inTodaysNames(bookmarksAdapter(profileId))] : []),
+    ...(synced("history") ? [inTodaysNames(historyAdapter(profileId))] : []),
+    inTodaysNames(deviceTabsAdapter(profileId, id, deviceName, !synced("tabs"))),
+    ...(synced("passwords") ? [passwords] : []),
+    ...(synced("extensions") ? [extensionsOf(profileId)] : []),
   ];
 }

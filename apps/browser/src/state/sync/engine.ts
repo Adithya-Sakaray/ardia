@@ -15,7 +15,7 @@ import { engineProfile } from "../browser/model";
 import { historyExpired } from "./adapters";
 import { settingsToReapply } from "./settingsAdapter";
 import { watchExtensionIntents } from "./extensions";
-import { appAdapters, extensionsOf, extensionsSynced, forgetScopeAdapters, profileAdapters } from "./scopeAdapters";
+import { appAdapters, extensionsOf, forgetScopeAdapters, profileAdapters, typeSynced } from "./scopeAdapters";
 import { APP_SCOPE, defaultTypes, emptyDoc, type DataType, type SyncDoc, type SyncUi } from "./syncDoc";
 import { syncFiles } from "./syncFiles";
 import { confirmThemes, settleAppliedThemes } from "./syncThemes";
@@ -71,9 +71,10 @@ function publishUi(patch: Partial<SyncUi> = {}) {
 }
 
 function watchExtensions() {
-  if (!doc.enabled || !doc.types.extensions) return;
+  if (!doc.enabled) return;
   const s = useBrowser.getState();
-  const profiles = [...new Set(Object.entries(doc.profiles).filter(([id, l]) => l.enabled && s.profiles[id] && !s.profiles[id]!.dataId).map(([id]) => engineProfile(s, id)))];
+  const watched = Object.entries(doc.profiles).filter(([id, l]) => l.enabled && s.profiles[id] && typeSynced(doc, "extensions", id));
+  const profiles = [...new Set(watched.map(([id]) => engineProfile(s, id)))];
   if (profiles.length) watchExtensionIntents(profiles);
 }
 
@@ -154,7 +155,7 @@ async function cycleOnce(native: NonNullable<typeof SyncNative>, folder: string,
         await settled();
       }
       pending += state.pending;
-      if (!retire && extensionsSynced(doc, profileId)) await extensionsOf(profileId).reconcile(visible(state, EXTENSION_PREFIX), Date.now());
+      if (!retire && typeSynced(doc, "extensions", profileId)) await extensionsOf(profileId).reconcile(visible(state, EXTENSION_PREFIX), Date.now());
       if (retire) {
         delete link.retire;
         if (!exists) {
