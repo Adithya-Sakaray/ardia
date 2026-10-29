@@ -25,7 +25,9 @@ NSArray<NSDictionary *> *Dictionaries(id value) {
 + (instancetype)readFrom:(NSString *)directory {
   NSData *data = directory ? [NSData dataWithContentsOfFile:[directory stringByAppendingPathComponent:@"session.json"]] : nil;
   NSDictionary *document = Typed<NSDictionary>(data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil);
-  if (![Typed<NSNumber>(document[@"version"]) isEqual:@(self.version)]) return nil;
+  if (!document) return nil;
+  id version = document[@"version"];
+  if (version && !([Typed<NSNumber>(version) integerValue] >= 0 && [Typed<NSNumber>(version) integerValue] <= self.version)) return nil;
   return [[self alloc] initWithDocument:document];
 }
 
