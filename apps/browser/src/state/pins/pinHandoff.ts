@@ -4,6 +4,7 @@ import { webviews } from "../../platform/webviews";
 import { useBrowser } from "../browser/store";
 import { activeTabId } from "../browser/model";
 import { holderOf, shareKeyOf } from "./pinShare";
+import { withDeadline } from "../../lib/deadline";
 
 const CAPTURE_DEADLINE_MS = 250;
 const PAINT_DEADLINE_MS = 120;
@@ -23,11 +24,10 @@ let users = 0;
 let stopWatching = () => {};
 
 const store = () => useBrowser.getState();
-const later = (ms: number) => new Promise<null>((done) => setTimeout(() => done(null), ms));
 
 async function frameOf(holderId: string, onScreen: boolean): Promise<string | null> {
   const live = onScreen ? webviews.get(holderId)?.capturePicture(1).catch(() => null) : undefined;
-  const picture = (live && (await Promise.race([live, later(CAPTURE_DEADLINE_MS)]))) || lastPicture(holderId);
+  const picture = (live && (await withDeadline(live, CAPTURE_DEADLINE_MS, null))) || lastPicture(holderId);
   return picture ? `data:image/jpeg;base64,${picture.data}` : null;
 }
 

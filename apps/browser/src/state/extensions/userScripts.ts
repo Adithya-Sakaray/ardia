@@ -12,6 +12,7 @@ import { useBrowser, type BrowserState } from "../browser/store";
 import { engineProfile, isIncognitoProfile } from "../browser/model";
 import { parseSaved, unchanged, versionedJson, type Migrations } from "../../lib/savedDocument";
 import { errorText } from "../../lib/errors";
+import { singleFlight, type Flight } from "../../lib/singleFlight";
 
 export type ScriptsOutcome = { ok: true } | { disabled: true } | { removed: true } | { error: string };
 type Status = { generation: number; profiles: Record<string, ScriptsOutcome> };
@@ -80,9 +81,6 @@ let lastStatus: string | null = null;
 const STATUS_VERSION = 1;
 const STATUS_MIGRATIONS: Migrations = { 0: unchanged };
 
-let running: Promise<void> | null = null;
-let again = false;
-
 async function seed() {
   if (seeded) return;
   seeded = true;
@@ -101,11 +99,11 @@ async function seed() {
   }
 }
 
-async function reconcile() {
+async function reconcile(flight: Flight) {
   if (!enabled()) return;
   await seed();
   const folder: UserScriptsFolder = await readUserScripts();
-  if (!enabled() || again) return;
+  if (!enabled() || flight.again) return;
   if (folder.state === "empty" || folder.state === "busy" || folder.state === "pending") return;
   const generation = folder.generation ?? 0;
   const targets = scriptsTargets(useBrowser.getState());
@@ -125,14 +123,14 @@ async function reconcile() {
     else outcome = { removed: true };
     if (!cached && (await readUserScripts()).token !== folder.token) {
       applied.delete(engine);
-      again = true;
+      flight.repeat();
       return;
     }
     outcomes.set(engine, outcome);
     if (!("error" in outcome)) applied.set(engine, { generation, wanted, outcome });
     if (!enabled()) return;
   }
-  if (again || !enabled()) return;
+  if (flight.again || !enabled()) return;
   const status: Status = { generation, profiles: {} };
   for (const [engine, names] of targets) for (const name of names) status.profiles[name] = outcomes.get(engine)!;
   const json = versionedJson(status, STATUS_VERSION, "version", 2);
@@ -141,23 +139,13 @@ async function reconcile() {
   lastStatus = json;
 }
 
-function schedule() {
-  if (running) {
-    again = true;
-    return;
+const schedule = singleFlight(async (flight) => {
+  try {
+    await reconcile(flight);
+  } catch (error) {
+    console.warn("[scripts] couldn't apply the ardia scripts", error);
   }
-  running = (async () => {
-    do {
-      again = false;
-      try {
-        await reconcile();
-      } catch (error) {
-        console.warn("[scripts] couldn't apply the ardia scripts", error);
-      }
-    } while (again && enabled());
-    running = null;
-  })();
-}
+}, enabled);
 
 let started = false;
 
@@ -174,7 +162,7 @@ export function startUserScripts() {
     watching = on;
     key = nextKey;
     watchUserScripts(on);
-    if (on) schedule();
+    if (on) void schedule();
   };
   sync(useBrowser.getState());
   useBrowser.subscribe((s, prev) => {

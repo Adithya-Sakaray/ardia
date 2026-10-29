@@ -11,6 +11,7 @@ import type { Tab } from "../browser/types";
 import { carrySignInToWebKit, signInCarryOn } from "./engineSignIn";
 import { wantsPage } from "../tabs/tabPages";
 import { webviews } from "../../platform/webviews";
+import { withDeadline } from "../../lib/deadline";
 
 export type EngineOffer = { site: string; host: string; keySystem: string; canRemember: boolean };
 
@@ -33,7 +34,7 @@ const UNSAVED_WORK = `(() => {
 async function hasUnsavedWork(tabId: string): Promise<boolean> {
   const web = webviews.get(tabId);
   if (!web) return false;
-  return (await Promise.race([web.evaluate<boolean>(UNSAVED_WORK), new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))])) === true;
+  return (await withDeadline(web.evaluate<boolean>(UNSAVED_WORK), 1500, null)) === true;
 }
 
 export function setWebsiteEngine(url: string, engine: PageEngine | null) {

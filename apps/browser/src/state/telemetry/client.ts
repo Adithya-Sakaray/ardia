@@ -7,6 +7,7 @@ import { cleanProperties } from "./sanitize";
 import type { RequestLogEntry } from "./requestLog";
 import { appInfo, mayPost, post } from "./transport";
 import { parseSaved, versionedJson, unchanged, type Migrations, type SavedObject } from "../../lib/savedDocument";
+import { withDeadline } from "../../lib/deadline";
 
 const STATE_DOC = "telemetry.json";
 const QUEUE_DOC = "telemetry-queue.json";
@@ -153,7 +154,7 @@ export function saveQueueNow(timeoutMs = 1000): Promise<void> {
   try {
     loadQueue();
     const landed = saveDocument(QUEUE_DOC, versionedJson(queue, QUEUE_VERSION)).catch(() => {});
-    return Promise.race([landed, new Promise<void>((resolve) => setTimeout(resolve, timeoutMs))]);
+    return withDeadline(landed, timeoutMs, undefined);
   } catch {
     return Promise.resolve();
   }
