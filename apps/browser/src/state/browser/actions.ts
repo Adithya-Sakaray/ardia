@@ -182,7 +182,7 @@ export function switchProfile(windowId: string, profileId: string, animated = fa
 
 export function cycleProfile(windowId: string, delta: 1 | -1) {
   if (!cycleTarget(windowId, delta)) return;
-  void stepPager(windowId, delta, true, store().profileOrder.join("\n")).then((ok) => ok || cycleFromStore(windowId, delta));
+  void stepPager(windowId, delta, true, store().profileOrder).then((ok) => ok || cycleFromStore(windowId, delta));
 }
 
 function cycleFromStore(windowId: string, delta: 1 | -1) {

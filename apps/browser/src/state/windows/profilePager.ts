@@ -67,7 +67,7 @@ class ProfilePager {
       this.external = 0;
       if (ok) this.commitNative(pagerState(this.windowId));
     };
-    selectPager(this.windowId, profileId, order.join("\n")).then(done, () => done(false));
+    selectPager(this.windowId, profileId, order).then(done, () => done(false));
   }
 
   private commitNative(snapshot: Pick<PagerStateEvent, "sequence" | "selected" | "profileId"> | null, event?: PagerStateEvent) {
@@ -125,7 +125,7 @@ class ProfilePager {
 
   step(delta: -1 | 1) {
     if (!this.current()) return;
-    void stepPager(this.windowId, delta, false, useBrowser.getState().profileOrder.join("\n")).then((ok) => {
+    void stepPager(this.windowId, delta, false, useBrowser.getState().profileOrder).then((ok) => {
       if (ok) return;
       const next = useBrowser.getState().profileOrder[this.index() + delta];
       if (this.index() >= 0 && next) useBrowser.getState().switchProfile(this.windowId, next);
@@ -137,7 +137,7 @@ class ProfilePager {
     const index = s.profileOrder.indexOf(profileId);
     if (!s.profiles[profileId] || !this.current() || index < 0) return;
     if (!this.active) return s.switchProfile(this.windowId, profileId);
-    void switchPager(this.windowId, index, s.profileOrder.join("\n")).then((ok) => {
+    void switchPager(this.windowId, index, s.profileOrder).then((ok) => {
       if (!ok) useBrowser.getState().switchProfile(this.windowId, profileId);
     });
   }
@@ -193,7 +193,7 @@ export function usePagerNativeConfig(windowId: string, width?: number): NativePa
     useShallow((s) => {
       const w = s.windows[windowId];
       const i = w && !w.incognito ? s.profileOrder.indexOf(w.profileId) : -1;
-      return [i, s.profileOrder.length, s.profileOrder.join("\n")] as const;
+      return [i, s.profileOrder.length, s.profileOrder] as const;
     }),
   );
   return useMemo(
