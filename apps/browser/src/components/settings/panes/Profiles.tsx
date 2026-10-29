@@ -17,7 +17,8 @@ import type { Profile } from "../../../state/browser/types";
 import { ClearDataDialog } from "../../pages/ClearDataDialog";
 import { Group, Row, SectionHeader } from "../Form";
 import { ColorStack } from "../../profiles/CreateProfile";
-import { iconMenuItems, PROFILE_SYMBOLS, ProfileBadge, profileSymbol } from "../../profiles/ProfileIcons";
+import { iconMenuItems, PROFILE_SYMBOLS, ProfileBadge } from "../../profiles/ProfileIcons";
+import { iconSymbol } from "../../../lib/customIcon";
 import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/sheet";
 import { ThemeSection } from "../ThemeEditor";
 import { goToSettingsPane, SETTINGS_WINDOW_ID } from "../../../state/settings/settingsWindows";
@@ -223,7 +224,7 @@ function ProfileRow({
 }
 
 function iconTitle(icon: string | null): string {
-  const symbol = profileSymbol(icon);
+  const symbol = iconSymbol(icon);
   if (symbol) return PROFILE_SYMBOLS.find((s) => s.name === symbol)?.title ?? "Symbol";
   return icon ?? "Initial";
 }

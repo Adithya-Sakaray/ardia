@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Animated, Pressable, Text, View } from "react-native";
 import { useGroup, useWindowId } from "../../state/browser/hooks";
-import { hasOwnGroupIcon, SYMBOL_PREFIX } from "../../state/groups/groupIcons";
+import { hasOwnGroupIcon } from "../../state/groups/groupIcons";
+import { iconSymbol } from "../../lib/customIcon";
 import { useGroupLabel } from "../../state/groups/hooks";
 import { openGroupMenu } from "../../state/sidebar/menus";
 import { openFolderMenu } from "../../state/tabs/topStrip";
@@ -141,7 +142,8 @@ function FolderChip({ groupId, holding }: { groupId: string; holding: boolean })
 export function StripGroupIcon({ icon, tint }: { icon: string | null; tint: string | null | undefined }) {
   const theme = useTheme();
   if (!hasOwnGroupIcon(icon)) return <GroupGlyph color={tint ?? (theme.dark ? NEUTRAL_GROUP_SWATCH.dark : NEUTRAL_GROUP_SWATCH.light)} />;
-  if (icon.startsWith(SYMBOL_PREFIX)) return <Symbol name={icon.slice(SYMBOL_PREFIX.length)} size={11} weight="medium" color={tint ?? theme.icon} style={{ width: 13, height: 13 }} />;
+  const symbol = iconSymbol(icon);
+  if (symbol) return <Symbol name={symbol} size={11} weight="medium" color={tint ?? theme.icon} style={{ width: 13, height: 13 }} />;
   return <Text style={{ width: 13, fontSize: font.small.fontSize, textAlign: "center" }}>{icon}</Text>;
 }
 
