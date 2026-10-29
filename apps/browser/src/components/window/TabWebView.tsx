@@ -8,7 +8,7 @@ import { noteFavicon } from "../../state/favicons/favicons";
 import { adoptIconPage, dropOutlivedFavicon, noteIconPage } from "../../state/favicons/iconPage";
 import { restoredThemeColor } from "../../state/windows/launchLook";
 import { noteTabReady } from "../../state/app/cliControl";
-import { isQuitting } from "../../state/app/nativeSync";
+import { isQuitting } from "../../state/app/quit";
 import { useProfileTheme } from "./ThemeScope";
 import { opaqueCard } from "../ui/opaqueCard";
 import { handOff, takeHandOff, wantsPage } from "../../state/tabs/tabPages";
