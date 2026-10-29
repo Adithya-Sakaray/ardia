@@ -112,7 +112,7 @@ extension MainMenu {
     }
     if bound != announcedShortcuts {
       announcedShortcuts = bound
-      NotificationCenter.default.post(name: .ardiaMenuShortcutsChanged, object: nil)
+      ArdiaHost.menuShortcutsChanged()
     }
   }
 

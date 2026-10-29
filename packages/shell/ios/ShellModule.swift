@@ -47,10 +47,7 @@ public class ShellModule: Module {
           ShellEvents.send(.app, ["type": "appearance", "dark": ShellModule.isDark])
         }
         self?.observeForSidebar()
-        let quitCancelled = NotificationCenter.default.addObserver(
-          forName: .ardiaQuitCancelled, object: nil, queue: .main
-        ) { _ in ShellEvents.send(.app, ["type": "quitCancelled"]) }
-        self?.sidebarObservers.append((NotificationCenter.default, quitCancelled))
+        ArdiaHost.quitCancelledHandler = { ShellEvents.send(.app, ["type": "quitCancelled"]) }
       }
     }
 

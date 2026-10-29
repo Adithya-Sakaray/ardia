@@ -161,7 +161,7 @@ final class Pager {
     #endif
     switch input {
     case "prepare":
-      announceActivity(["seconds": 1, "speculative": true])
+      announceActivity { ArdiaWebView.wakeNeighbourPages(in: $0, seconds: 1, committed: false) }
       if phase == .settling {
         stopSpring()
         phase = .holding
@@ -173,7 +173,7 @@ final class Pager {
       } else if phase == .tracking, drag.area === area {
         release(velocity: 0, cancelled: false)
       } else {
-        announceActivity(["release": true])
+        announceActivity { ArdiaWebView.releaseNeighbourPages(in: $0) }
       }
     case "began":
       begin(area)
@@ -388,10 +388,10 @@ final class Pager {
     for area in areas.allObjects { area.onPagerState(event) }
   }
 
-  private func announceActivity(_ info: [String: Any] = [:]) {
+  private func announceActivity(_ tell: (NSWindow) -> Void = { ArdiaWebView.wakeNeighbourPages(in: $0) }) {
     var windows: [NSWindow] = []
     for case let window? in areas.allObjects.map(\.window) where !windows.contains(where: { $0 === window }) { windows.append(window) }
-    for window in windows { NotificationCenter.default.post(name: .ardiaPagerActivity, object: window, userInfo: info) }
+    windows.forEach(tell)
   }
 
   private func publish() {

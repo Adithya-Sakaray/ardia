@@ -5,7 +5,6 @@
 #import "ArdiaStartup.h"
 #import "ArdiaTabParking.h"
 #import "ArdiaWebViewInternal.h"
-#import "ArdiaNotifications.h"
 
 #import <Security/Security.h>
 #import <objc/runtime.h>
@@ -46,12 +45,7 @@ namespace ardia_host {
 void WatchReservedShortcuts() {
   static dispatch_once_t once;
   dispatch_once(&once, ^{
-    NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
-    [center addObserverForName:ArdiaMenuShortcutsChangedNotification object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *) {
-      gMenuShortcutsReady = YES;
-      SendReservedShortcuts();
-    }];
-    [center addObserverForName:NSTextInputContextKeyboardSelectionDidChangeNotification object:nil queue:NSOperationQueue.mainQueue
+    [NSNotificationCenter.defaultCenter addObserverForName:NSTextInputContextKeyboardSelectionDidChangeNotification object:nil queue:NSOperationQueue.mainQueue
                     usingBlock:^(NSNotification *) { SendReservedShortcuts(); }];
   });
   SendReservedShortcuts();
@@ -90,6 +84,21 @@ NSMutableDictionary<NSString *, NSDictionary *> *gInstallPrompts = [NSMutableDic
 }
 
 @implementation ArdiaHost
+
+static void (^gQuitCancelledHandler)(void);
+
++ (void (^)(void))quitCancelledHandler {
+  return gQuitCancelledHandler;
+}
+
++ (void)setQuitCancelledHandler:(void (^)(void))handler {
+  gQuitCancelledHandler = [handler copy];
+}
+
++ (void)menuShortcutsChanged {
+  gMenuShortcutsReady = YES;
+  SendReservedShortcuts();
+}
 
 + (void)replayInstallPrompts {
   for (NSDictionary *prompt in gInstallPrompts.allValues) [ArdiaEvents emit:@"extensions.installPrompt" data:prompt];

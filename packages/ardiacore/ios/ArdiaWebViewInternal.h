@@ -133,8 +133,6 @@ enum class ArdiaPageFocus { Unknown, Page, DevTools, Elsewhere };
 @end
 
 @interface ArdiaWebView (PaintingInternal)
-+ (void)wakeNeighbourPagesIn:(NSWindow *)window seconds:(CFTimeInterval)seconds committed:(BOOL)committed;
-+ (void)releaseNeighbourPagesIn:(NSWindow *)window;
 + (void)sleepNeighbourPagesIn:(NSWindow *)window after:(CFTimeInterval)delay;
 + (void)repaintWarmPagesIn:(NSWindow *)window;
 + (void)noteShown:(ArdiaCoreTab *)tab;

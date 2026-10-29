@@ -5,7 +5,6 @@
 #import "ArdiaStartup.h"
 #import "ArdiaTabParking.h"
 #import "ArdiaWebViewInternal.h"
-#import "ArdiaNotifications.h"
 
 #import <Security/Security.h>
 #import <objc/runtime.h>
@@ -32,7 +31,6 @@ using namespace ardia_host;
   ardia_host::LoadContentBlocker(@"");
   [ArdiaWebView installScrollZoom];
   [ArdiaWebView installSwitchPrewarm];
-  [ArdiaWebView installOutgoingFocusSnapshots];
   [ArdiaServices watchDownloads:@""];
 
   NSBundle *bundle = [NSBundle bundleForClass:ArdiaHostEngineDelegate.class];
@@ -96,7 +94,7 @@ using namespace ardia_host;
 
 - (void)engineQuitCancelled {
   NSLog(@"[ardiacore] quit cancelled");
-  [NSNotificationCenter.defaultCenter postNotificationName:ArdiaQuitCancelledNotification object:nil];
+  if (ArdiaHost.quitCancelledHandler) ArdiaHost.quitCancelledHandler();
 }
 
 - (void)engine:(ArdiaCoreEngine *)engine permissionRequest:(NSDictionary *)request tab:(ArdiaCoreTab *)tab {

@@ -130,6 +130,10 @@ BOOL Above(NSView *a, NSView *b) {
   return [NeighbourPagesAwake() objectForKey:window].until <= CACurrentMediaTime();
 }
 
++ (void)wakeNeighbourPagesIn:(NSWindow *)window {
+  [self wakeNeighbourPagesIn:window seconds:kNeighbourPagesAwakeSeconds committed:YES];
+}
+
 + (void)wakeNeighbourPagesIn:(NSWindow *)window seconds:(CFTimeInterval)seconds committed:(BOOL)committed {
   const CFTimeInterval now = CACurrentMediaTime();
   ArdiaNeighbourWake *wake = [NeighbourPagesAwake() objectForKey:window];

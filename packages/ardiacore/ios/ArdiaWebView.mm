@@ -6,7 +6,6 @@
 
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
-#import "ArdiaNotifications.h"
 
 #include <cmath>
 
@@ -108,17 +107,6 @@ void AcceptDrops(NSView *root, BOOL accept) {
 
 + (void)initialize {
   if (self != ArdiaWebView.class) return;
-  [NSNotificationCenter.defaultCenter addObserverForName:ArdiaPagerActivityNotification
-                                                  object:nil
-                                                   queue:nil
-                                              usingBlock:^(NSNotification *note) {
-                                                if (![note.object isKindOfClass:NSWindow.class]) return;
-                                                if ([note.userInfo[@"release"] boolValue]) return [ArdiaWebView releaseNeighbourPagesIn:note.object];
-                                                const double seconds = [note.userInfo[@"seconds"] doubleValue];
-                                                [ArdiaWebView wakeNeighbourPagesIn:note.object
-                                                                               seconds:seconds > 0 ? seconds : kNeighbourPagesAwakeSeconds
-                                                                             committed:![note.userInfo[@"speculative"] boolValue]];
-                                              }];
   [NSNotificationCenter.defaultCenter addObserverForName:@"RCTBridgeWillReloadNotification"
                                                   object:nil
                                                    queue:nil

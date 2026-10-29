@@ -62,8 +62,16 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface ArdiaWebView (Focus)
-+ (void)installOutgoingFocusSnapshots;
++ (void)keepOutgoingFocusFrom:(NSResponder *)responder NS_SWIFT_NAME(keepOutgoingFocus(from:));
++ (void)endOutgoingFocusFrom:(NSResponder *)responder NS_SWIFT_NAME(endOutgoingFocus(from:));
 - (void)focusPage;
+@end
+
+@interface ArdiaWebView (NeighbourPages)
++ (void)wakeNeighbourPagesIn:(NSWindow *)window NS_SWIFT_NAME(wakeNeighbourPages(in:));
++ (void)wakeNeighbourPagesIn:(NSWindow *)window seconds:(CFTimeInterval)seconds committed:(BOOL)committed
+    NS_SWIFT_NAME(wakeNeighbourPages(in:seconds:committed:));
++ (void)releaseNeighbourPagesIn:(NSWindow *)window NS_SWIFT_NAME(releaseNeighbourPages(in:));
 @end
 
 @interface ArdiaWebView (InputMonitors)
