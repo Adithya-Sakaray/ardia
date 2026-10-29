@@ -1,6 +1,7 @@
 import { Children, createContext, isValidElement, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Animated, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
-import { registerAnchor, settingsSectionKey, useSettingsSearch } from "../../state/settings/searchState";
+import { settingsSectionKey, useSettingsSearch } from "../../state/settings/searchState";
+import { registerAnchor } from "./anchors";
 import { useProfiles, useSettings, useTabLayout } from "../../state/browser/hooks";
 import { currentSettings } from "../../state/browser/current";
 import type { SettingsPane } from "../../state/settings/settingsWindows";

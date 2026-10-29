@@ -66,16 +66,16 @@ export function openSettings(pane?: SettingsPane, profileId?: string | null) {
   void openWindow(SETTINGS_WINDOW_ID, { kind: "settings", title: "Settings" });
 }
 
-let preferredImportSource: string | null = null;
+export const useImportRequest = create<{ source: string | null }>()(() => ({ source: null }));
 
 export function takePreferredImportSource() {
-  const id = preferredImportSource;
-  preferredImportSource = null;
-  return id;
+  const { source } = useImportRequest.getState();
+  useImportRequest.setState({ source: null });
+  return source;
 }
 
 export function openImport(browserId?: string) {
-  preferredImportSource = browserId ?? null;
+  useImportRequest.setState({ source: browserId ?? null });
   void openWindow(IMPORT_WINDOW_ID, { kind: "import", title: "Import from Another Browser" });
 }
 
