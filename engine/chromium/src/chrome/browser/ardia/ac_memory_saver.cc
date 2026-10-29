@@ -120,11 +120,7 @@ class KeptActiveSites : public ProfileManagerObserver {
 }
 }
 
-AC_ENGINE_CALL(ac_memory_saver) {
-  ardia::Call call(profile_dir, args_json, reply, context);
-  if (!call) {
-    return;
-  }
+AC_PROFILE_CALL(ac_memory_saver) {
   ardia::Reply out = call.TakeReply();
   const base::DictValue& args = call.args();
   PrefService* local_state =

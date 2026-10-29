@@ -274,14 +274,22 @@ framework.
   Chromium's at the same path (`apply.sh --paths` lists them; `series.py` counts each as the layer's). Only Chromium's
   logo, by Ardia's (`docs/brand/ardia/build.py` writes them): binary files a patch can't carry.
 - **How it links.** One `source_set("ardia")` in `chrome/browser/ardia/BUILD.gn`: add your
-  `ac_<domain>.{h,cc}` to its sources (sorted) and its deps.
+  `ac_<domain>.cc` to its sources (sorted) and its deps. A header only when another file calls into the domain
+  (`ac_tab_restore.h`, `ac_scripts_policy.h`, `ac_external_apps.h`…); exports need none. `//ardia/core` depends on
+  this target, so ArdiaCore includes those headers through a real GN dependency.
   `chromium-ardia-layer.patch` links it into the macOS `//chrome:chrome_dll` (ArdiaCore's framework), through the
   `:exports` group that exports `_ac_*`.
 - **The C surface.** `public/ac_engine.h` is plain C with the rules: exports are `ac_<domain>_<verb>`, all with one
   signature `void (const char* profile_dir, const char* args_json, ac_engine_reply_t reply, void* context)`; JSON
   object in, JSON object out (`{"error": …}` on failure); UI thread only; the reply runs once, maybe before the
   call returns. Events go to one sink (`ac_engine_set_event_sink`) as `("<domain>.<what>", {profile, …})`.
-  `ac_engine.h` has the C++ side (`AC_ENGINE_CALL`, `ardia::Call`, `Reply`, `Emit`).
+  `ac_engine.h` has the C++ side: `AC_PROFILE_CALL(name, …)` defines an export whose body gets a resolved
+  `ardia::Call& call` (args parsed, profile found; the export has already replied with the error otherwise),
+  `AC_ARGS_CALL(name)` one that needs no profile (`ardia::ArgsCall&`), and `Reply`, `Emit`, `StateFor`, `TabWithId`.
+  Args are cleansed when the call ends; a call taking secrets passes `ardia::Sensitive{max_bytes}` and reads them with
+  `call.SecretAt`. A private window's call carries `offTheRecord: true`; `Call` refuses it ("no engine data for a
+  private profile") unless the call passes `ardia::OffTheRecord::kAllow`, so the engine is the one place that says which
+  calls serve a private session.
 - **The app** includes `public/ac_engine.h` from the repo and looks each export up with `dlsym` on the engine
   framework (`packages/ardiacore/ios/ArdiaEngineBridge.mm`). A missing export aborts: the app bundles an engine it wasn't built
   for. Add each new call to `docs/ardiacore-parity.md`.

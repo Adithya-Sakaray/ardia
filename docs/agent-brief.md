@@ -125,9 +125,11 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
   must be named `ArdiaCore*` to be exported (the `ardiacore.exports` wildcard). The pod reads `ArdiaCore.h` from the repo and
   the app and the engine ship together, so the app calls new selectors directly (no `respondsToSelector:`).
 - **Adding an engine call** (Chrome's services are `ac_*` C calls in `engine/chromium`, which the app finds with
-  dlsym through `ArdiaEngineBridge`): (1) write `AC_ENGINE_CALL(ac_<domain>_<verb>)` in
-  `engine/chromium/src/chrome/browser/ardia/ac_<domain>.cc` (conventions in `public/ac_engine.h`; a new file goes
-  in that `BUILD.gn`; `ac_engine.exports` exports every `ac_*`); (2) `scripts/agent/engine-build`; (3) call it with
+  dlsym through `ArdiaEngineBridge`): (1) write `AC_PROFILE_CALL(ac_<domain>_<verb>) { … }` in
+  `engine/chromium/src/chrome/browser/ardia/ac_<domain>.cc` (`AC_ARGS_CALL` for a call that needs no profile; conventions
+  in `public/ac_engine.h` and `ac_engine.h`; a new file goes in that `BUILD.gn`; `ac_engine.exports` exports every
+  `ac_*`). A private window's calls arrive with `offTheRecord: true` and are refused unless the call says
+  `ardia::OffTheRecord::kAllow`: the engine alone decides which calls serve a private session; (2) `scripts/agent/engine-build`; (3) call it with
   `ArdiaEngineBridge call:` (`callWithSecret:` for secrets); for JS, add `"verb": EngineCall.passing("ac_<domain>_<verb>")`
   to the domain module's call table and its `"domain.verb": [args, result]` row to `packages/ardiacore/src/engine/api.ts`.
 - **The page script** is `packages/ardiacore/ios/page_script.js`, a pod resource: `ArdiaHostEngineDelegate.mm` hands it to the

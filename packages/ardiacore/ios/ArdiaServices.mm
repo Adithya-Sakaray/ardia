@@ -384,7 +384,7 @@ NSMutableDictionary<NSString *, NSString *> *DownloadProfiles() {
 
 + (void)downloadCommand:(NSString *)command id:(NSString *)downloadId {
   NSString *profile = DownloadProfiles()[downloadId ?: @""] ?: @"";
-  [self callBase:[@"ac_downloads_" stringByAppendingString:command] profile:profile args:@{@"id" : downloadId ?: @""}
+  [self callBase:@"ac_downloads_command" profile:profile args:@{@"id" : downloadId ?: @"", @"command" : command ?: @""}
       completion:^(NSDictionary *) {}];
 }
 

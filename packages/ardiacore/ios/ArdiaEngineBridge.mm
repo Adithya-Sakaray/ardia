@@ -12,53 +12,13 @@ namespace {
 bool gForwarding = false;
 NSMutableArray<NSArray *> *gPendingForwards;
 
-NSDictionary<NSString *, NSString *> *AppEventOfTopic() {
-  static NSDictionary *events = @{
-    @"history.changed" : @"history.changed",
-    @"bookmarks.changed" : @"bookmarks.changed",
-    @"extensions.action" : @"extensions.action",
-    @"extensions.sync" : @"extensions.sync",
-    @"cliControl" : @"engine.cliControl",
-  };
-  return events;
+NSSet<NSString *> *ForwardedTopics() {
+  static NSSet *topics = [NSSet setWithArray:@[ @"history.changed", @"bookmarks.changed", @"extensions.action", @"extensions.sync", @"cliControl" ]];
+  return topics;
 }
 
-NSString *const kServesPrivateSession = @"session";
-NSString *const kNoEngineData = @"no engine data for a private profile";
-
-NSDictionary<NSString *, NSString *> *PrivateSessionPolicy() {
-  static NSDictionary *policy = @{
-    @"ac_site_settings_get" : kServesPrivateSession,
-    @"ac_site_settings_origins" : kServesPrivateSession,
-    @"ac_site_settings_set" : kServesPrivateSession,
-    @"ac_site_settings_reset" : kServesPrivateSession,
-    @"ac_site_data_clear" : kServesPrivateSession,
-    @"ac_zoom_list" : kServesPrivateSession,
-    @"ac_zoom_set" : kServesPrivateSession,
-    @"ac_history_query" : kNoEngineData,
-    @"ac_history_add" : kNoEngineData,
-    @"ac_history_import" : kNoEngineData,
-    @"ac_history_delete_urls" : kNoEngineData,
-    @"ac_history_watch" : kNoEngineData,
-    @"ac_favicons_get" : kNoEngineData,
-    @"ac_favicons_set" : kNoEngineData,
-    @"ac_bookmarks_tree" : kNoEngineData,
-    @"ac_bookmarks_apply" : kNoEngineData,
-    @"ac_bookmarks_watch" : kNoEngineData,
-    @"ac_bookmarks_export_html" : kNoEngineData,
-    @"ac_tabs_last_tab_policy" : kNoEngineData,
-    @"ac_task_manager_open" : kNoEngineData,
-    @"ac_battery_saver" : kNoEngineData,
-    @"ac_memory_saver" : kNoEngineData,
-    @"ac_memory_trim" : kNoEngineData,
-    @"ac_cli_control" : kNoEngineData,
-    @"ac_extensions_watch_actions" : kNoEngineData,
-    @"ac_extensions_sync_state" : kNoEngineData,
-    @"ac_extensions_sync_apply" : kNoEngineData,
-    @"ac_downloads_settings" : kNoEngineData,
-    @"ac_downloads_set_settings" : kNoEngineData,
-  };
-  return policy;
+NSString *AppEventOfTopic(NSString *topic) {
+  return [topic isEqualToString:@"cliControl"] ? @"engine.cliControl" : topic;
 }
 
 void *Symbol(const char *name) {
@@ -93,14 +53,14 @@ NSMutableDictionary<NSString *, NSMutableArray *> *Observers() {
 }
 
 bool Forwarded(NSString *topic) {
-  return gForwarding && AppEventOfTopic()[topic] != nil;
+  return gForwarding && [ForwardedTopics() containsObject:topic];
 }
 
 void FlushForwards() {
   NSArray<NSArray *> *events = gPendingForwards;
   gPendingForwards = nil;
   for (NSArray *event in events)
-    [ArdiaEvents emit:AppEventOfTopic()[event[0]] data:event[1]];
+    [ArdiaEvents emit:AppEventOfTopic(event[0]) data:event[1]];
 }
 
 void Forward(NSString *topic, NSDictionary *payload) {
@@ -145,8 +105,6 @@ void InstallSink() {
   auto call = (ac_engine_call_t)Symbol(name.UTF8String);
   if (!call) return completion(JSON(@{@"error" : [NSString stringWithFormat:@"the engine has no %@", name]}));
   if (ardia_host::IsPrivateProfile(profile)) {
-    NSString *policy = PrivateSessionPolicy()[name];
-    if (![policy isEqualToString:kServesPrivateSession]) return completion(JSON(@{@"error" : policy ?: @"private profile"}));
     NSData *bytes = [(args.length ? args : @"{}") dataUsingEncoding:NSUTF8StringEncoding];
     NSMutableDictionary *parsed = [[NSJSONSerialization JSONObjectWithData:bytes options:0 error:nil] mutableCopy];
     if (![parsed isKindOfClass:NSMutableDictionary.class]) return completion(JSON(@{@"error" : @"bad arguments"}));
