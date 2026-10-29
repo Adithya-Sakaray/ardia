@@ -177,9 +177,10 @@ writeDocument(DOC, versionedJson(data, VERSION));
   `telemetry-queue.json`, `telemetry-daily.json`, `release-notes.json`, `onboarding.json`,
   `default-browser-offer.json`, `sync.json`, `sync-extensions.json`, `live.json`, `ardia-cli.json`,
   `bangs-state.json` and `Scripts/status.json` (all 1).
-- Not versioned yet: the sealed `sync-state.nns` and `sync-journal.nns`. Each gets its own version in its envelope
-  (`{ version, scopes }`, and inside the journal's `{ journal }`) before its first format change; `sync.json`'s `v`
-  doesn't cover them, because they're written separately.
+- The sealed sync files carry their own `version` inside the sealed JSON, because they're written apart from
+  `sync.json` and its `v` doesn't cover them: the `sync-state.nns` checkpoint (`{ covers, clock, scopes }`, 1; version 0
+  includes the older bare scope map) and each `sync-journal-<n>.nns` part (1). The single `sync-journal.nns` from before
+  numbered parts is still read first and emptied with them.
 - Out of scope: the Keychain token JSON, logs (`dev-console.log`, `telemetry-requests.log`), dev and bench results
   (`dev-eval-result.json`, `layout-watch.json`), test fixtures (`calendar-fixture.json`), and the legacy
   `bookmarks.json` / `history.json`, which are migration inputs read once. The sync payload (log and snapshot files,
