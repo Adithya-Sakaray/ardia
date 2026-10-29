@@ -13,7 +13,9 @@ enum ShellEvents {
 
   private struct Sink {
     let owner: ObjectIdentifier
-    let send: ([String: Any]) -> Void
+    weak var module: Module?
+
+    var live: Module? { module?.appContext == nil ? nil : module }
   }
 
   private static var sinks: [Channel: Sink] = [:]
@@ -21,16 +23,12 @@ enum ShellEvents {
   static func attach(_ channel: Channel, to module: Module) {
     DispatchQueue.main.async { [weak module] in
       guard let module else { return }
-      attach(channel, owner: ObjectIdentifier(module)) { [weak module] body in module?.sendEvent(channel.rawValue, body) }
-    }
-  }
-
-  private static func attach(_ channel: Channel, owner: ObjectIdentifier, send: @escaping ([String: Any]) -> Void) {
-    sinks[channel] = Sink(owner: owner, send: send)
-    switch channel {
-    case .openURLs: OpenURLInbox.flush()
-    case .notificationResponse: NotificationHub.shared.flushPending()
-    default: break
+      sinks[channel] = Sink(owner: ObjectIdentifier(module), module: module)
+      switch channel {
+      case .openURLs: OpenURLInbox.flush()
+      case .notificationResponse: NotificationHub.shared.flushPending()
+      default: break
+      }
     }
   }
 
@@ -43,12 +41,12 @@ enum ShellEvents {
     }
   }
 
-  static func isAttached(_ channel: Channel) -> Bool { sinks[channel] != nil }
+  static func isAttached(_ channel: Channel) -> Bool { sinks[channel]?.live != nil }
 
   @discardableResult
   static func send(_ channel: Channel, _ body: [String: Any]) -> Bool {
-    guard let sink = sinks[channel] else { return false }
-    sink.send(body)
+    guard let module = sinks[channel]?.live else { return false }
+    module.sendEvent(channel.rawValue, body)
     return true
   }
 }
