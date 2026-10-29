@@ -5,7 +5,7 @@ import {
   recordDefaultBrowserCheckInDone,
 } from "./onboarding";
 import { useBrowser } from "../browser/store";
-import { sendFeedback } from "../app/appIntegration";
+import { sendFeedback } from "../commands/appCommands";
 
 export const CHECK_IN_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-const { COMMANDS, shortcutSources, staticShortcutSources } = await import("./commandCatalog.ts");
+const { COMMANDS, settingChange, settingChecks, shortcutSources, staticShortcutSources, variantArg } = await import("./commandCatalog.ts");
+const { SETTING_SPECS } = await import("../settings/settings.ts");
 const { formatShortcut } = await import("./shortcuts.ts");
 
 const { TABLE_FILES, renderSwift, renderUnion } = await import("../../../scripts/command-tables.mjs");
@@ -27,10 +28,27 @@ test("profiles get ⌃1 to ⌃9 in order", () => {
   assert.deepEqual(keys.get("switchProfile:p9"), []);
 });
 
-test("the app-wide commands are exactly the ones the app integration runs, so the window router never acts on them", () => {
-  const source = readFileSync(new URL("../app/appIntegration.ts", import.meta.url), "utf8");
-  const body = source.slice(source.indexOf("function runAppCommand("), source.indexOf("export async function sendFeedback"));
-  const handled = [...body.matchAll(/case "(\w+)":/g)].map((m) => m[1]).sort();
-  const appWide = Object.entries(COMMANDS).filter(([, spec]) => spec.app).map(([command]) => command).sort();
-  assert.deepEqual(appWide, handled);
+test("a command that chooses a setting offers exactly the setting's values", () => {
+  for (const [command, spec] of Object.entries(COMMANDS)) {
+    if (spec.chooses) assert.deepEqual(Object.keys(spec.variants).sort(), [...SETTING_SPECS[spec.chooses].values].sort(), command);
+    if (spec.toggles) assert.equal(typeof SETTING_SPECS[spec.toggles].default, "boolean", command);
+  }
+});
+
+test("setting commands change their setting and check the menu item that matches it", () => {
+  const defaults = Object.fromEntries(Object.entries(SETTING_SPECS).map(([key, spec]) => [key, spec.default]));
+  const settings = { ...defaults, appearance: "dark", bookmarksBar: "newTab", showFullUrl: true, allowJavaScriptFromAppleEvents: false };
+  assert.deepEqual(settingChange("setAppearance", "light", settings), { appearance: "light" });
+  assert.equal(settingChange("setAppearance", "sepia", settings), undefined);
+  assert.equal(settingChange("setBookmarksBar", null, settings), undefined);
+  assert.deepEqual(settingChange("toggleFullUrl", null, settings), { showFullUrl: false });
+  assert.equal(settingChange("reload", null, settings), undefined);
+  assert.deepEqual(settingChecks(settings).sort(), ["setAppearance:dark", "setBookmarksBar:newTab", "toggleFullUrl"]);
+});
+
+test("a variant argument is read only when the catalog lists it", () => {
+  assert.equal(variantArg("togglePin", "row"), "row");
+  assert.equal(variantArg("togglePin", "tile"), "tile");
+  assert.equal(variantArg("togglePin", "toString"), undefined);
+  assert.equal(variantArg("togglePin", null), undefined);
 });

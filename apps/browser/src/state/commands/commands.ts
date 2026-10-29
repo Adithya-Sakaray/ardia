@@ -36,7 +36,8 @@ import { webviews } from "../../platform/webviews";
 import { togglePageEngine } from "../engines/actions";
 import { goBack, goForward } from "../tabs/navigation";
 import { openSplitPane } from "../splits/actions";
-import { APP_COMMANDS, LITTLE_ARDIA_PAGE_COMMANDS } from "./commandCatalog";
+import { isAppCommand, LITTLE_ARDIA_PAGE_COMMANDS, settingChange, variantArg } from "./commandCatalog";
+import { APP_COMMAND_HANDLERS } from "./appCommands";
 import { runSidebarCommand } from "../sidebar/commands";
 import { numberedTabs } from "../sidebar/entries";
 import { openExtensionFromMenu } from "../extensions/bridge";
@@ -64,7 +65,7 @@ import { findStep, openFind } from "../find/actions";
 const newOrId = (arg: string) => (arg === "new" ? null : arg);
 
 export function runCommand({ command, arg, windowId: requested }: CommandEvent) {
-  if (APP_COMMANDS.has(command)) return;
+  if (isAppCommand(command)) return APP_COMMAND_HANDLERS[command](requested);
   const s = useBrowser.getState();
 
   if (isUtilityWindowId(requested)) {
@@ -74,6 +75,8 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent) 
   }
   if (isSmall(s, requested) && runLittleArdiaCommand(command, arg, requested!)) return;
   if (runPeekCommand(command, resolveWindowId(s, requested) ?? "")) return;
+  const settings = settingChange(command, arg, s.settings);
+  if (settings) return s.updateSettings(settings);
 
   switch (command) {
     case "newWindow":
@@ -86,13 +89,6 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent) 
       return s.updateSettings({ openLinksInLittleArdia: !s.settings.openLinksInLittleArdia });
     case "reopenClosedWindow":
       return s.reopenClosedWindow();
-    case "setAppearance":
-      if (arg === "auto" || arg === "light" || arg === "dark") s.updateSettings({ appearance: arg });
-      return;
-    case "toggleFullUrl":
-      return s.updateSettings({ showFullUrl: !s.settings.showFullUrl });
-    case "toggleJavaScriptFromAppleEvents":
-      return s.updateSettings({ allowJavaScriptFromAppleEvents: !s.settings.allowJavaScriptFromAppleEvents });
     case "toggleAddressBar":
       return s.updateSettings({ addressBar: s.settings.addressBar === "sidebar" ? "toolbar" : "sidebar" });
     case "openSettings":
@@ -105,9 +101,6 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent) 
       return void openFiles(requested);
     case "manageExtensions":
       return openManageExtensions(requested);
-    case "setBookmarksBar":
-      if (arg === "always" || arg === "newTab" || arg === "never") s.updateSettings({ bookmarksBar: arg });
-      return;
     case "toggleBookmarksBar": {
       const mode = s.settings.bookmarksBar;
       const target = resolveWindowId(s, requested);
@@ -249,11 +242,13 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent) 
       const id = command === "selectLastTab" ? rows.at(-1) : rows[Number(arg) - 1];
       return id ? s.activate(id) : undefined;
     }
-    case "togglePin":
+    case "togglePin": {
       if (!tab) return;
-      if (arg === "row") return s.pinTabs([tab.id], true, !isPinnedRow(tab));
-      if (arg === "tile") return isPinnedRow(tab) ? s.pinTabs([tab.id], true, false) : undefined;
+      const place = variantArg("togglePin", arg);
+      if (place === "row") return s.pinTabs([tab.id], true, !isPinnedRow(tab));
+      if (place === "tile") return isPinnedRow(tab) ? s.pinTabs([tab.id], true, false) : undefined;
       return s.togglePin(tab.id);
+    }
     case "moveTabDown":
     case "moveTabUp":
       return tab ? s.moveTabBy(tab.id, command === "moveTabDown" ? 1 : -1) : undefined;
