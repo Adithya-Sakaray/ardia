@@ -1,7 +1,6 @@
 import type { Adapter, Extraction } from "../../platform/sync";
 import { useBrowser } from "../browser/store";
 import { orderSections } from "../groups/groups";
-import { pinnedFirst } from "../browser/model";
 import { arrangeParked, arrangePinnedArea } from "../pins/pinnedArea";
 import { fromSync } from "../pins/pinOrderChoices";
 import { pinKeyOf } from "../pins/pinMirror";
@@ -67,7 +66,7 @@ export function pinnedRowsAdapter(profileId: string): Adapter {
         const slots = ids.map((id, i) => (tabs[id]?.pinned && tabs[id]!.profileId === profileId && pos(tabs[id]) !== undefined ? i : -1)).filter((i) => i >= 0);
         const sorted = slots.map((i) => ids[i]!).sort((a, z) => (pos(tabs[a])! < pos(tabs[z])! ? -1 : pos(tabs[a])! > pos(tabs[z])! ? 1 : 0));
         slots.forEach((slot, i) => (ids[slot] = sorted[i]!));
-        const sectioned = { ...w, tabIds: orderSections(pinnedFirst(ids, tabs, s.groups), tabs, s.groups) };
+        const sectioned = { ...w, tabIds: orderSections(ids, tabs, s.groups) };
         windows[w.id] = { ...sectioned, tabIds: arrangePinnedArea({ tabs, groups: s.groups }, sectioned, profileId, (group) => anchorIn(base(`${PIN_ORDER}${group}`))) };
         edited = true;
       }

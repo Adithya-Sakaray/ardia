@@ -1,6 +1,6 @@
 import type { BrowserState } from "../browser/store";
 import { rejoinGroups } from "../groups/groups";
-import { findLast, IDLE_LIVE, isIncognitoProfile, makeTab, newId, pinnedFirst, resolveWindowId } from "../browser/model";
+import { findLast, IDLE_LIVE, isIncognitoProfile, makeTab, newId, resolveWindowId } from "../browser/model";
 import { restoreId } from "../tabs/adoptIds";
 import { hasPage } from "../tabs/pageSession";
 import { adoptParkedPins } from "../pins/parkedPins";
@@ -9,6 +9,7 @@ import { lastActiveProfile } from "./small";
 import { activated, apply, withNewTab } from "../tabs/tabs";
 import type { ClosedTab, ClosedWindow, TabGroup } from "../browser/types";
 import { emptyWindow, smallWindow, withWindow } from "./newWindow";
+import { orderSections } from "../groups/groups";
 
 function restoreGroup(groups: Record<string, TabGroup>, g: Omit<TabGroup, "tabIds">, tabIds: string[]): [Record<string, TabGroup>, string] {
   const id = groups[g.id] ? newId("g") : g.id;
@@ -117,7 +118,7 @@ export function restoreWindow(s: BrowserState, entry: ClosedWindow): BrowserStat
     ids.push(t.id);
     if (active || !w.activeTabIds[t.profileId]) w.activeTabIds[t.profileId] = t.id;
   }
-  w.tabIds = pinnedFirst(ids, tabs);
+  w.tabIds = orderSections(ids, tabs, {});
   let groups = s.groups;
   const restored = new Map<string, string>();
   for (const { tabIndexes, parentId: _, ...g } of entry.groups) {

@@ -2,6 +2,7 @@ import { appUrlOrigin, displayHost } from "@ardia/core";
 import type { BrowserState } from "./store";
 import { DEFAULT_PROFILE_ID } from "../settings/settings";
 import type { BrowserWindow, Profile, Tab, TabGroup, TabLive, TabSnapshot } from "./types";
+import { pinnedGroupMembers } from "./structure";
 
 
 const launch = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -90,22 +91,10 @@ export const togglePinTitle = (tab: Pick<Tab, "pinned" | "pinnedAsRow"> | undefi
 export type PinSection = "tile" | "row" | "none";
 export const pinSection = (t: Pick<Tab, "pinned" | "pinnedAsRow"> | undefined): PinSection => (!t?.pinned ? "none" : t.pinnedAsRow ? "row" : "tile");
 
-export function pinnedFirst(ids: string[], tabs: Record<string, Tab>, groups?: Record<string, TabGroup>): string[] {
-  const pinnedGroup = new Set(groups ? Object.values(groups).filter((g) => g.pinned).flatMap((g) => g.tabIds) : []);
-  const pinnedArea = (id: string) => pinSection(tabs[id]) === "row" || (!tabs[id]?.pinned && pinnedGroup.has(id));
-  return [
-    ...ids.filter((id) => pinSection(tabs[id]) === "tile"),
-    ...ids.filter(pinnedArea),
-    ...ids.filter((id) => !tabs[id]?.pinned && !pinnedArea(id)),
-  ];
-}
-
 export function inPinnedContainer(s: Pick<BrowserState, "tabs" | "groups">, id: string): boolean {
   const tab = s.tabs[id];
   if (!tab) return false;
-  if (tab.pinned) return true;
-  for (const g of Object.values(s.groups)) if (g.pinned && g.tabIds.includes(id)) return true;
-  return false;
+  return tab.pinned || pinnedGroupMembers(s.groups).has(id);
 }
 
 export function viewTabIds(s: BrowserState, windowId: string, profileId?: string): string[] {

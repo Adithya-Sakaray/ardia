@@ -11,6 +11,7 @@ import { groupLabel, groupOf, movingGroup, withGroup, withRowsGrouped, type Grou
 import { groupingOnto, placing, type TabPlacement } from "./placing";
 import { closedEntries, closeQuietly, closingGroup, keptCleanedTabs, nestedSnapshot, rebuildNested, regroupRestored, restoreSnapshots, restoreTarget } from "./closedTabs";
 import { abandonedNewTabs, canUndoClear, CLEAN_UP_AFTER_MS, cleanUpCandidates, clearedTabIds, isClosedPin, MAX_CLEANED, undoable, type ClearedTabs } from "./tabCleanup";
+import { pinnedGroupMembers } from "../browser/structure";
 
 export { groupChoiceKey, livePinTable, nextPinChoice, notePinChoices, orderChoiceKey, placeChoiceKey, type PinChoices, type PinSync, type PinSyncEntry } from "./pinChoices";
 export { canMoveGroup, groupLabel, groupOf, groupWithOpener, movingGroup, pinnedChildGroup, withGroup, withRowsGrouped, type GroupPlacement } from "./tabGrouping";
@@ -145,8 +146,8 @@ export const createOrganizeSlice: StateCreator<BrowserState, [], [], OrganizeSli
     const first = s.tabs[ids[0] ?? ""];
     const w = first && s.windows[first.windowId];
     if (!w) return;
-    const pinnedGroupMembers = new Set(Object.values(s.groups).filter((g) => g.pinned).flatMap((g) => g.tabIds));
-    const beforeId = pinned ? null : w.tabIds.find((id) => !s.tabs[id]?.pinned && !pinnedGroupMembers.has(id) && !ids.includes(id));
+    const members = pinnedGroupMembers(s.groups);
+    const beforeId = pinned ? null : w.tabIds.find((id) => !s.tabs[id]?.pinned && !members.has(id) && !ids.includes(id));
     set(placing(s, ids, { pinned, row, beforeId }));
   },
 

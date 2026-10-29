@@ -1,7 +1,7 @@
 import type { Adapter, Extraction } from "../../platform/sync";
 import { useBrowser } from "../browser/store";
 import { fromSync } from "../pins/pinOrderChoices";
-import { pinnedGroupMembers } from "../pins/pinHomes";
+import { pinnedGroupMembers } from "../browser/structure";
 import { pinKeyOf } from "../pins/pinMirror";
 import type { Tab } from "../browser/types";
 import { PIN_TAB, PIN_HOME, syncedHome, syncedHomeIn } from "./pinRecords";
@@ -31,7 +31,7 @@ export function pinnedHomesAdapter(profileId: string): Adapter {
         if (!home) held.add(key);
         else if (base(k) !== undefined || (remote(k) ?? null) === null) values.set(k, home);
       };
-      const members = pinnedGroupMembers(s);
+      const members = pinnedGroupMembers(s.groups);
       const home = homeWindow(s, profileId);
       for (const w of home ? [home, ...openWindows(s).filter((w) => w.id !== home.id)] : openWindows(s)) {
         for (const id of w.tabIds) {
@@ -61,7 +61,7 @@ export function pinnedHomesAdapter(profileId: string): Adapter {
       };
       const s = store();
       let tabs: Record<string, Tab> | null = null;
-      for (const id of pinnedGroupMembers(s)) {
+      for (const id of pinnedGroupMembers(s.groups)) {
         const t = s.tabs[id];
         if (!t || t.profileId !== profileId || t.pinned) continue;
         const home = wanted(pinKeyOf(t), t.pinnedUrl);

@@ -4,7 +4,7 @@ import { createBookmarksSlice, ensureRoots, type BookmarksSlice } from "../bookm
 import { changedIds } from "./changes";
 import { createGroupsSlice, settleNesting, type GroupsSlice } from "../groups/groups";
 import { createHistorySlice, type HistorySlice } from "../history/history";
-import { engineProfile, IDLE_LIVE, isIncognitoProfile, pinnedFirst } from "./model";
+import { engineProfile, IDLE_LIVE, isIncognitoProfile } from "./model";
 import { createOrganizeSlice, forgetClosedPrivateWindows, keptCleanedTabs, keptDeletedGroups, livePinTable, notePinChoices, type OrganizeSlice } from "../pins/organize";
 import { createPeekSlice, settlePeeks, type PeekSlice } from "../peek/peek";
 import { settlePinHomes } from "../pins/pinHomes";
@@ -21,6 +21,7 @@ import { transactional } from "./transaction";
 import type { BrowserWindow, Tab } from "./types";
 import { createUiSlice, type UiSlice } from "../windows/ui";
 import { createWindowsSlice, type WindowsSlice } from "../windows/windows";
+import { orderSections } from "../groups/groups";
 
 export type BrowserState = ProfilesSlice &
   WindowsSlice &
@@ -127,7 +128,7 @@ export const useBrowser = create<BrowserState>()(transactions.middleware(batched
     }
     const windows: Record<string, BrowserWindow> = {};
     for (const w of Object.values(rawWindows)) {
-      const tabIds = pinnedFirst(w.tabIds.filter((id) => tabs[id]?.windowId === w.id), tabs, data.groups ?? {});
+      const tabIds = orderSections(w.tabIds.filter((id) => tabs[id]?.windowId === w.id), tabs, data.groups ?? {});
       if (!tabIds.length) continue;
       const activeTabIds = Object.fromEntries(Object.entries(w.activeTabIds).filter(([p, id]) => tabs[id]?.profileId === p));
       const profileId = tabIds.some((id) => tabs[id]!.profileId === w.profileId) ? w.profileId : tabs[tabIds[0]!]!.profileId;

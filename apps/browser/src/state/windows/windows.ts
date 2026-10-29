@@ -8,7 +8,6 @@ import {
   isIncognitoProfile,
   navigationTo,
   newId,
-  pinnedFirst,
   resolveWindowId,
   snapshotTab,
   viewTabIds,
@@ -28,6 +27,7 @@ import type { BrowserWindow, ClosedWindow, Frame, ParkedPins, Tab } from "../bro
 import { emptyWindow, smallWindow, withWindow } from "./newWindow";
 import { lastClosedEntry, lastClosedTab, restoreTab, restoreWindow } from "./reopenClosed";
 import { groupTree, regrouped, splitsWithin, withSplitsBack } from "./groupMoves";
+import { orderSections } from "../groups/groups";
 
 export type CreateWindowOptions = {
   profileId?: string;
@@ -97,7 +97,7 @@ export function moveTabsInto(s: BrowserState, ids: string[], targetId: string): 
     ...next,
     tabs,
     live,
-    windows: { ...next.windows, [targetId]: { ...w, tabIds: pinnedFirst([...w.tabIds, ...moving.map((t) => t.id)], tabs, next.groups), activeTabIds } },
+    windows: { ...next.windows, [targetId]: { ...w, tabIds: orderSections([...w.tabIds, ...moving.map((t) => t.id)], tabs, next.groups), activeTabIds } },
   };
   for (const id of sources) {
     const src = next.windows[id];
@@ -130,7 +130,7 @@ function intoProfile(s: BrowserState, tabId: string, profileId: string): Browser
     tabs,
     pinChoices,
     live: { ...next.live, [tabId]: IDLE_LIVE },
-    windows: { ...next.windows, [w.id]: { ...base, tabIds: pinnedFirst(tabIds, tabs, next.groups) } },
+    windows: { ...next.windows, [w.id]: { ...base, tabIds: orderSections(tabIds, tabs, next.groups) } },
     windowOrder: next.windowOrder.includes(w.id) ? next.windowOrder : s.windowOrder,
   };
 }

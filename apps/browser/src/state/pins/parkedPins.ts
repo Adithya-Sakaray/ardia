@@ -1,6 +1,6 @@
 import type { BrowserState } from "../browser/store";
 import { ancestorIds, depthOf, orderSections, placeBlock, syncGroupOrder, withParent } from "../groups/groups";
-import { IDLE_LIVE, isIncognitoProfile, makeTab, newId, pinnedFirst, snapshotTab, without } from "../browser/model";
+import { IDLE_LIVE, isIncognitoProfile, makeTab, newId, snapshotTab, without } from "../browser/model";
 import { pendingRestore, restoreId } from "../tabs/adoptIds";
 import { samePage } from "./organize";
 import { pinKeyOf } from "./pinMirror";
@@ -141,7 +141,7 @@ export function adoptParkedPins(s: BrowserState, windowId: string, profileId: st
     splits = { ...splits, [id]: { id, windowId, tabIds: panes, orientation: v.orientation, sizes: v.sizes, ...(v.stack ? { stack: v.stack } : {}) } };
     order = placeBlock(order, order.filter((x) => panes.includes(x)));
   }
-  const window = { ...w, tabIds: orderSections(pinnedFirst(order, tabs, groups), tabs, groups) };
+  const window = { ...w, tabIds: orderSections(order, tabs, groups) };
   groups = syncGroupOrder(groups, window);
   return { ...s, tabs, live, groups, splits, windows: { ...s.windows, [windowId]: window }, parkedPins: without(s.parkedPins, [profileId]) };
 }

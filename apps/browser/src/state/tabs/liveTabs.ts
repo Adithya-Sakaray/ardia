@@ -3,7 +3,7 @@ import type { StripGroup, StripState, StripTab } from "../../platform/tabs";
 import type { BrowserState } from "../browser/store";
 import type { TabGroup } from "../browser/types";
 import { rootOf } from "../groups/groups";
-import { engineProfile, pinnedFirst } from "../browser/model";
+import { engineProfile } from "../browser/model";
 import { forgetOpeners, switchKeepsOpeners } from "./openers";
 import { groupOf, placing, withGroup } from "../pins/organize";
 import { isPeekTab, withoutPeek } from "../peek/peek";
@@ -11,6 +11,7 @@ import { settleMovedPins } from "../pins/pinMirror";
 import { splitOf } from "../splits/splits";
 import { activated, apply, removeTabs } from "./tabs";
 import { isAdoptKind } from "./adoptIds";
+import { orderSections } from "../groups/groups";
 
 type Keyed = StripTab & { key: string };
 const known = (s: BrowserState, t: StripTab | undefined): t is Keyed => !!t?.key && !!s.tabs[t.key] && !isPeekTab(s, t.key);
@@ -266,7 +267,7 @@ function intoWindow(s: BrowserState, key: string, to: string): BrowserState {
     ...next,
     tabs,
     live: live ? { ...next.live, [key]: live } : next.live,
-    windows: { ...next.windows, [to]: { ...w, tabIds: pinnedFirst([...w.tabIds, key], tabs, next.groups) } },
+    windows: { ...next.windows, [to]: { ...w, tabIds: orderSections([...w.tabIds, key], tabs, next.groups) } },
   };
   return settleMovedPins(s, next, [key], to);
 }

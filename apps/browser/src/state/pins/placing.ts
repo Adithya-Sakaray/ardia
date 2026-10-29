@@ -5,6 +5,7 @@ import { splitOf, splitRowHead, splitRowPanes, withSplitRows } from "../splits/s
 import { nextPinChoice, placeChoiceKey } from "./pinChoices";
 import { groupOf, withRowsGrouped } from "./tabGrouping";
 import type { BrowserWindow, TileFolder } from "../browser/types";
+import { pinnedGroupMembers } from "../browser/structure";
 
 export type TabPlacement = {
   pinned: boolean;
@@ -70,7 +71,7 @@ export function placing(s: BrowserState, ids: string[], p: TabPlacement): Browse
     at = kept.length ? rest.indexOf(kept.at(-1)!) + 1 : Math.min(order.get(target.tabIds[0]!)!, rest.length);
   } else if (p.pinned) {
     const toRow = !!tabs[moving[0]!]!.pinnedAsRow;
-    const pinnedGroup = toRow && p.last ? new Set(Object.values(s.groups).filter((g) => g.pinned).flatMap((g) => g.tabIds)) : null;
+    const pinnedGroup = toRow && p.last ? pinnedGroupMembers(s.groups) : null;
     at = rest.reduce((last, id, i) => ((tabs[id]?.pinned && (toRow || !tabs[id]!.pinnedAsRow)) || pinnedGroup?.has(id) ? i + 1 : last), 0);
   } else at = rest.length;
   insertAll(rest, at, moving);

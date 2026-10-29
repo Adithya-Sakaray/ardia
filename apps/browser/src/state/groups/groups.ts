@@ -6,6 +6,7 @@ import { withSplitRows } from "../splits/splits";
 import { withNewTab } from "../tabs/tabs";
 import type { BrowserWindow, ClosedGroupInfo, GroupColor, Tab, TabGroup } from "../browser/types";
 import { depthOf, innermostGroupOf, nestGroups, reparent } from "./groupNesting";
+import { pinnedGroupMembers } from "../browser/structure";
 
 export { ancestorIds, canNest, commonGroup, depthOf, descendantIds, groupPath, innermostGroupOf, nestGroups, reparent, rootOf, withParent } from "./groupNesting";
 
@@ -36,7 +37,7 @@ export function syncGroupOrder(groups: Record<string, TabGroup>, window: Browser
 }
 
 export function orderSections(ids: string[], tabs: Record<string, Tab>, groups: Record<string, TabGroup>): string[] {
-  const pinnedGroup = new Set(Object.values(groups).filter((g) => g.pinned).flatMap((g) => g.tabIds));
+  const pinnedGroup = pinnedGroupMembers(groups);
   const rank = (id: string) => (tabs[id]?.pinned ? (tabs[id]!.pinnedAsRow ? 1 : 0) : pinnedGroup.has(id) ? 1 : 2);
   const out = [0, 1, 2].flatMap((r) => ids.filter((id) => rank(id) === r));
   return out.every((id, i) => id === ids[i]) ? ids : out;

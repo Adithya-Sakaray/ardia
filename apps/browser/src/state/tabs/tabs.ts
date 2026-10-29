@@ -5,7 +5,6 @@ import {
   inPinnedContainer,
   makeTab,
   navigationTo,
-  pinnedFirst,
   viewTabIds,
   wake,
   without,
@@ -21,6 +20,7 @@ import { removeFromSplits, splitOf, withPinnedPanes } from "../splits/splits";
 import { closedTabEntry, MAX_CLOSED_TABS } from "../pins/closedTabs";
 import { pendingRestore } from "./adoptIds";
 import type { BrowserWindow, ClosedTab, Tab, TabSnapshot } from "../browser/types";
+import { orderSections } from "../groups/groups";
 
 export type NewTabOptions = {
   url?: string;
@@ -276,7 +276,7 @@ export function withNewTab(s: BrowserState, windowId: string, o: NewTabOptions =
   tabIds.splice(Math.min(at, tabIds.length), 0, tab.id);
   const window: BrowserWindow = {
     ...w,
-    tabIds: pinnedFirst(tabIds, tabs, s.groups),
+    tabIds: orderSections(tabIds, tabs, s.groups),
     activeTabIds: w.activeTabIds[profileId] ? w.activeTabIds : { ...w.activeTabIds, [profileId]: tab.id },
   };
   let next: BrowserState = {

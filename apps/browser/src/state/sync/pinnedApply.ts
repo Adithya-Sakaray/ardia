@@ -1,7 +1,7 @@
 import type { ApplyRecords } from "../../platform/sync";
 import { useBrowser } from "../browser/store";
 import { depthOf, leaveGroups, orderSections, syncGroupOrder, withParent } from "../groups/groups";
-import { makeTab, newId, pinnedFirst, without } from "../browser/model";
+import { makeTab, newId, without } from "../browser/model";
 import { noteRemotePinDeletion, type PinSyncEntry } from "../pins/organize";
 import { adoptParkedPins, parkWindowPins } from "../pins/parkedPins";
 import { arrangePinnedArea } from "../pins/pinnedArea";
@@ -281,7 +281,7 @@ export function applyPinned(profileId: string, visible: Map<string, unknown>, ch
     const slots = ids.map((id, i) => (rank.has(id) ? i : -1)).filter((i) => i >= 0);
     const sorted = slots.map((i) => ids[i]!).sort((a, z) => rank.get(a)! - rank.get(z)!);
     slots.forEach((slot, i) => (ids[slot] = sorted[i]!));
-    const sectioned = { ...w, tabIds: orderSections(pinnedFirst(ids, tabs, groups), tabs, groups) };
+    const sectioned = { ...w, tabIds: orderSections(ids, tabs, groups) };
     const window = { ...sectioned, tabIds: arrangePinnedArea({ tabs, groups }, sectioned, profileId, (group) => anchorIn(base(`${PIN_ORDER}${group}`))) };
     windows[w.id] = window;
     groups = syncGroupOrder(groups, window);

@@ -1,11 +1,12 @@
 import type { BrowserState } from "../browser/store";
 import { changedIds } from "../browser/changes";
 import { orderSections, syncGroupOrder, withParent } from "../groups/groups";
-import { IDLE_LIVE, inPinnedContainer, newId, pinnedFirst } from "../browser/model";
+import { IDLE_LIVE, inPinnedContainer, newId } from "../browser/model";
 import { hasOwnOrSharedPage, hasPage } from "./pageSession";
 import { chainOf, copyOf, hasDuplicates, keyField, mirrored, pinKeyOf, profilesOf, sectionOf, signature, treeOrder, union } from "../pins/pinMirror";
 import { removeTabs, withNewTab } from "./tabs";
 import type { Tab, TabGroup } from "../browser/types";
+import { pinnedGroupMembers } from "../browser/structure";
 
 type Section = ReturnType<typeof sectionOf>;
 
@@ -20,7 +21,7 @@ export function sharedListTab(s: BrowserState, t: Tab): boolean {
 }
 
 function listMember(s: BrowserState): (t: Tab) => boolean {
-  const pinnedMembers = new Set(Object.values(s.groups).filter((g) => g.pinned).flatMap((g) => g.tabIds));
+  const pinnedMembers = pinnedGroupMembers(s.groups);
   const inSplit = new Set(Object.values(s.splits).flatMap((v) => v.tabIds));
   return (t) => listable(t) && !pinnedMembers.has(t.id) && !inSplit.has(t.id) && s.peeks[t.windowId]?.tabId !== t.id;
 }
@@ -192,7 +193,7 @@ function conformList(input: BrowserState, windowId: string, profileId: string, s
   }
   for (const g of cur.own) if (groups[g.id]?.parentId && !groups[groups[g.id]!.parentId!]) groups[g.id] = withParent(groups[g.id]!, undefined);
 
-  const window = { ...w, tabIds: orderSections(pinnedFirst(ids, tabs, groups), tabs, groups) };
+  const window = { ...w, tabIds: orderSections(ids, tabs, groups) };
   groups = syncGroupOrder(groups, window);
   let next: BrowserState = { ...s, tabs, live, groups, windows: { ...s.windows, [windowId]: window } };
   if (!gone.length) return next;

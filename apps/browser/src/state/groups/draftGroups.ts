@@ -5,6 +5,7 @@ import { IDLE_LIVE, isIncognitoProfile, makeTab, newId } from "../browser/model"
 import { pageKey, pinnedPages } from "../tabs/pageKeys";
 import type { BookmarkFolder, Bookmarks, TabGroup } from "../browser/types";
 import { isWebPageUrl } from "../../lib/url";
+import { pinnedGroupMembers } from "../browser/structure";
 
 export type GroupDraft = { title: string; url?: string; customTitle?: string; id?: string; children?: GroupDraft[] };
 export type DraftGroups = { made: string[]; carried: Set<string>; skipped: number };
@@ -73,7 +74,7 @@ export function withDraftGroups(s: BrowserState, windowId: string, profileId: st
     make(d);
   }
   if (!made.length) return [s, { made, carried, skipped }];
-  const pinnedArea = new Set(Object.values(s.groups).filter((g) => g.pinned).flatMap((g) => g.tabIds));
+  const pinnedArea = pinnedGroupMembers(s.groups);
   const at = w.tabIds.reduce((last, id, i) => (s.tabs[id]?.pinned || pinnedArea.has(id) ? i + 1 : last), 0);
   const ids = [...w.tabIds];
   insertAll(ids, at, order);

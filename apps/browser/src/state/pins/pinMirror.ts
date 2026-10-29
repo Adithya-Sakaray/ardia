@@ -1,7 +1,7 @@
 import type { BrowserState } from "../browser/store";
 import { changedIds } from "../browser/changes";
 import { ancestorIds, depthOf, orderSections, placeBlock, syncGroupOrder, withParent } from "../groups/groups";
-import { IDLE_LIVE, isIncognitoProfile, makeTab, newId, pinnedFirst, without } from "../browser/model";
+import { IDLE_LIVE, isIncognitoProfile, makeTab, newId, without } from "../browser/model";
 import { samePage } from "./organize";
 import { hasPage } from "../tabs/pageSession";
 import { removeFromSplits } from "../splits/splits";
@@ -303,7 +303,7 @@ function conform(s: BrowserState, windowId: string, profileId: string, spec: Sec
       ids = placeBlock(ids, ids.filter((id) => x.ids.includes(id)));
     }
   }
-  const window = { ...w, tabIds: orderSections(pinnedFirst(ids, tabs, groups), tabs, groups) };
+  const window = { ...w, tabIds: orderSections(ids, tabs, groups) };
   groups = syncGroupOrder(groups, window);
   const next: BrowserState = { ...s, tabs, live, groups, splits, windows: { ...s.windows, [windowId]: window } };
   return gone.length ? removeTabs(next, gone, false) : next;
@@ -372,7 +372,7 @@ export function settleMovedPins(before: BrowserState, after: BrowserState, moved
     for (const g of sharesTabs(before) ? Object.values(before.groups) : pinnedGroupsOf(before)) {
       if (g.windowId === sourceId && g.tabIds.some((id) => swap.has(id))) groups[g.id] = { ...g, ...groups[g.id], tabIds: keep(g.tabIds) };
     }
-    windows[sourceId] = { ...src, tabIds: pinnedFirst(keep(before.windows[sourceId]!.tabIds), tabs, groups), ...(activeTabIds !== src.activeTabIds ? { activeTabIds } : {}) };
+    windows[sourceId] = { ...src, tabIds: orderSections(keep(before.windows[sourceId]!.tabIds), tabs, groups), ...(activeTabIds !== src.activeTabIds ? { activeTabIds } : {}) };
   }
   const target = windows[targetId]!;
   let tabIds = [...target.tabIds];
@@ -391,7 +391,7 @@ export function settleMovedPins(before: BrowserState, after: BrowserState, moved
       tabIds.push(copy);
     } else gone.push(copy);
   }
-  windows[targetId] = { ...target, tabIds: orderSections(pinnedFirst(tabIds, tabs, groups), tabs, groups) };
+  windows[targetId] = { ...target, tabIds: orderSections(tabIds, tabs, groups) };
   const next: BrowserState = { ...after, tabs, live, windows, groups };
   return gone.length ? removeTabs(next, gone, false) : next;
 }
