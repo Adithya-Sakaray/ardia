@@ -1,6 +1,6 @@
 import { applyBookmarkOps, bookmarkTree, onBookmarksChanged, watchBookmarks, type BookmarkOp, type EngineBookmark } from "../../platform/bookmarks";
 import { readDocument, removeDocument, writeDocument } from "../../platform/documents";
-import { versionedJson, upgraded, type Migrations } from "../../lib/savedDocument";
+import { parseSaved, versionedJson, type Migrations } from "../../lib/savedDocument";
 import { bookmarkUuidFor, isBookmarkUuid, ROOT_TITLES, rootIdsFor } from "./bookmarks";
 import { applyOps, bookmarkOps, flatFromEngine, flatFromStore, type Flat } from "./flatBookmarks";
 import { useBrowser, type BrowserState } from "../browser/store";
@@ -136,14 +136,20 @@ const CACHE_MIGRATIONS: Migrations = {};
 
 type CacheDoc = { trees: Record<string, BookmarkNode[]> };
 
+const isFields = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+
+const isCachedNode = (n: unknown): n is BookmarkNode =>
+  isFields(n) &&
+  typeof n.id === "string" &&
+  typeof n.title === "string" &&
+  typeof n.addedAt === "number" &&
+  ((n.kind === "url" && typeof n.url === "string" && typeof n.parentId === "string") ||
+    (n.kind === "folder" && Array.isArray(n.children) && n.children.every((c) => typeof c === "string")));
+
 function readCache(): CacheDoc["trees"] {
-  try {
-    const json = readDocument(CACHE_FILE);
-    const doc = json ? (upgraded(JSON.parse(json), CACHE_VERSION, CACHE_MIGRATIONS) as CacheDoc | null) : null;
-    return doc?.trees ?? {};
-  } catch {
-    return {};
-  }
+  const trees = parseSaved(readDocument(CACHE_FILE), CACHE_VERSION, CACHE_MIGRATIONS)?.trees;
+  if (!isFields(trees)) return {};
+  return Object.fromEntries(Object.entries(trees).flatMap(([engine, nodes]) => (Array.isArray(nodes) && nodes.every(isCachedNode) ? [[engine, nodes]] : [])));
 }
 
 function launchTrees(): Record<string, Flat> {
