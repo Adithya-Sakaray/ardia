@@ -1,7 +1,7 @@
 import { onExtensionActionPopup, onExtensionActionShortcut, onExtensionSidePanel, onExtensionsChanged, onExtensionTabsRequest } from "../../platform/extensions";
 import { useBrowser, type BrowserState } from "../browser/store";
 import { shownPageId } from "../peek/peek";
-import { startActionStates, watchActionsOf } from "./actionStates";
+import { startActionStates, watchActionsOf } from "./actionWatch";
 import { startExtensionSearchEngines } from "./searchEngines";
 import { watchExtensionInstallFailures } from "./crxDrop";
 import { onSyncedExtensionChange } from "../sync/extensions";
