@@ -10,10 +10,11 @@ import { tabTitle } from "../browser/model";
 import { splitOf, type SplitSide } from "../splits/splits";
 import { dropTabIntoSplit } from "../splits/actions";
 import { dropTabsOutside, screenPoint, windowUnder } from "./windowDrop";
+import { dropTabsOnBar, followTabDragOnBar } from "../bookmarks/barDrag";
 
 export type DropTarget = { tabId: string; side: SplitSide };
 
-type TabDrag = {
+export type TabDrag = {
   tabId: string | null;
   tabIds: string[];
   windowId: string | null;
@@ -42,6 +43,8 @@ export const useTabDrag = create<TabDrag>()(() => ({
   overPoint: null,
   insert: null,
 }));
+
+useTabDrag.subscribe(followTabDragOnBar);
 
 if (__DEV__) (globalThis as { acTabDrag?: typeof useTabDrag }).acTabDrag = useTabDrag;
 
@@ -168,11 +171,6 @@ export function setTargetResolver(resolver: typeof resolveTarget) {
   resolveTarget = resolver;
 }
 
-let dropOnBookmarks: ((tabIds: string[], windowId: string, x: number, y: number) => boolean) | null = null;
-export function setBookmarksDrop(drop: typeof dropOnBookmarks) {
-  dropOnBookmarks = drop;
-}
-
 export function setOnPage(onPage: boolean) {
   if (useTabDrag.getState().onPage === onPage) return;
   useTabDrag.setState({ onPage });
@@ -205,7 +203,7 @@ export function endTabDrag(): boolean {
   picture = null;
   const shown = begun;
   sentShape = "hidden";
-  if (!outside && windowId && tabIds.length && dropOnBookmarks?.(tabIds, windowId, x, y)) {
+  if (!outside && windowId && tabIds.length && dropTabsOnBar(tabIds, windowId, x, y)) {
     if (shown) dragPreview.end();
     return true;
   }

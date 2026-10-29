@@ -1,7 +1,6 @@
 import { lastTabClosesWindow } from "../../platform/tabs";
 import { onDownload } from "../../platform/downloads";
 import { releaseProfile } from "../../platform/profiles";
-import { cancelFocusMove, claimFocus } from "../../platform/focus";
 import { closeWindow, onWindowEvent, openWindow, restoreFullScreen, setTrafficLightsCenter, setWindowTitle, windowIds } from "../../platform/windows";
 import { isDarkAppearance, onAppEvent, onOpenURLs, replyToTerminate } from "../../platform/app";
 import { startNativeSettings } from "../settings/nativeSettings";
@@ -29,7 +28,6 @@ import { runCommand } from "../commands/commands";
 import { LITTLE_ARDIA_DISABLED_COMMANDS, PAGE_COMMANDS, PAGE_COMMANDS_OFF_INTERNAL_PAGES, WINDOW_COMMANDS } from "../commands/commandCatalog";
 import { setMenuBarShortcuts } from "../commands/commandShortcuts";
 import { finishAnimatedCloses } from "../windows/closeAnimated";
-import { setFocusSenders } from "../focus/focusClaims";
 import { cancelAbandonedFocusMoves, settlingCommandFocus } from "../focus/focusHandoff";
 import { flushPersistence, resumePersistence } from "../session/persist";
 import { startWindowCloseGuard } from "../windows/windowClose";
@@ -56,7 +54,6 @@ export function startNativeSync() {
   const store = useBrowser;
   if (!store.getState().windowOrder.length) store.getState().createWindow();
 
-  setFocusSenders(claimFocus, cancelFocusMove);
   cancelAbandonedFocusMoves();
   onCommand((e) => settlingCommandFocus(e, runCommand));
   startWindowCloseGuard();
