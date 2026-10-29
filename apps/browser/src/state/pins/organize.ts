@@ -12,6 +12,7 @@ import { groupingOnto, placing, type TabPlacement } from "./placing";
 import { closedEntries, closeQuietly, closingGroup, keptCleanedTabs, nestedSnapshot, rebuildNested, regroupRestored, restoreSnapshots, restoreTarget } from "./closedTabs";
 import { abandonedNewTabs, canUndoClear, CLEAN_UP_AFTER_MS, cleanUpCandidates, clearedTabIds, isClosedPin, MAX_CLEANED, undoable, type ClearedTabs } from "./tabCleanup";
 import { pinnedGroupMembers } from "../browser/structure";
+import { samePage } from "../../lib/url";
 
 export { groupChoiceKey, livePinTable, nextPinChoice, notePinChoices, orderChoiceKey, placeChoiceKey, type PinChoices, type PinSync, type PinSyncEntry } from "./pinChoices";
 export { canMoveGroup, groupLabel, groupOf, groupWithOpener, movingGroup, pinnedChildGroup, withGroup, withRowsGrouped, type GroupPlacement } from "./tabGrouping";
@@ -61,11 +62,6 @@ export function selectedTabIds(s: BrowserState, windowId: string): string[] {
   if (selected.length) return view.filter((id) => selected.includes(id));
   const active = activeTabId(s, windowId);
   return active ? [active] : [];
-}
-
-export function samePage(a: string, b: string): boolean {
-  const norm = (u: string) => u.replace(/#.*$/, "").replace(/\/$/, "");
-  return norm(a) === norm(b);
 }
 
 export const awayFromPin = (t: Pick<Tab, "url" | "pinnedUrl">) => !!t.pinnedUrl && !!t.url && !samePage(t.url, t.pinnedUrl);

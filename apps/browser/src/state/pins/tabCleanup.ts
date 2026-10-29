@@ -5,6 +5,7 @@ import { holderOf } from "./pinShare";
 import { splitOf } from "../splits/splits";
 import { lastUsedOf, sharedLastUsed } from "../tabs/tabShare";
 import type { ClosedTab, Tab, TabGroup } from "../browser/types";
+import { withoutFragment } from "../../lib/url";
 
 export type ClearedTabs = {
   windowId: string;
@@ -120,7 +121,7 @@ export function cleanUpCandidates(s: BrowserState, windowId: string, inactiveFor
   for (const id of view) {
     const t = s.tabs[id]!;
     if (!t.url) continue;
-    const key = t.url.replace(/#.*$/, "");
+    const key = withoutFragment(t.url);
     byPage.set(key, [...(byPage.get(key) ?? []), t]);
   }
   for (const same of byPage.values()) {

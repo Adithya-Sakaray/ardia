@@ -2,6 +2,8 @@ import { breadcrumb, displayHost, hostOf } from "@ardia/core";
 
 export const withoutFragment = (url: string) => url.replace(/#.*$/, "");
 
+export const samePage = (a: string, b: string) => withoutFragment(a).replace(/\/$/, "") === withoutFragment(b).replace(/\/$/, "");
+
 export const isWebPageUrl = (url: string) => /^(https?|file):/i.test(url);
 
 export const displayHostOf = (url: string) => displayHost(hostOf(url));

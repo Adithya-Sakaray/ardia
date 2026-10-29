@@ -2,10 +2,11 @@ import type { BrowserState } from "../browser/store";
 import { siteKey, siteName } from "../groups/groupNames";
 import { depthOf, innermostGroupOf } from "../groups/groups";
 import { activeTabId, isPinnedRow } from "../browser/model";
-import { placing, restoreSnapshots, samePage, withRowsGrouped } from "./organize";
+import { placing, restoreSnapshots, withRowsGrouped } from "./organize";
 import { splitOf, splitRowPanes, withSplitRows } from "../splits/splits";
 import { activated, apply, removeTabs } from "../tabs/tabs";
 import type { ClosedTab, Tab, TabGroup } from "../browser/types";
+import { samePage } from "../../lib/url";
 
 export type TidyPlan = {
   closes: { tabId: string; keeperId: string }[];

@@ -2,8 +2,8 @@ import type { BrowserState } from "../browser/store";
 import { ancestorIds, depthOf, orderSections, placeBlock, syncGroupOrder, withParent } from "../groups/groups";
 import { IDLE_LIVE, isIncognitoProfile, makeTab, newId, pinKeyOf, snapshotTab, without } from "../browser/model";
 import { pendingRestore, restoreId } from "../tabs/adoptIds";
-import { samePage } from "./organize";
 import type { BrowserWindow, HistoryEntry, ParkedPins, Tab, TabGroup } from "../browser/types";
+import { samePage } from "../../lib/url";
 
 
 type PinSource = Pick<BrowserState, "tabs" | "groups" | "history"> & Partial<Pick<BrowserState, "windows" | "splits">>;

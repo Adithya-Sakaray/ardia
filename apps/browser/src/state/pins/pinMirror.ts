@@ -2,12 +2,12 @@ import type { BrowserState } from "../browser/store";
 import { changedIds } from "../browser/changes";
 import { ancestorIds, depthOf, orderSections, placeBlock, syncGroupOrder, withParent } from "../groups/groups";
 import { IDLE_LIVE, isIncognitoProfile, makeTab, newId, pinKeyOf, without } from "../browser/model";
-import { samePage } from "./organize";
 import { hasPage } from "../tabs/pageSession";
 import { removeFromSplits } from "../splits/splits";
 import { sharedListTab, sharesTabs } from "../tabs/tabShare";
 import { removeTabs } from "../tabs/tabs";
 import type { BrowserWindow, SplitView, Tab, TabGroup } from "../browser/types";
+import { samePage } from "../../lib/url";
 
 const homeOf = (t: Pick<Tab, "url" | "pinnedUrl">) => t.pinnedUrl || t.url;
 export const mirrored = (w: BrowserWindow | undefined): w is BrowserWindow => !!w && !w.incognito && w.kind !== "small";

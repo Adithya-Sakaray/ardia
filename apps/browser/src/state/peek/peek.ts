@@ -8,6 +8,7 @@ import { isSmall } from "../windows/small";
 import { activated, apply, removeTabs } from "../tabs/tabs";
 import { pinnedGroupMembers } from "../browser/structure";
 import { orderSections } from "../groups/groups";
+import { withoutFragment } from "../../lib/url";
 
 export type PeekPoint = { x: number; y: number };
 export type Peek = { tabId: string; sourceId: string; sourcePage: string; from: PeekPoint | null };
@@ -22,7 +23,6 @@ export type PeekSlice = {
 
 type PeekState = Pick<BrowserState, "peeks" | "tabs">;
 
-const samePageKey = (url: string) => url.replace(/#.*$/, "");
 const peekable = (url: string) => /^https?:\/\//i.test(url);
 
 export function otherSitePeekTabIds(s: Pick<BrowserState, "tabs" | "groups" | "settings">): string[] {
@@ -65,7 +65,7 @@ export function settlePeeks(s: BrowserState, prev: BrowserState): BrowserState |
       !s.tabs[peek.tabId] ||
       !source ||
       activeTabId(s, windowId) !== peek.sourceId ||
-      samePageKey(source.url) !== peek.sourcePage;
+      withoutFragment(source.url) !== peek.sourcePage;
     if (stale) next = withoutPeek(next, windowId);
   }
   return next === s ? null : next;
@@ -86,7 +86,7 @@ export const createPeekSlice: StateCreator<BrowserState, [], [], PeekSlice> = (s
       ...s,
       tabs: { ...s.tabs, [tab.id]: tab },
       live: { ...s.live, [tab.id]: IDLE_LIVE },
-      peeks: { ...s.peeks, [w.id]: { tabId: tab.id, sourceId: sourceTabId, sourcePage: samePageKey(s.tabs[sourceTabId]!.url), from } },
+      peeks: { ...s.peeks, [w.id]: { tabId: tab.id, sourceId: sourceTabId, sourcePage: withoutFragment(s.tabs[sourceTabId]!.url), from } },
     });
     return tab.id;
   },

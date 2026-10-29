@@ -10,7 +10,7 @@ import {
   without,
 } from "../browser/model";
 import { forgetOpeners, insertionIndex, openerSuccessor } from "./openers";
-import { isClosedPin, onUrlChange, pruneSelection, samePage } from "../pins/organize";
+import { isClosedPin, onUrlChange, pruneSelection } from "../pins/organize";
 import { hasOwnOrSharedPage, hasPage, isLazy } from "./pageSession";
 import { isPeekTab, withoutPeek } from "../peek/peek";
 import { resolveTyped } from "../settings/settings";
@@ -21,6 +21,7 @@ import { closedTabEntry, MAX_CLOSED_TABS } from "../pins/closedTabs";
 import { pendingRestore } from "./adoptIds";
 import type { BrowserWindow, ClosedTab, Tab, TabSnapshot } from "../browser/types";
 import { orderSections } from "../groups/groups";
+import { samePage } from "../../lib/url";
 
 export type NewTabOptions = {
   url?: string;
