@@ -171,7 +171,7 @@ export type EngineCalls = {
   "webView.setVideoUpscalingTestConditions": [{ lowPower?: boolean; thermalPressure?: boolean }, null];
   "webView.videoUpscalingState": [{}, VideoUpscalingState | null];
 
-  "webKit.removeDownloadStaging": [{ path: string; uuid: string; folder: string }, boolean];
+  "webKit.removeDownloadStaging": [{ path: string }, boolean];
   "webKit.endPrivateSession": [{ session: string }, null];
   "webKit.cookieStoreKey": [Profile, string];
   "webKit.importCookies": [Profile & { storeKey: string; cookies: PageCookie[] }, number];

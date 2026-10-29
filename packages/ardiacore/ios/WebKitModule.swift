@@ -89,7 +89,7 @@ public class WebKitModule: Module {
   }
   static let calls = CallTable(domain: "webKit", handlers: [
     "removeDownloadStaging": { args, reply in
-      reply.ok(WebKitDownloads.removeStaging(try args.text("path"), uuid: try args.text("uuid"), folder: try args.text("folder")))
+      reply.ok(WebKitDownloads.removeStaging(try args.text("path")))
     },
     "endPrivateSession": { args, reply in
       WebKitHub.shared.endPrivateSession(try args.text("session"))

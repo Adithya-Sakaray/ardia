@@ -1,4 +1,4 @@
-import { cancelDownload, leftDownloadStaging, removeLeftDownloadStaging, type Download } from "../../platform/downloads";
+import { cancelDownload, removeDownloadStaging, type Download } from "../../platform/downloads";
 import { endWebKitPrivateSession } from "../../platform/webkit";
 import { readDocument, writeDocument } from "../../platform/documents";
 import { SESSION_DOCUMENT } from "./sessionDocument";
@@ -24,8 +24,18 @@ import { sessionWithOwnTabMutes } from "../tabs/mute";
 const SAVE_DELAY_MS = 800;
 const SESSION_VERSION = 4;
 const SESSION_MIGRATIONS: Migrations = { 2: sessionWithCleanUpMinutes, 3: sessionWithOwnTabMutes };
-const DOWNLOADS_VERSION = 2;
-const DOWNLOADS_MIGRATIONS: Migrations = { 0: unchanged, 1: unchanged };
+const downloadsWithStagingPathOnly = (doc: SavedObject): SavedObject => ({
+  ...doc,
+  downloads: Array.isArray(doc.downloads)
+    ? doc.downloads.map((d: unknown) => {
+        if (typeof d !== "object" || d === null) return d;
+        const { stagingId: _id, destination: _to, ...kept } = d as SavedObject;
+        return kept;
+      })
+    : doc.downloads,
+});
+const DOWNLOADS_VERSION = 3;
+const DOWNLOADS_MIGRATIONS: Migrations = { 0: unchanged, 1: unchanged, 2: downloadsWithStagingPathOnly };
 
 type Key = keyof BrowserState;
 type Field<K extends Key, V> = { reads: readonly K[]; save: (s: Pick<BrowserState, K>) => V };
@@ -169,7 +179,7 @@ function forgetStaging(id: string) {
   const s = useBrowser.getState();
   const download = s.downloads.find((d) => d.id === id);
   if (!download) return;
-  const { staging: _, stagingId: _id, destination: _to, ...kept } = download;
+  const { staging: _, ...kept } = download;
   s.upsertDownload(kept);
 }
 
@@ -179,13 +189,12 @@ function savedDownloads(saved: Pick<BrowserState, "profiles">): Download[] {
   droppedPrivateDownloads = downloads.some((d) => downloadSession(saved, d) !== null);
   return downloads.filter((d) => downloadSession(saved, d) === null).map((d, i) => {
     const id = `saved-${i}`;
-    const left = leftDownloadStaging(d);
-    const { staging: _, stagingId: _id, destination: _to, ...kept } = d;
-    if (!left) return { ...kept, id };
-    void removeLeftDownloadStaging(d)
+    const { staging, ...kept } = d;
+    if (!staging || d.state === "downloading") return { ...kept, id };
+    void removeDownloadStaging(staging)
       .catch(() => false)
       .then((removed) => removed && forgetStaging(id));
-    return { ...d, id, stagingId: left.uuid };
+    return { ...d, id };
   });
 }
 
