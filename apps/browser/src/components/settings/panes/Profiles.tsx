@@ -1,5 +1,6 @@
 import { ContextMenuArea, Symbol, Box, Button, font, PopUp, TextField, Toggle, useHover } from "../../ui";
-import { hapticTick, showMenu } from "../../../state/app/system";
+import { hapticTick } from "../../../state/app/system";
+import { chooseFromMenu } from "../../../state/app/menuChoice";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from "react-native";
 import { useShallow } from "zustand/react/shallow";
@@ -242,8 +243,8 @@ export function ProfileDetailsPane({ profileId }: { profileId: string }) {
   const sharing = shared.length > 1;
 
   const pickIcon = async () => {
-    const choice = await showMenu(iconMenuItems(profile.icon));
-    if (choice?.startsWith("icon:")) update({ icon: choice.slice("icon:".length) || null });
+    const choice = await chooseFromMenu(iconMenuItems(profile.icon));
+    if (choice && typeof choice === "object") update({ icon: choice.icon });
   };
 
   return (

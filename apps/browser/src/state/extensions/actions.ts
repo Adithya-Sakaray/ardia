@@ -15,6 +15,7 @@ import {
 import { webStoreExtensionId } from "@ardia/core";
 import { confirm } from "../../platform/dialogs";
 import { showMenu, type MenuItem } from "../../platform/menus";
+import type { ChoiceItem } from "../app/menuChoice";
 import { menuSections } from "../app/menuSections";
 import { openWindow } from "../browser/actions";
 import { webviews } from "../../platform/webviews";
@@ -265,13 +266,15 @@ export async function showExtensionMenu(windowId: string, ext: InstalledExtensio
   }
 }
 
-export const EXTENSION_LIST_ITEMS: MenuItem[] = [
+export type ExtensionListChoice = "add" | "manage" | "pin";
+
+export const EXTENSION_LIST_ITEMS: ChoiceItem<never, ExtensionListChoice>[] = [
   { id: "add", title: "Add Extension…", symbol: "plus" },
   { id: "manage", title: "Manage Extensions…", symbol: "puzzlepiece.extension" },
   { id: "pin", title: "Pin Extensions…", symbol: "pin" },
 ];
 
-export function runExtensionListChoice(choice: string | null, windowId: string) {
+export function runExtensionListChoice(choice: ExtensionListChoice | null, windowId: string) {
   if (choice === "add") openWebStore(windowId);
   if (choice === "manage") openManageExtensions(windowId);
   if (choice === "pin") openPinDialog(windowId);
