@@ -169,7 +169,7 @@ async function cycleOnce(native: NonNullable<typeof SyncNative>, folder: string,
     publishUi({ status: "updated", error: null, pending });
   } catch (error) {
     if ((error as { code?: unknown } | null)?.code === "ERR_SYNC_FOLDER_UNREADABLE") {
-      publishUi({ status: "offline", error: errorText(error) });
+      publishUi({ status: "offline", error: "The sync folder can’t be read. Check that it’s still there and that Ardia can open it." });
     } else {
       console.warn("[sync] cycle failed", error);
       publishUi({ status: "stalled", error: errorText(error) });
