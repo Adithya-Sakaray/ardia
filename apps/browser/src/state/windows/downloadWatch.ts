@@ -1,6 +1,6 @@
 import { openFile } from "../../platform/files";
 import { useBrowser, type BrowserState } from "../browser/store";
-import { downloadVisibleIn } from "./ui";
+import { downloadVisibleIn } from "../downloads/downloadsSlice";
 import { focusedWindowOf } from "./ui";
 
 const openWhenDone = new Set<string>();

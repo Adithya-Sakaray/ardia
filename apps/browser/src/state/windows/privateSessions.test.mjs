@@ -2,9 +2,18 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
 const model = await import("../browser/model.ts");
-const { downloadVisibleIn, downloadsIn } = await import("./ui.ts");
+const { downloadVisibleIn, downloadsIn } = await import("../downloads/downloadsSlice.ts");
 const { lastActiveProfile, privateWindowProfile } = await import("./small.ts");
 const { flushPersistence, startPersistence } = await import("../session/persist.ts");
+const { startFavicons } = await import("../favicons/favicons.ts");
+const { startHistory } = await import("../history/engineSync.ts");
+const { startBookmarks } = await import("../bookmarks/engineSync.ts");
+const { startProfileDataCleanup } = await import("../profiles/profileData.ts");
+const { startPrivateSessions } = await import("../windows/privateSessions.ts");
+const startApp = () => {
+  const stops = [startPersistence(), startFavicons(), startHistory(), startBookmarks(), startProfileDataCleanup(), startPrivateSessions()];
+  return () => stops.forEach((stop) => stop());
+};
 const { extensionProfile } = await import("../extensions/store.ts");
 const stub = await import("../../test-native/index.ts");
 
@@ -77,7 +86,7 @@ test("Little Ardia from a profile-2 private window opens in profile 2, never pri
 test("a private session's downloads show in its windows only, never on disk, and go with its last window", async () => {
   stub.docs.clear();
   stub.cancelledDownloads.length = 0;
-  const stop = startPersistence();
+  const stop = startApp();
   const { work, a, b } = twoProfiles();
   const p2 = S().createWindow({ incognito: true });
   const p2b = S().createWindow({ incognito: true, profileId: work });
@@ -154,7 +163,7 @@ test("deleting a profile closes its private windows, not another profile's", () 
 
 test("relaunch: no private window, tab or id is saved", () => {
   stub.docs.clear();
-  const stop = startPersistence();
+  const stop = startApp();
   const { work } = twoProfiles();
   S().createWindow({ incognito: true, url: "https://secret.example/" });
   S().createWindow({ incognito: true, profileId: "default", url: "https://secret.example/" });

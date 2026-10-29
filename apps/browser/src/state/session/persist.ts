@@ -1,10 +1,9 @@
-import { cancelDownload, removeDownloadStaging, type Download } from "../../platform/downloads";
-import { endWebKitPrivateSession } from "../../platform/webkit";
+import { removeDownloadStaging, type Download } from "../../platform/downloads";
 import { readDocument, writeDocument } from "../../platform/documents";
 import { SESSION_DOCUMENT } from "./sessionDocument";
 import { pendingRestore } from "../tabs/adoptIds";
 import { useBrowser, type BrowserState, type HydrateData } from "../browser/store";
-import { inPinnedContainer, isIncognitoProfile, privateSession, snapshotTab } from "../browser/model";
+import { inPinnedContainer, isIncognitoProfile, snapshotTab } from "../browser/model";
 import { earlyLaunchTabOn, launchTab, linkProfile } from "../tabs/launchTab";
 import { launchBackdrop } from "../windows/launchBackdrop";
 import { restoreLaunchLook, saveLaunchLook } from "../windows/launchLook";
@@ -12,11 +11,7 @@ import { parkWindowPins } from "../pins/parkedPins";
 import { closedWindowEntry, MAX_CLOSED_WINDOWS } from "../pins/closedTabs";
 import { isPeekTab } from "../peek/peek";
 import type { BrowserWindow, Tab } from "../browser/types";
-import { downloadSession } from "../windows/ui";
-import { startFavicons } from "../favicons/favicons";
-import { startBookmarks } from "../bookmarks/engineSync";
-import { startHistory } from "../history/engineSync";
-import { startProfileDataCleanup } from "../profiles/profileData";
+import { downloadSession } from "../downloads/downloadsSlice";
 import { parseSaved, versionedJson, unchanged, type Migrations, type SavedObject } from "../../lib/savedDocument";
 import { sessionWithCleanUpMinutes } from "../settings/cleanUpAfter";
 import { sessionWithOwnTabMutes } from "../tabs/mute";
@@ -291,30 +286,5 @@ export function startPersistence() {
     check(useBrowser.getState());
     save();
   };
-  const stopFavicons = startFavicons();
-  const stopHistory = startHistory();
-  const stopBookmarks = startBookmarks();
-  const stopProfileData = startProfileDataCleanup();
-  const stopSession = useBrowser.subscribe((s, prev) => {
-    check(s);
-    if (s.windows !== prev.windows) forgetClosedIncognito(s, prev);
-  });
-  return () => {
-    stopFavicons();
-    stopHistory();
-    stopBookmarks();
-    stopProfileData();
-    stopSession();
-  };
-}
-
-function forgetClosedIncognito(s: BrowserState, prev: BrowserState) {
-  for (const w of Object.values(prev.windows)) {
-    if (!w.incognito || s.windows[w.id]) continue;
-    const session = privateSession(s, w.profileId);
-    if (Object.values(s.windows).some((o) => o.incognito && privateSession(s, o.profileId) === session)) continue;
-    for (const d of s.downloads) if (downloadSession(s, d) === session && d.state === "downloading") void cancelDownload(d.id);
-    s.forgetDownloads(w.profileId);
-    if (session !== null) void endWebKitPrivateSession(session);
-  }
+  return useBrowser.subscribe((s) => check(s));
 }

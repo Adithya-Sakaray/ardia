@@ -9,7 +9,7 @@ import { canTidyPins } from "../pins/tidyPins";
 import { folderIn } from "../pins/tileFolders";
 import { useStoreWhile } from "../tabs/tabWatch";
 import { splitOf, splitRowPanes } from "../splits/splits";
-import { downloadsIn } from "../windows/ui";
+import { downloadsIn } from "../downloads/downloadsSlice";
 import { groupEntries, keptEntry, sidebarEntries } from "./entries";
 import { groupTabIds } from "./groupPanelRows";
 import { capture, type Capture } from "./listCapture";

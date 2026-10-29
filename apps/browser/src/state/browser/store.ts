@@ -22,6 +22,7 @@ import { createTabsSlice, type TabsSlice } from "../tabs/tabsSlice";
 import { transactional } from "./transaction";
 import type { BrowserWindow, Tab } from "./types";
 import { createUiSlice, type UiSlice } from "../windows/ui";
+import { createDownloadsSlice, type DownloadsSlice } from "../downloads/downloadsSlice";
 import { createWindowsSlice, type WindowsSlice } from "../windows/windows";
 import { orderSections } from "../groups/groups";
 
@@ -35,6 +36,7 @@ export type BrowserState = ProfilesSlice &
   BookmarksSlice &
   SettingsSlice &
   UiSlice &
+  DownloadsSlice &
   PeekSlice & {
     hydrate(data: HydrateData): void;
   };
@@ -99,6 +101,7 @@ export const useBrowser = create<BrowserState>()(transactions.middleware(batched
   ...createBookmarksSlice(...a),
   ...createSettingsSlice(...a),
   ...createUiSlice(...a),
+  ...createDownloadsSlice(...a),
   ...createPeekSlice(...a),
 
   hydrate(data) {

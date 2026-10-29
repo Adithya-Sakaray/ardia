@@ -5,7 +5,8 @@ import { useBrowser, type BrowserState } from "./store";
 import { activeTabId, bookmarkProfileId, IDLE_LIVE, profileFor, tabLayoutOf } from "./model";
 import type { Settings } from "../settings/settings";
 import type { BrowserWindow, FindState, Profile, Tab, TabGroup, TabLive } from "./types";
-import { CLOSED_FIND, DEFAULT_WINDOW_UI, downloadsIn } from "../windows/ui";
+import { CLOSED_FIND, DEFAULT_WINDOW_UI } from "../windows/ui";
+import { downloadsIn } from "../downloads/downloadsSlice";
 import { focusedWindowOf } from "../windows/ui";
 
 export const WindowContext = createContext<string | null>(null);
