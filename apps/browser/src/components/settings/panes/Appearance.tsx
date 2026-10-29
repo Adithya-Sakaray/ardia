@@ -1,4 +1,4 @@
-import { setAppearance, type AppIcon } from "../../../state/app/appSettings";
+import type { AppIcon } from "../../../state/app/appSettings";
 import { Symbol, font, PopUp, Toggle, useHover } from "../../ui";
 import { Image, Pressable, Text, View } from "react-native";
 import { useTheme } from "../../ui/theme";
@@ -22,10 +22,7 @@ const MODES: { value: Settings["appearance"]; title: string; description: string
 export function AppearancePane() {
   const appearance = useSettings((s) => s.appearance);
   const spacesFollow = useSettings((s) => s.spacesFollowAppearance);
-  const choose = (mode: Settings["appearance"]) => {
-    updateSettings({ appearance: mode });
-    void setAppearance(mode);
-  };
+  const choose = (mode: Settings["appearance"]) => updateSettings({ appearance: mode });
   return (
     <View>
       <SectionHeader anchor="appearance.theme" />

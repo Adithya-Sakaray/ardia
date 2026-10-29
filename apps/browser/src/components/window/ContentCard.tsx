@@ -15,7 +15,6 @@ import { dockMoving, usePeekEdge, whenDockStill } from "../../state/windows/dock
 import { FrozenPage } from "./FrozenPage";
 import { setCardAnchor, setUrlAnchor, useAddressBarInSidebar, useTabLayout, watchToolbarExtensionsWidth } from "../../state/windows/layout";
 import { startSelectionTools } from "../../state/site/selection";
-import { startCommandScrollZoom } from "../../state/site/commandScrollZoom";
 import { startMedia } from "../../state/media/pip";
 import { urlFieldRight } from "../toolbar/Toolbar";
 import { WindowToolbar } from "../toolbar/WindowToolbar";
@@ -47,7 +46,6 @@ export function ContentCard() {
   useEffect(startChromeTabs, []);
   useEffect(startMedia, []);
   useEffect(startSelectionTools, []);
-  useEffect(startCommandScrollZoom, []);
   useEffect(startPeeks, []);
   const peekId = usePeeks((p) => p[windowId]?.tabId);
   const peekFullscreen = !!peekId && fullscreenTab === peekId;

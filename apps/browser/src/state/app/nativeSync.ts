@@ -3,7 +3,8 @@ import { onDownload } from "../../platform/downloads";
 import { releaseProfile } from "../../platform/profiles";
 import { cancelFocusMove, claimFocus } from "../../platform/focus";
 import { closeWindow, onWindowEvent, openWindow, restoreFullScreen, setTrafficLightsCenter, setWindowTitle, windowIds } from "../../platform/windows";
-import { isDarkAppearance, onAppEvent, onOpenURLs, replyToTerminate, setAppearance, setThinScrollBars } from "../../platform/app";
+import { isDarkAppearance, onAppEvent, onOpenURLs, replyToTerminate } from "../../platform/app";
+import { startNativeSettings } from "../settings/nativeSettings";
 import { menuShortcuts, onCommand, setMenuStateParts, type MenuBookmark, type MenuState } from "../../platform/commands";
 import { Appearance } from "react-native";
 import { folderChildren, isBookmarked } from "../bookmarks/bookmarks";
@@ -67,8 +68,7 @@ export function startNativeSync() {
   onDownload((d) => store.getState().upsertDownload(d));
 
   store.getState().setAppDark(Appearance.getColorScheme() === "dark");
-  void setAppearance(store.getState().settings.appearance);
-  void setThinScrollBars(store.getState().settings.pageScrollBars === "thin");
+  startNativeSettings();
   void isDarkAppearance().then((dark) => store.getState().setAppDark(dark));
 
   onAppEvent((e) => {
@@ -124,10 +124,6 @@ export function startNativeSync() {
   store.subscribe((s, prev) => {
     windows.sync(s, prev);
     menuTimer ??= setTimeout(syncMenu, 120);
-  });
-  store.subscribe((s, prev) => {
-    if (s.settings.appearance !== prev.settings.appearance) void setAppearance(s.settings.appearance);
-    if (s.settings.pageScrollBars !== prev.settings.pageScrollBars) void setThinScrollBars(s.settings.pageScrollBars === "thin");
   });
   useExtensions.subscribe((e, prev) => {
     if (e.lists !== prev.lists) menuTimer ??= setTimeout(syncMenu, 120);

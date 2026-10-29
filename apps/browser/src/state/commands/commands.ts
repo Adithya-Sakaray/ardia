@@ -1,6 +1,6 @@
 import { closeWindow as closeNativeWindow } from "../../platform/windows";
 import { copyText } from "../../platform/clipboard";
-import { openExternalURL, setAppearance } from "../../platform/app";
+import { openExternalURL } from "../../platform/app";
 import { pickFiles, prompt } from "../../platform/dialogs";
 import type { CommandEvent } from "../../platform/commands";
 import { markdownLink } from "@ardia/core";
@@ -86,10 +86,7 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent) 
     case "reopenClosedWindow":
       return s.reopenClosedWindow();
     case "setAppearance":
-      if (arg === "auto" || arg === "light" || arg === "dark") {
-        s.updateSettings({ appearance: arg });
-        void setAppearance(arg);
-      }
+      if (arg === "auto" || arg === "light" || arg === "dark") s.updateSettings({ appearance: arg });
       return;
     case "toggleFullUrl":
       return s.updateSettings({ showFullUrl: !s.settings.showFullUrl });
