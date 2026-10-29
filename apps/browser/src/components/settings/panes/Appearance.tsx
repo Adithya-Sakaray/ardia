@@ -1,4 +1,4 @@
-import { setAppearance, setAppIcon, type AppIcon } from "../../../state/app/appSettings";
+import { setAppearance, type AppIcon } from "../../../state/app/appSettings";
 import { Symbol, font, PopUp, Toggle, useHover } from "../../ui";
 import { Image, Pressable, Text, View } from "react-native";
 import { useTheme } from "../../ui/theme";
@@ -10,8 +10,8 @@ import { PictureChoice } from "../PictureChoice";
 import { BookmarksBarSection } from "./BookmarksBarSection";
 import { modePreview } from "../tokens";
 import { useSettingsColors } from "../useSettingsColors";
-import { APP_ICON_SIZE, appIconChoices } from "../../../state/settings/paneData";
-import { store, useResource } from "../../../state/settings/resources";
+import { APP_ICON_SIZE, appIconChoices, chooseAppIcon } from "../../../state/settings/paneData";
+import { useResource } from "../../../state/settings/resources";
 
 const MODES: { value: Settings["appearance"]; title: string; description: string }[] = [
   { value: "auto", title: "Automatic", description: "Follow the system appearance setting" },
@@ -162,16 +162,12 @@ function AppIconPicker() {
   const icons = choices?.icons ?? [];
   const current = choices?.current ?? null;
   if (icons.length < 2) return null;
-  const choose = (id: string) => {
-    store(appIconChoices, [], { icons, current: id });
-    void setAppIcon(id);
-  };
   return (
     <>
       <SectionHeader anchor="appearance.appIcon" />
       <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: 6, rowGap: 10 }}>
         {icons.map((icon) => (
-          <IconChoice key={icon.id} icon={icon} selected={icon.id === current} onPress={() => choose(icon.id)} />
+          <IconChoice key={icon.id} icon={icon} selected={icon.id === current} onPress={() => chooseAppIcon(icon.id)} />
         ))}
       </View>
     </>

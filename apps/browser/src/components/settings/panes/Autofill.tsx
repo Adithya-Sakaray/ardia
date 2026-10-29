@@ -5,7 +5,6 @@ import {
   revealCardNumber,
   saveAddress,
   saveCard,
-  setAutofillSettings,
   type SavedAddress,
   type SavedCard,
 } from "../../../state/site/autofill";
@@ -18,8 +17,8 @@ import { useTheme } from "../../ui/theme";
 import { currentEngineProfile } from "../../../state/browser/current";
 import { Group, ProfilePicker, Row, SectionHeader, useSettingsProfile } from "../Form";
 import { NetworkBadge } from "../../site/Autofill";
-import { addresses as addressList, autofillEnabled, cards as cardList } from "../../../state/settings/paneData";
-import { store, useResource } from "../../../state/settings/resources";
+import { addresses as addressList, autofillEnabled, cards as cardList, setAutofillFor } from "../../../state/settings/paneData";
+import { useResource } from "../../../state/settings/resources";
 import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/sheet";
 
 export function AutofillPane({ profileId: initial }: { profileId?: string | null }) {
@@ -34,8 +33,7 @@ export function AutofillPane({ profileId: initial }: { profileId?: string | null
     void reloadAddresses();
     void reloadCards();
   };
-  const toggle = (key: "addresses" | "cards", value: boolean) =>
-    void setAutofillSettings({ [key]: value }, profile).then(() => enabled && store(autofillEnabled, [profile], { ...enabled, [key]: value }));
+  const toggle = (kind: "addresses" | "cards", on: boolean) => void setAutofillFor(profile, kind, on);
 
   return (
     <View>

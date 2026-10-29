@@ -5,7 +5,6 @@ import {
   getPassword,
   listPasswords,
   setNeverSavePasswords,
-  setPasswordAutofill,
   updatePassword,
   type PasswordExportStatus,
   type SavedPassword,
@@ -22,8 +21,8 @@ import { importPasswordsCsv, unlockPasswordsFor, usePasswordsUnlocked } from "..
 import { hostLabel, matchesQuery } from "../../pages/PageLayout";
 import { Favicon } from "../../favicon/Favicon";
 import { Group, ProfilePicker, Row, SectionHeader, useSettingsProfile } from "../Form";
-import { passwordAutofill } from "../../../state/settings/paneData";
-import { store, useResource } from "../../../state/settings/resources";
+import { passwordAutofill, setPasswordAutofillFor } from "../../../state/settings/paneData";
+import { useResource } from "../../../state/settings/resources";
 import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/sheet";
 
 function passwordManagerAppsNote() {
@@ -85,7 +84,7 @@ export function PasswordsPane({ profileId: initial }: { profileId?: string | nul
       />
       <Group>
         <Row anchor="passwords.offerToSave">
-          <Toggle value={autofill} onChange={(v) => void setPasswordAutofill(v, profile).then(() => store(passwordAutofill, [profile], v))} />
+          <Toggle value={autofill} onChange={(v) => void setPasswordAutofillFor(profile, v)} />
         </Row>
         <Row anchor="passwords.importPasswords" description={importStatus || undefined}>
           <Button title="Import CSV…" onPress={() => void importCsv()} />

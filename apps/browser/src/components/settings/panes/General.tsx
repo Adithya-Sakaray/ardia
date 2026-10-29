@@ -1,13 +1,5 @@
-import { setDownloadSettings, type DownloadSettings } from "../../../state/downloads/actions";
-import {
-  checkForUpdates,
-  setAsDefaultBrowser,
-  setAutomaticUpdateChecks,
-  setAutomaticUpdateDownloads,
-  setLaunchAtLogin,
-  setUpdateChannel,
-  type UpdateChannel,
-} from "../../../state/app/appSettings";
+import type { DownloadSettings } from "../../../state/downloads/actions";
+import { checkForUpdates, setLaunchAtLogin } from "../../../state/app/appSettings";
 import { pickFolder } from "../../../state/app/system";
 import { Symbol, Button, font, PopUp, Toggle } from "../../ui";
 import { useEffect } from "react";
@@ -18,8 +10,8 @@ import { currentEngineProfile } from "../../../state/browser/current";
 import { useProfiles, useSettings } from "../../../state/browser/hooks";
 import { SHARING_COPY } from "../../../state/telemetry/copy";
 import { Anchor, Group, ProfilePicker, Row, SectionHeader, SettingToggle, useSettingsProfile } from "../Form";
-import { defaultBrowser, downloadSettings, loginItem, updater } from "../../../state/settings/paneData";
-import { store, useResource } from "../../../state/settings/resources";
+import { defaultBrowser, downloadSettings, loginItem, makeDefaultBrowser, setDownloadsFor, setUpdaterPrefs, updater } from "../../../state/settings/paneData";
+import { useResource } from "../../../state/settings/resources";
 import { openImport } from "../../../state/settings/settingsWindows";
 import { ExportBookmarksRow } from "./ExportBookmarksRow";
 import { SetupCodeRow } from "./SetupCodeRow";
@@ -124,8 +116,7 @@ function DownloadsSection() {
   const profile = currentEngineProfile(profileId);
   const [current] = useResource(downloadSettings, profile);
   const others = [...new Set(profiles.map((p) => currentEngineProfile(p.id)))].filter((p) => p !== profile);
-  const apply = (patch: Partial<Pick<DownloadSettings, "folder" | "askWhereToSave">>, targets = [profile]) =>
-    void Promise.all(targets.map((p) => setDownloadSettings(patch, p).then((next) => store(downloadSettings, [p], next), () => {})));
+  const apply = (patch: Partial<Pick<DownloadSettings, "folder" | "askWhereToSave">>, targets = [profile]) => void setDownloadsFor(patch, targets);
   const change = async () => {
     if (!current) return;
     const folder = await pickFolder(current.folder, "Use Folder");
@@ -172,12 +163,6 @@ function UpdatesSection() {
   }, []);
   if (!state?.available) return null;
   const ready = state.configured;
-  const set = (patch: { automaticChecks?: boolean; automaticDownloads?: boolean; channel?: UpdateChannel }) => {
-    store(updater, [], { ...state, ...patch });
-    if (patch.automaticChecks !== undefined) void setAutomaticUpdateChecks(patch.automaticChecks).finally(refresh);
-    if (patch.automaticDownloads !== undefined) void setAutomaticUpdateDownloads(patch.automaticDownloads).finally(refresh);
-    if (patch.channel !== undefined) void setUpdateChannel(patch.channel).finally(refresh);
-  };
   const lastCheck = state.lastCheck
     ? `Last checked ${new Date(state.lastCheck).toLocaleString(UI_LOCALE, { dateStyle: "medium", timeStyle: "short" })}.`
     : "Not checked yet.";
@@ -186,13 +171,13 @@ function UpdatesSection() {
       <SectionHeader title="Updates" description={ready ? undefined : "Updates aren't set up for this build."} />
       <Group>
         <Row anchor="general.updateChecks" description={`${SHARING_COPY.updateChecks} ${SHARING_COPY.switchFile}`}>
-          <Toggle value={ready && state.automaticChecks} disabled={!ready} onChange={(v) => set({ automaticChecks: v })} />
+          <Toggle value={ready && state.automaticChecks} disabled={!ready} onChange={(v) => setUpdaterPrefs({ automaticChecks: v })} />
         </Row>
         <Row anchor="general.autoUpdate">
           <Toggle
             value={ready && state.automaticChecks && state.automaticDownloads}
             disabled={!ready || !state.automaticChecks}
-            onChange={(v) => set({ automaticDownloads: v })}
+            onChange={(v) => setUpdaterPrefs({ automaticDownloads: v })}
           />
         </Row>
         {state.channel && (
@@ -204,7 +189,7 @@ function UpdatesSection() {
                 { value: "nightly", title: "Nightly" },
               ]}
               disabled={!ready}
-              onChange={(channel) => set({ channel })}
+              onChange={(channel) => setUpdaterPrefs({ channel })}
               minWidth={190}
             />
           </Row>
@@ -249,7 +234,7 @@ function DefaultBrowserBanner() {
       <Text style={{ flex: 1, ...font.body, color: theme.textPrimary }}>
         {isDefault ? `${APP} is your default browser` : `${APP} works best as your default browser`}
       </Text>
-      {!isDefault && <Button title={`Set ${APP} as Default`} kind="primary" onPress={() => void setAsDefaultBrowser().then((v) => store(defaultBrowser, [], v))} />}
+      {!isDefault && <Button title={`Set ${APP} as Default`} kind="primary" onPress={() => void makeDefaultBrowser()} />}
     </Anchor>
   );
 }
