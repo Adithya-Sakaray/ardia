@@ -3,6 +3,7 @@ import { systemInfo } from "../../platform/app";
 import { devTestValue } from "../../platform/launchConfig";
 import { create } from "zustand";
 import { parseSaved, unchanged, versionedJson, type Migrations } from "../../lib/savedDocument";
+import { hasSavedSession } from "../session/sessionDocument";
 
 export type ReleaseNotes = {
   version: string;
@@ -65,7 +66,7 @@ export function trackAppVersion(): boolean {
   const version = systemInfo().appVersion;
   if (!version) return false;
   const saved = readSaved();
-  const updated = saved ? saved.lastVersion !== version : !!readDocument("session.json");
+  const updated = saved ? saved.lastVersion !== version : hasSavedSession();
   let pending = saved?.pending ?? null;
   if (__DEV__) {
     if (devTestValue("whatsNew") === "1") pending = { version, since: Date.now() };

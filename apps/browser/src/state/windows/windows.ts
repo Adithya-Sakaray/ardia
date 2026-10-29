@@ -20,6 +20,7 @@ import { hasLoadedPage } from "../tabs/pageSession";
 import { adoptParkedPins, parkWindowPins } from "../pins/parkedPins";
 import { settleMovedPins } from "../pins/pinMirror";
 import { returnSharedPages } from "../pins/pinShare";
+import { closedWindowEntry, MAX_CLOSED_WINDOWS } from "../pins/closedTabs";
 import { sharedElsewhere, sharesTabs } from "../tabs/tabShare";
 import { isSmall, isSmallWindow, lastActiveProfile, linkProfileOf, mainWindowFor } from "./small";
 import { activated, apply, removeTabs, withNewTab } from "../tabs/tabs";
@@ -63,8 +64,6 @@ export type WindowsSlice = {
   reopenClosedWindow(): void;
   restoreClosed(entryId: string, windowId?: string | null): void;
 };
-
-const MAX_CLOSED_WINDOWS = 10;
 
 function lastProfileAfterClosing(s: BrowserState, id: string): string | null {
   const w = s.windows[id];
@@ -183,16 +182,14 @@ export const createWindowsSlice: StateCreator<BrowserState, [], [], WindowsSlice
     let closedWindows = s.closedWindows;
     if (!w.incognito && !small && tabs.some((t) => t.url)) {
       const active = new Set(Object.values(w.activeTabIds));
-      const entry: ClosedWindow = {
-        kind: "window",
-        id: newId("cw"),
-        window: { profileId: w.profileId, sidebarOpen: w.sidebarOpen, frame: w.frame },
-        tabs: tabs.map((t) => ({ ...snapshotTab(t), active: active.has(t.id), ...(hasLoadedPage(t) ? { tabId: t.id } : pendingRestore(t) ? { tabId: pendingRestore(t) } : {}) })),
-        groups: Object.values(s.groups)
+      const entry = closedWindowEntry(
+        w,
+        tabs.map((t) => ({ ...snapshotTab(t), active: active.has(t.id), ...(hasLoadedPage(t) ? { tabId: t.id } : pendingRestore(t) ? { tabId: pendingRestore(t) } : {}) })),
+        Object.values(s.groups)
           .filter((g) => g.windowId === id && !g.pinned && (!sharesTabs(s) || g.tabIds.some((t) => tabIds.includes(t))))
           .map(({ tabIds: members, windowId: _, ...g }) => ({ ...g, tabIndexes: members.map((t) => tabIds.indexOf(t)) })),
-        closedAt: Date.now(),
-      };
+        Date.now(),
+      );
       closedWindows = [...closedWindows, entry].slice(-MAX_CLOSED_WINDOWS);
     }
     const next = removeTabs(s, w.tabIds, small);

@@ -269,3 +269,23 @@ test("quit and relaunch after the window closed: the next window has the pinned 
   const n = S().createWindow();
   assert.deepEqual(sidebar(n), PINS);
 });
+
+test("a session.json with the right version but broken lists loads what is whole and drops the rest", () => {
+  reset();
+  const tab = { id: "t1", windowId: "w1", profileId: "default", url: "https://kept.example/", title: "Kept", favicon: null, pinned: false, muted: false, zoom: 1, customTitle: null, customIcon: null, pinnedUrl: null, openerId: null, createdAt: 0, lastActiveAt: 0 };
+  const window = { id: "w1", profileId: "default", incognito: false, tabIds: ["t1"], activeTabIds: { default: "t1" }, sidebarOpen: true, frame: null, createdAt: 0 };
+  for (const broken of [
+    { windows: {}, tabs: {}, groups: "no", splits: 7, closedTabs: null },
+    { windows: [{ id: "w2", profileId: "default" }, window, 3, null], tabs: [tab, { id: "t2" }, "x"], groups: [{ id: "g", tabIds: "t1" }], closedTabs: [{ id: "c" }], closedWindows: [{ id: "cw", tabs: [null] }] },
+  ]) {
+    stub.docs.set("session.json", JSON.stringify({ version: 4, profiles: { default: { id: "default", name: "Personal", color: "plum", icon: null, createdAt: 0 } }, profileOrder: ["default"], ...broken }));
+    reset();
+    assert.doesNotThrow(() => S().hydrate(loadSession() ?? {}));
+  }
+  assert.deepEqual(Object.keys(S().windows), ["w1"]);
+  assert.equal(S().tabs.t1.url, "https://kept.example/");
+  assert.deepEqual(S().groups, {});
+  assert.deepEqual(S().closedTabs, []);
+  assert.deepEqual(S().closedWindows, []);
+  stub.docs.delete("session.json");
+});

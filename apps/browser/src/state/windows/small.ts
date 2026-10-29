@@ -31,7 +31,7 @@ export function privateWindowProfile(s: Pick<BrowserState, "profiles" | "profile
   return named ?? originalProfile(s, w);
 }
 
-export function lastActiveProfile(s: BrowserState): string {
+export function lastActiveProfile(s: Pick<BrowserState, "profiles" | "windows" | "windowOrder" | "ui" | "settings">): string {
   const last = s.ui.lastProfileId;
   if (last && s.profiles[last]) return last;
   for (const id of [...s.ui.focusOrder, ...[...s.windowOrder].reverse()]) {

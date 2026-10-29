@@ -19,4 +19,4 @@ export function launchTab(s: Pick<BrowserState, "windows" | "tabs" | "settings" 
   return { id: t.id, url: t.url, profile: engineProfile(s, t.profileId) };
 }
 
-export const linkProfile = (s: BrowserState): string => engineProfile(s, lastActiveProfile(s));
+export const linkProfile = (s: Pick<BrowserState, "profiles" | "windows" | "windowOrder" | "ui" | "settings">): string => engineProfile(s, lastActiveProfile(s));

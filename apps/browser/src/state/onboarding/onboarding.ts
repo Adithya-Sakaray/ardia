@@ -11,6 +11,7 @@ import { endToolTour, startToolTour } from "./tour";
 import { choosePresetColor, setProfileTheme } from "../profiles/themeActions";
 import { stepsForThisSurface } from "./demoSteps";
 import { parseSaved, unchanged, versionedJson, type Migrations } from "../../lib/savedDocument";
+import { hasSavedSession } from "../session/sessionDocument";
 
 export { playIntroMusic, setIntroMusicMuted, stopIntroMusic, type IntroMusicCues } from "../../platform/introMusic";
 export { PRESET_NAMES, PRESETS, presetFor, setsUpLikeBrowser, type BrowserSourceId, type Preset } from "./presets";
@@ -387,7 +388,7 @@ export function maybeStartOnboarding() {
   const saved = readSaved();
   if (saved?.completedAt) return;
   if (saved?.startedAt) return resumeOnboarding(saved);
-  if (readDocument("session.json")) return markCompleted();
+  if (hasSavedSession()) return markCompleted();
   if (__DEV__ && devTestValue("onboarding") !== "1") return;
   save({ startedAt: Date.now() });
   startOnboarding();
