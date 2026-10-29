@@ -13,5 +13,5 @@ struct MenuStateUpdate: Record {
   @Field var undoReopensClosedTab: Bool = false
   @Field var downloadsInProgress: Int = 0
   @Field var extensions: [MenuExtension] = []
-  @Field var shortcuts: [String: [String]] = [:]
+  @Field var shortcuts: [String: [[String]]] = [:]
 }

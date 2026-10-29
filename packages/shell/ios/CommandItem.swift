@@ -67,13 +67,8 @@ final class CommandItem: NSMenuItem, Rebindable {
     return self
   }
 
-  func followPrimaryShortcut(bound: Set<String>) {
-    guard let primary = commandAlternateOf else { return }
-    let mods = primary.keyEquivalentModifierMask.union(.command)
-    if keyEquivalent != primary.keyEquivalent { keyEquivalent = primary.keyEquivalent }
-    if keyEquivalentModifierMask != mods { keyEquivalentModifierMask = mods }
-    let collides = !primary.keyEquivalent.isEmpty && bound.contains(MainMenu.comboKey(primary.keyEquivalent, mods))
-    let hidden = primary.keyEquivalentModifierMask.contains(.command) || collides
-    if isHidden != hidden { isHidden = hidden }
+  func applyAlternate(_ bound: [[String]]) {
+    MainMenu.setShortcut(self, bound.first)
+    if isHidden != bound.isEmpty { isHidden = bound.isEmpty }
   }
 }

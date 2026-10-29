@@ -99,7 +99,10 @@ export function startNativeSync() {
     const menuItems = JSON.stringify([state.profiles.map((p) => p.id), (state.extensions ?? []).map((e) => e.id)]);
     if (menuItems === lastMenuItems) return void sent;
     lastMenuItems = menuItems;
-    void sent.then(menuShortcuts).then(setMenuBarShortcuts, () => {});
+    void sent.then(menuShortcuts).then((items) => {
+      setMenuBarShortcuts(items);
+      menuTimer ??= setTimeout(syncMenu, 120);
+    }, () => {});
   };
 
   windows.sync(store.getState());

@@ -18,7 +18,7 @@ struct MenuState {
   var warnBeforeClosingWindow = false
   var undoReopensClosedTab = false
   var downloadsInProgress = 0
-  var shortcuts: [String: [String]] = [:]
+  var shortcuts: [String: [[String]]] = [:]
   var extensions: [MenuExtension] = []
   var fromApp = false
 

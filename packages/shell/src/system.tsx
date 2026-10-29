@@ -3,17 +3,10 @@ import { forwardRef, type Ref } from "react";
 import type { View, ViewProps } from "react-native";
 import { nativeModule } from "./nativeModules";
 
-export type MenuShortcut = {
-  id: string;
-  title: string;
-  path: string[];
-  key: string;
-  modifiers: ShortcutModifier[];
-  defaultKey: string;
-  defaultModifiers: ShortcutModifier[];
-  remappable: boolean;
-  aliases?: string[][];
-};
+export type MenuShortcut = { id: string; title: string; path: string[] } & (
+  | { remappable: true }
+  | { remappable: false; key: string; modifiers: ShortcutModifier[] }
+);
 
 export type ShortcutModifier = "control" | "option" | "shift" | "command" | "function";
 

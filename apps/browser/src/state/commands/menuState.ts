@@ -12,6 +12,7 @@ import { muteState, muteTitle } from "../tabs/mute";
 import { sidebarMenuState } from "../sidebar/commands";
 import { LITTLE_ARDIA_DISABLED_COMMANDS, PAGE_COMMANDS, PAGE_COMMANDS_OFF_INTERNAL_PAGES, WINDOW_COMMANDS } from "../commands/commandCatalog";
 import { extensionMenu } from "../extensions/actions";
+import { menuBarBindings } from "./commandShortcuts";
 import { focusedWindowOf } from "../windows/ui";
 
 function menuBookmarks(b: Bookmarks, folderId: string, depth = 0): MenuBookmark[] {
@@ -134,6 +135,6 @@ export function menuState(s: BrowserState): MenuState {
     warnBeforeClosingWindow: s.settings.warnBeforeClosingWindow,
     undoReopensClosedTab: s.settings.undoReopensClosedTab,
     downloadsInProgress: s.downloads.filter((d) => d.state === "downloading").length,
-    shortcuts: s.settings.shortcuts,
+    shortcuts: menuBarBindings(s),
     extensions: extensionMenu(s, windowId) };
 }

@@ -38,7 +38,7 @@ export type MenuState = {
   undoReopensClosedTab?: boolean;
   downloadsInProgress?: number;
   extensions?: { id: string; title: string; icon?: string | null; enabled: boolean }[];
-  shortcuts?: Record<string, string[]>;
+  shortcuts?: Record<string, string[][]>;
 };
 
 let menusShown = 0;

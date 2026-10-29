@@ -459,8 +459,8 @@ enum MainMenu {
     profiles.removeAllItems()
     profilesItem.isHidden = state.profiles.count < 2
     profilesSeparator.isHidden = profilesItem.isHidden
-    for (i, p) in state.profiles.enumerated() {
-      let item = CommandItem(p.title, "switchProfile", arg: p.id, key: i < 9 ? "\(i + 1)" : "", .control)
+    for p in state.profiles {
+      let item = CommandItem(p.title, "switchProfile", arg: p.id)
       item.tracksChecked = false
       item.state = p.current ? .on : .off
       profiles.addItem(item)
