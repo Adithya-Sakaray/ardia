@@ -62,7 +62,7 @@ extension WindowManager {
     let entered = notification.name == NSWindow.didEnterFullScreenNotification
     if entered { fullScreenIds.insert(id) } else { fullScreenIds.remove(id) }
     if isMainWindow(window) {
-      ShellEvents.send(.window, ["type": "fullScreen", "id": id, "on": entered && !ChromeWindows.fullScreenIsForPage(window)])
+      ShellEvents.send(.window, ["type": "fullScreen", "id": id, "on": entered && !ArdiaChromeWindowHost.windowFullScreenIs(forPage: window)])
     }
     if entered, fullScreenEntering == id { enteredFullScreen(id) }
   }

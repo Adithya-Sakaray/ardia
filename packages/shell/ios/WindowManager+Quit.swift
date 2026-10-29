@@ -93,7 +93,7 @@ extension WindowManager {
       return NSApp.reply(toApplicationShouldTerminate: false)
     }
     guard quitStep == .saving else { return }
-    if DocumentStore.flush() { ChromeWindows.recordLaunchLayout() } else { ChromeWindows.forgetLaunchPictures() }
+    if DocumentStore.flush() { ArdiaChromeWindowHost.recordLaunchLayout() } else { ArdiaChromeWindowHost.forgetLaunchPictures() }
     quitAfterUpdaterSettles()
   }
 

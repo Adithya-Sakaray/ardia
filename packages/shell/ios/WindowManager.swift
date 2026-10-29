@@ -69,11 +69,11 @@ final class WindowManager: NSObject, NSWindowDelegate {
     let small = kind == .small
     if kind != .browser && !small { return openAux(id: id, kind: kind, title: title) }
     guard let makeWindow = WindowHost.makeWindow, let makeContentView = WindowHost.makeContentView else { return }
-    if !small, ChromeWindows.takeDismissed(appWindow: id) {
+    if !small, ArdiaChromeWindowHost.takeDismissedAppWindow(id) {
       ShellEvents.send(.window, ["type": "close", "id": id])
       return
     }
-    if small, let claim, ChromeWindows.takeDismissed(appWindow: claim) {
+    if small, let claim, ArdiaChromeWindowHost.takeDismissedAppWindow(claim) {
       ShellEvents.send(.window, ["type": "close", "id": id])
       return
     }
@@ -81,7 +81,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
     if let chromeWindow = ChromeWindows.makeWindow(profile: options.profile, chromeWindow: small ? nil : options.chromeWindow, appWindow: small ? claim : id) {
       if options.incognito { chromeWindow.appearance = NSAppearance(named: .darkAqua) }
       let root = makeContentView(id)
-      ChromeWindows.embed(root, in: chromeWindow)
+      ArdiaChromeWindowHost.embedRootView(root, in: chromeWindow)
       if small || options.animated, !chromeWindow.isVisible { entrances[id] = !small || frame == nil }
       holdUntilContent(chromeWindow, id: id, root: root)
       noteFirstContent(id: id, root: root)
@@ -371,7 +371,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
     contentShown.remove(id)
     if let observer = firstContentObservers.removeValue(forKey: id) { NotificationCenter.default.removeObserver(observer) }
     guard let window = windows[id] else { return }
-    if ChromeWindows.root(of: window) != nil {
+    if ArdiaChromeWindowHost.rootView(of: window) != nil {
       NotificationCenter.default.removeObserver(self, name: nil, object: window)
       windows[id] = nil
       window.animationBehavior = .none
@@ -383,8 +383,8 @@ final class WindowManager: NSObject, NSWindowDelegate {
       fullScreenIds.remove(id)
       auxKinds[id] = nil
       smallIds.remove(id)
-      ChromeWindows.close(window)
-      DispatchQueue.main.async { ChromeWindows.removeRoot(of: window) }
+      ArdiaChromeWindowHost.close(window)
+      DispatchQueue.main.async { ArdiaChromeWindowHost.removeRootView(of: window) }
       return
     }
     closingFromJS.insert(id)
@@ -434,7 +434,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
       ShellEvents.send(.window, ["type": "close", "id": id])
     }
     DispatchQueue.main.async {
-      if ChromeWindows.root(of: window) != nil { return ChromeWindows.removeRoot(of: window) }
+      if ArdiaChromeWindowHost.rootView(of: window) != nil { return ArdiaChromeWindowHost.removeRootView(of: window) }
       window.contentViewController = nil
     }
   }
@@ -486,7 +486,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
   }
 
   private func relayoutRoot(_ window: NSWindow) {
-    guard let root = ChromeWindows.root(of: window) ?? window.contentView else { return }
+    guard let root = ArdiaChromeWindowHost.rootView(of: window) ?? window.contentView else { return }
     root.needsLayout = true
     for view in root.subviews { view.needsLayout = true }
     root.layoutSubtreeIfNeeded()
